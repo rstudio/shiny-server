@@ -3,7 +3,7 @@
 var fs = require('fs');
 var util = require('util');
 
-getpwnam = function(name){
+module.exports.getpwnam = function(name){
    var i;
    var users = fs.readFileSync('/etc/passwd','utf8').split('\n');
    var users_split;
@@ -25,5 +25,3 @@ getpwnam = function(name){
 
    return null;
 }
-
-console.log(util.inspect(getpwnam(process.argv[2] || 'root'))) 
