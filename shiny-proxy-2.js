@@ -3,11 +3,9 @@
 //
 // [browser] <-----sockjs-----> [shiny-proxy] <----websockets----> [shiny app]
 // 
-// Currently supports only one client and one shiny app
-//
 // Call like:
 //
-// node shiny-proxy.js
+// node shiny-proxy-2.js
 //
 // And edit the below SHINY object
 //
@@ -23,7 +21,8 @@ var util = require('util'),
     http = require('http'),
     httpProxy = require('http-proxy'),
     sockjs = require('sockjs'),
-    websocket = require('faye-websocket');
+    websocket = require('faye-websocket'),
+    url = require('url');
 
 
 var sockjs_server = sockjs.createServer();
@@ -78,8 +77,18 @@ sockjs_server.on('connection', function(conn) {
    });
 });
 
-var proxy = httpProxy.createServer(SHINY.forward_port, SHINY.forward_addr);
+var PROXY = httpProxy.createServer(function(req,res,proxy){
+   console.log('Request is ',req.url);
+   if (req.url === '/hornerj/foo'){
+      console.log("changing " + req.url + " to /");
+      req.url = '/';
+   }
+   proxy.proxyRequest(req,res,{
+      host: SHINY.forward_addr, 
+      port: SHINY.forward_port
+   });
+});
 
-sockjs_server.installHandlers(proxy, {prefix:'/sockjs'});
+sockjs_server.installHandlers(PROXY, {prefix:'/sockjs'});
 
-proxy.listen(SHINY.listen_port,SHINY.listen_addr);
+PROXY.listen(SHINY.listen_port,SHINY.listen_addr);
