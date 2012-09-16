@@ -11,8 +11,6 @@
 //
 //
 SHINY = {
-   forward_addr: '127.0.0.1',
-   forward_port: 8100,
    listen_addr: '0.0.0.0',
    listen_port: 8000
 };
@@ -22,8 +20,8 @@ var util = require('util'),
     httpProxy = require('http-proxy'),
     sockjs = require('sockjs'),
     websocket = require('faye-websocket'),
-    url = require('url');
-
+    url = require('url'),
+    getpwnam = require('./etcpasswd').getpwnam;
 
 var sockjs_server = sockjs.createServer();
 
@@ -77,16 +75,47 @@ sockjs_server.on('connection', function(conn) {
    });
 });
 
+var extractUserApp = function(url){
+   var results = /^\/([0-9.\-A-Za-z]+)\/([0-9.\-A-Za-z]+)(\/)?.*/.exec(url);
+
+   
+   if (!results) return null;
+
+   return {
+      user: results[1],
+      app: results[2],
+      trailingSlash: (results[3] != undefined)? true : false
+   };
+}
+
 var PROXY = httpProxy.createServer(function(req,res,proxy){
-   console.log('Request is ',req.url);
-   if (req.url === '/hornerj/foo'){
-      console.log("changing " + req.url + " to /");
-      req.url = '/';
+
+   userApp = extractUserApp(req.url);
+
+   if (!userApp){
+      res.writeHead(400, {'Content-Type': 'text/html'});
+      res.end('<h1>Bad Request!</h1>');
+      return;
    }
-   proxy.proxyRequest(req,res,{
-      host: SHINY.forward_addr, 
-      port: SHINY.forward_port
-   });
+
+   if (!userApp.trailingSlash){
+      newUrl = '/' + userApp.user + '/' + userApp.app + '/';
+      res.writeHead(301, {
+         'Content-Type': 'text/html', 
+         'Location': newUrl
+      });
+      res.end('<h1><a href="'+newUrl+'">Moved Permanently</a></h1>');
+   }
+
+   // Testing now
+   res.writeHead(200, {'Content-Type': 'text/plain'});
+   res.end(util.inspect(userApp));
+   return;
+
+   //proxy.proxyRequest(req,res,{
+   //   host: SHINY.forward_addr, 
+   //   port: SHINY.forward_port
+   //});
 });
 
 sockjs_server.installHandlers(PROXY, {prefix:'/sockjs'});
