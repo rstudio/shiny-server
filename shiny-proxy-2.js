@@ -21,7 +21,9 @@ var util = require('util'),
     sockjs = require('sockjs'),
     websocket = require('faye-websocket'),
     url = require('url'),
-    getpwnam = require('./etcpasswd').getpwnam;
+    RMonitorClient = require('./RMonitorClient').RMonitorClient;
+
+var rmon = new RMonitorClient();
 
 var sockjs_server = sockjs.createServer();
 
@@ -32,19 +34,19 @@ sockjs_server.on('connection', function(conn) {
 
    var ws = new websocket.Client('ws://'+SHINY.forward_addr+':'+SHINY.forward_port+'/'); 
 
-	var ws_is_open = false;
+   var ws_is_open = false;
 
    ws.onopen = function(event){
-		ws_is_open = true;
-		var i;
+      ws_is_open = true;
+      var i;
 
       console.log("conn: "+conn.url+" ws open");
 
       if (fmq.length){
-			for (i = 0; i < fmq.length; i++){
-         	ws.send(fmq[i]);
-			}
-			fmq = [];
+         for (i = 0; i < fmq.length; i++){
+            ws.send(fmq[i]);
+         }
+         fmq = [];
       }
    }
 
@@ -90,26 +92,44 @@ var extractUserApp = function(url){
 
 var PROXY = httpProxy.createServer(function(req,res,proxy){
 
-   userApp = extractUserApp(req.url);
+   uaName = extractUserApp(req.url);
 
-   if (!userApp){
+   if (!uaName){
       res.writeHead(400, {'Content-Type': 'text/html'});
       res.end('<h1>Bad Request!</h1>');
       return;
    }
 
-   if (!userApp.trailingSlash){
-      newUrl = '/' + userApp.user + '/' + userApp.app + '/';
+   if (!uaName.trailingSlash){
+      newUrl = '/' + uaName.user + '/' + uaName.app + '/';
       res.writeHead(301, {
          'Content-Type': 'text/html', 
          'Location': newUrl
       });
       res.end('<h1><a href="'+newUrl+'">Moved Permanently</a></h1>');
+      return;
+   }
+
+   shinyProc = rmon.procInfo(uaName.user,uaName.app);
+
+   if (!shinyProc){
+      shinyProc = rmon.spawnProc(uaName.user,uaName.app);
+
+      if (shinyProc.status === "starting"){
+         res.writeHead(200, {'Content-Type': 'text/html'});
+         res.write('<html><head><meta http-equiv="refresh" content="3"></head>');
+         res.end("<body><h1>Creating App. Just a Sec...</h1></body></html>");
+      } else if (shinyProc.status === "nouser"){
+         res.writeHead(400, {'Content-Type': 'text/html'});
+         res.end('<h1>User '+uaName.user+' Does Not Exist!</h1>');
+      }
+
+      return;
    }
 
    // Testing now
    res.writeHead(200, {'Content-Type': 'text/plain'});
-   res.end(util.inspect(userApp));
+   res.end(util.inspect(uaName));
    return;
 
    //proxy.proxyRequest(req,res,{
