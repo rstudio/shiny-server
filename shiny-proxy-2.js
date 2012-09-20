@@ -1,7 +1,7 @@
 // 
-// shiny-proxy.js: A shiny proxy server using sockjs
+// shiny-proxy-2.js: A shiny proxy server using sockjs
 //
-// [browser] <-----sockjs-----> [shiny-proxy] <----websockets----> [shiny app]
+// [browser] <-----sockjs-----> [shiny-proxy] <----websockets----> [shiny apps]
 // 
 // Call like:
 //
@@ -86,22 +86,24 @@ var extractUserApp = function(url){
    return {
       user: results[1],
       app: results[2],
+      hash: results[1]+'-'+results[2],
+      rootUrl: '/' + results[1] + '/' + results[2],
       trailingSlash: (results[3] != undefined)? true : false
    };
 }
 
 var PROXY = httpProxy.createServer(function(req,res,proxy){
 
-   uaName = extractUserApp(req.url);
+   ua = extractUserApp(req.url);
 
-   if (!uaName){
+   if (!ua){
       res.writeHead(400, {'Content-Type': 'text/html'});
       res.end('<h1>Bad Request!</h1>');
       return;
    }
 
-   if (!uaName.trailingSlash){
-      newUrl = '/' + uaName.user + '/' + uaName.app + '/';
+   if (!ua.trailingSlash){
+      newUrl = '/' + ua.user + '/' + ua.app + '/';
       res.writeHead(301, {
          'Content-Type': 'text/html', 
          'Location': newUrl
@@ -110,32 +112,31 @@ var PROXY = httpProxy.createServer(function(req,res,proxy){
       return;
    }
 
-   shinyProc = rmon.procInfo(uaName.user,uaName.app);
+   shinyProc = rmon.procInfo(ua.user,ua.app);
 
-   if (!shinyProc){
-      shinyProc = rmon.spawnProc(uaName.user,uaName.app);
+   if (!shinyProc)
+      shinyProc = rmon.startProc(ua.user,ua.app);
 
-      if (shinyProc.status === "starting"){
-         res.writeHead(200, {'Content-Type': 'text/html'});
-         res.write('<html><head><meta http-equiv="refresh" content="3"></head>');
-         res.end("<body><h1>Creating App. Just a Sec...</h1></body></html>");
-      } else if (shinyProc.status === "nouser"){
-         res.writeHead(400, {'Content-Type': 'text/html'});
-         res.end('<h1>User '+uaName.user+' Does Not Exist!</h1>');
-      }
-
-      return;
+   if (shinyProc.status === "starting"){
+      res.writeHead(200, {'Content-Type': 'text/html'});
+      res.write('<html><head><meta http-equiv="refresh" content="3"></head>');
+      res.end("<body><h1>Creating App. Just a Sec...</h1></body></html>");
+   } else if (shinyProc.status === "nouser"){
+      res.writeHead(400, {'Content-Type': 'text/html'});
+      res.end('<h1>User '+ua.user+' Does Not Exist!</h1>');
+   } else if (shinyProc.status === "dead"){
+      res.writeHead(500, {'Content-Type': 'text/html'});
+      res.end('<h1>Internal Error! Cannot start '+ua.hash+'!</h1>');
+   } else if (shinyProc.status === "running"){
+      req.url = req.url.replace(ua.rootUrl,'')
+      proxy.proxyRequest(req,res,{
+         host: shinyProc.host,
+         port: shinyProc.port
+      });
+   } else {
+      res.writeHead(500, {'Content-Type': 'text/html'});
+      res.end('<h1>Internal Error! End of rope!</h1>');
    }
-
-   // Testing now
-   res.writeHead(200, {'Content-Type': 'text/plain'});
-   res.end(util.inspect(uaName));
-   return;
-
-   //proxy.proxyRequest(req,res,{
-   //   host: SHINY.forward_addr, 
-   //   port: SHINY.forward_port
-   //});
 });
 
 sockjs_server.installHandlers(PROXY, {prefix:'/sockjs'});

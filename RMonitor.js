@@ -1,7 +1,8 @@
 var net = require('net');
 var cp = require('child_process');
 var getpwnam = require('./etcpasswd').getpwnam;
-var SOCKJSADAPTER='/home/hornerj/NODE/shiny-playground/SockJSAdapter.R';
+
+// Set these to a
 var RPROG='/home/hornerj/R-sources/trunk/bin/R';
 
 //
@@ -45,12 +46,15 @@ process.on('message',function(m){
    }
 
    spawnR = function() {
-      var env = process.env;
+      var env = {};
 
       env.SHINY_PORT=port;
       env.SHINY_APP=m.app;
+      env.SOCKJSADAPTER = process.env.SOCKJSADAPTER;
+      env.USER=userInfo.username;
+      env.HOME=userInfo.home;
 
-      var R = cp.spawn(RPROG,['--slave','-f',SOCKJSADAPTER],{env: env, detach: true});
+      var R = cp.spawn(RPROG,['--no-save','-f',env.SOCKJSADAPTER],{env: env, detach: true});
       message = {
          status: "started",
          port: port,
@@ -75,6 +79,12 @@ process.on('message',function(m){
       R.stdout.on('data',function(m){
          console.log('R stdout: '+m);
       });
+
+      // Now let R start up, possibly fail, then exit after 5 seconds;
+      setTimeout(function(){
+         console.log("launcher exiting");
+         process.exit()
+      },5000);
    }
 
    // Bind to a random port first, then spawnR();

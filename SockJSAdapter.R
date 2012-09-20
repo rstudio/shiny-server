@@ -1,3 +1,5 @@
+cat(getwd(),'\n')
+cat(.libPaths(),'\n')
 library(websockets)
 library(shiny)
 
@@ -22,5 +24,4 @@ local({
                                                         
    options(shiny.http.response.filter=filter)
 })
-cat(getwd(),'\n')
 runApp(Sys.getenv('SHINY_APP'),port=Sys.getenv('SHINY_PORT'),launch.browser=FALSE)
