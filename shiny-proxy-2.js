@@ -131,7 +131,7 @@ var sockjsProxyHandler = function(proc){
 }
 
 SHINY.proxy = httpProxy.createServer(function(req,res,proxy){
-   var sockjs_server;
+   var sockjs_server, shinyProc;
    var ua = extractUserApp(req.url);
 
    console.log('proxy: '+req.url);

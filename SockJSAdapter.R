@@ -1,5 +1,3 @@
-library(RJSONIO)
-library(websockets)
 library(shiny)
 
 local({
