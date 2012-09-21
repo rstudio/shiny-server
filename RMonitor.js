@@ -3,7 +3,10 @@ var cp = require('child_process');
 var getpwnam = require('./etcpasswd').getpwnam;
 
 // Set these to a
-var RPROG='/home/hornerj/R-sources/trunk/bin/R';
+var RPROG='R';
+
+if (process.env.R)
+   RPROG=process.env.R
 
 //
 

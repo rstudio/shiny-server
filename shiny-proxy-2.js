@@ -73,16 +73,20 @@ var unproxyApp = function(hash){
 
 var sockjsProxyHandler = function(proc){
    var handler = function(conn) {
+      var fmq, ws_is_open, ws, userApp;
+
+      userApp = proc.user+'-'+proc.app;
       // Forwarding Message Queue
       fmq = [];
 
       ws_is_open = false;
 
-      console.log("conn: "+conn.url+" ws open");
 
       if (!proc) conn.close();
 
       ws = new websocket.Client('ws://'+proc.host+':'+proc.port+'/'); 
+
+      console.log("ws("+userApp+"): "+conn.remotePort+"<->"+ws._uri.port+" ws open");
 
       ws.onopen = function(event){
          ws_is_open = true;
@@ -98,18 +102,18 @@ var sockjsProxyHandler = function(proc){
       }
 
       ws.onmessage = function(event){
-         console.log("conn: "+conn.url+" ws message");
+         console.log("ws("+userApp+"): "+conn.remotePort+"<- "+ws._uri.port);
          conn.write(event.data);
       };
 
       ws.onclose = function(event){
-         console.log("conn: "+conn.url+" ws close");
+         console.log("ws("+userApp+"): "+conn.remotePort+" ->"+ws._uri.port+" close");
          conn.close();
          ws.close();
       };
 
       conn.on('data', function(message) {
-         console.log('conn: '+conn.url+' data');
+         console.log("ws("+userApp+"): "+conn.remotePort+" ->"+ws._uri.port);
          if (ws_is_open){
             ws.send(message);
          } else {
@@ -118,7 +122,7 @@ var sockjsProxyHandler = function(proc){
       });
 
       conn.on('close', function(message){
-         console.log('conn: '+conn.url+' close');
+         console.log("ws("+userApp+"): "+conn.remotePort+"<- "+ws._uri.port+" close");
          ws.close();
          conn.close();
       });
