@@ -23,11 +23,8 @@ var abort = function(){
 process.send({status: 'ready'});
 
 process.on('message',function(m){
-   var i, spawnR, server, port;
+   var i, spawnR, server, port, sockjsPrefix;
    var userInfo = getpwnam(m.user);
-
-   console.log('got message');
-   console.log(m);
 
    if (!userInfo){
       abort();
@@ -45,14 +42,18 @@ process.on('message',function(m){
       abort();
    }
 
+   sockjsPrefix = m.options.shiny_options.sockjs_prefix;
+
    spawnR = function() {
       var env = {};
 
       env.SHINY_PORT=port;
       env.SHINY_APP=m.app;
+      env.SHINY_SOCKJSPREFIX = sockjsPrefix + '/' + m.user + '/' + m.app;
       env.SOCKJSADAPTER = process.env.SOCKJSADAPTER;
       env.USER=userInfo.username;
       env.HOME=userInfo.home;
+
 
       var R = cp.spawn(RPROG,['--no-save','-f',env.SOCKJSADAPTER],{env: env, detach: true});
       message = {
@@ -77,7 +78,7 @@ process.on('message',function(m){
       });
 
       R.stdout.on('data',function(m){
-         console.log('R stdout: '+m);
+         //console.log('R stdout: '+m);
       });
 
       // Now let R start up, possibly fail, then exit after 5 seconds;

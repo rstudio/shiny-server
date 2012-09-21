@@ -11,6 +11,7 @@ var getpwnam = require(__dirname + '/etcpasswd').getpwnam;
 process.env.SOCKJSADAPTER=__dirname + '/SockJSAdapter.R';
 
 var RMonitorClient = exports.RMonitorClient = function(options){
+   this.options = options;
    this.procs = [];
 }
 
@@ -37,31 +38,27 @@ RMonitorClient.prototype.newProc = function(options){
 
 RMonitorClient.prototype.procInfo = function(user,app){
    var i;
-   console.log('procInfo '+user+', '+app);
+
    for (i = 0; i < this.procs.length; i += 1){
       if (this.procs[i].user === user && this.procs[i].app == app)
-         console.log('found');
-         console.log(this.procs[i]);
          return this.procs[i];
    }
-   console.log('not found');
    return null;
 }
 
 // Start a new user+app. Ensure one proc per user+app
 RMonitorClient.prototype.startProc = function(user,app){
-   var child;
-   var proc;
+   var child, proc, self;
    var userInfo = getpwnam(user);
+
+   self = this;
+
 
    // Get out of here as fast as possible
    if (!userInfo)
       return this.newProc({ status: "nouser" });
 
    proc = this.procInfo(user,app);
-
-   console.log('startProc');
-   console.log(proc);
 
    if (proc && (proc.status === "running" || proc.status == "dead"))
       return proc;
@@ -88,7 +85,7 @@ RMonitorClient.prototype.startProc = function(user,app){
          });
 
          proc.launcher.on('message', function(m) {
-            message = {user: proc.user, app: proc.app};
+            message = {user: proc.user, app: proc.app, options: self.options};
             if (m.status === 'ready'){
                // Send user and app name
                proc.launcher.send(message);

@@ -9,12 +9,6 @@
 //
 // And edit the below SHINY object
 //
-//
-SHINY = {
-   listen_addr: '0.0.0.0',
-   listen_port: 8000
-};
-
 var util = require('util'),
     http = require('http'),
     httpProxy = require('http-proxy'),
@@ -23,62 +17,26 @@ var util = require('util'),
     url = require('url'),
     RMonitorClient = require('./RMonitorClient').RMonitorClient;
 
-var rmon = new RMonitorClient();
+SHINY = {
+   listen_addr: '0.0.0.0',
+   listen_port: 8000,
+   sockjs_prefix: '/sockjs',
+   proxy: null,
+   proxied_apps: [],
+   rmon: null
+};
 
-var sockjs_server = sockjs.createServer();
+SHINY.rmon = new RMonitorClient(
+      {shiny_options: {sockjs_prefix: SHINY.sockjs_prefix}}
+);
 
-sockjs_server.on('connection', function(conn) {
-   
-   // Forwarding Message Queue
-   var fmq = [];
+var extractUserApp = function(url,prefix){
+   var results;
 
-   var ws = new websocket.Client('ws://'+SHINY.forward_addr+':'+SHINY.forward_port+'/'); 
-
-   var ws_is_open = false;
-
-   ws.onopen = function(event){
-      ws_is_open = true;
-      var i;
-
-      console.log("conn: "+conn.url+" ws open");
-
-      if (fmq.length){
-         for (i = 0; i < fmq.length; i++){
-            ws.send(fmq[i]);
-         }
-         fmq = [];
-      }
-   }
-
-   ws.onmessage = function(event){
-      console.log("conn: "+conn.url+" ws message");
-      conn.write(event.data);
-   };
-
-   ws.onclose = function(event){
-      console.log("conn: "+conn.url+" ws close");
-      conn.close();
-      ws.close();
-   };
-
-   conn.on('data', function(message) {
-      console.log('conn: '+conn.url+' data');
-      if (ws_is_open){
-         ws.send(message);
-      } else {
-         fmq.push(message);
-      }
-   });
-
-   conn.on('close', function(message){
-      console.log('conn: '+conn.url+' close');
-      ws.close();
-      conn.close();
-   });
-});
-
-var extractUserApp = function(url){
-   var results = /^\/([0-9.\-A-Za-z]+)\/([0-9.\-A-Za-z]+)(\/)?.*/.exec(url);
+   if (prefix)
+      url = url.replace(prefix,'')
+  
+   results = /^\/([0-9.\-A-Za-z]+)\/([0-9.\-A-Za-z]+)(\/)?.*/.exec(url);
 
    
    if (!results) return null;
@@ -92,9 +50,87 @@ var extractUserApp = function(url){
    };
 }
 
-var PROXY = httpProxy.createServer(function(req,res,proxy){
+var appIsProxied = function(hash){
+   var i;
+   for (i = 0; i < SHINY.proxied_apps.length; i += 1){
+      if (SHINY.proxied_apps[i] === hash)
+         return true;
+   }
+   return false;
+}
 
-   ua = extractUserApp(req.url);
+var proxyApp = function(hash){
+   SHINY.proxied_apps.push(hash);
+}
+
+var unproxyApp = function(hash){
+   var i;
+   for (i = 0; i < SHINY.proxied_apps.length; i += 1){
+      if (SHINY.proxied_apps[i] === hash)
+         SHINY.proxied_apps.splice(i,1);
+   }
+}
+
+var sockjsProxyHandler = function(proc){
+   var handler = function(conn) {
+      // Forwarding Message Queue
+      fmq = [];
+
+      ws_is_open = false;
+
+      console.log("conn: "+conn.url+" ws open");
+
+      if (!proc) conn.close();
+
+      ws = new websocket.Client('ws://'+proc.host+':'+proc.port+'/'); 
+
+      ws.onopen = function(event){
+         ws_is_open = true;
+         var i;
+
+
+         if (fmq.length){
+            for (i = 0; i < fmq.length; i++){
+               ws.send(fmq[i]);
+            }
+            fmq = [];
+         }
+      }
+
+      ws.onmessage = function(event){
+         console.log("conn: "+conn.url+" ws message");
+         conn.write(event.data);
+      };
+
+      ws.onclose = function(event){
+         console.log("conn: "+conn.url+" ws close");
+         conn.close();
+         ws.close();
+      };
+
+      conn.on('data', function(message) {
+         console.log('conn: '+conn.url+' data');
+         if (ws_is_open){
+            ws.send(message);
+         } else {
+            fmq.push(message);
+         }
+      });
+
+      conn.on('close', function(message){
+         console.log('conn: '+conn.url+' close');
+         ws.close();
+         conn.close();
+      });
+   }
+   return handler;
+}
+
+SHINY.proxy = httpProxy.createServer(function(req,res,proxy){
+   var sockjs_server;
+   var ua = extractUserApp(req.url);
+
+   console.log('proxy: '+req.url);
 
    if (!ua){
       res.writeHead(400, {'Content-Type': 'text/html'});
@@ -112,10 +148,10 @@ var PROXY = httpProxy.createServer(function(req,res,proxy){
       return;
    }
 
-   shinyProc = rmon.procInfo(ua.user,ua.app);
+   shinyProc = SHINY.rmon.procInfo(ua.user,ua.app);
 
    if (!shinyProc)
-      shinyProc = rmon.startProc(ua.user,ua.app);
+      shinyProc = SHINY.rmon.startProc(ua.user,ua.app);
 
    if (shinyProc.status === "starting"){
       res.writeHead(200, {'Content-Type': 'text/html'});
@@ -133,12 +169,16 @@ var PROXY = httpProxy.createServer(function(req,res,proxy){
          host: shinyProc.host,
          port: shinyProc.port
       });
+      if (!appIsProxied(ua.hash)){
+         proxyApp(ua.hash);
+         sockjs_server = sockjs.createServer();
+         sockjs_server.on('connection', sockjsProxyHandler(shinyProc));
+         sockjs_server.installHandlers(SHINY.proxy,{prefix: SHINY.sockjs_prefix+ua.rootUrl});
+      }
    } else {
       res.writeHead(500, {'Content-Type': 'text/html'});
       res.end('<h1>Internal Error! End of rope!</h1>');
    }
 });
 
-sockjs_server.installHandlers(PROXY, {prefix:'/sockjs'});
-
-PROXY.listen(SHINY.listen_port,SHINY.listen_addr);
+SHINY.proxy.listen(SHINY.listen_port,SHINY.listen_addr);
