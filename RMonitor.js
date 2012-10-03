@@ -45,7 +45,7 @@ process.on('message',function(m){
       abort();
    }
 
-   sockjsPrefix = m.options.shiny_options.sockjs_prefix;
+   sockjsPrefix = m.options.shinyOptions.sockjsPrefix;
 
    spawnR = function() {
       var env = {};

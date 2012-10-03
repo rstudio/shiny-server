@@ -109,4 +109,12 @@ RMonitorClient.prototype.startProc = function(user,app){
 }
 
 RMonitorClient.prototype.stopProc = function(user, app){
+   var i;
+
+   for (i = 0; i < this.procs.length; i += 1){
+      if (this.procs[i].user === user && this.procs[i].app == app)
+         process.kill(this.procs[i].pid,'SIGUSR1');
+         this.procs.splice(i,1);
+   }
+   return null;
 }
