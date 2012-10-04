@@ -34,7 +34,7 @@ ShinyProxy.prototype.getUserAppFromUrl = function(url,prefix){
    if (prefix)
       url = url.replace(prefix,'')
   
-   results = /^\/([0-9.\-A-Za-z]+)\/([0-9.\-A-Za-z]+)(\/)?.*/.exec(url);
+   results = /^\/([0-9.\-A-Za-z]+)\/([0-9.\-A-Za-z]+)(?:(\/).*)?$/.exec(url);
 
    
    if (!results) return null;
