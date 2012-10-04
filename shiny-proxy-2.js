@@ -214,7 +214,7 @@ var sockjsProxyHandler = function(rShinyProc){
          // Do we need to call close here?
          wsClient.close();
 
-         SHINY.removeConnectedClient(userappHash,sockjsClient,wsClient);
+         SHINY.removeConnectedClient(userAppHash,sockjsClient,wsClient);
       };
 
       sockjsClient.on('data', function(message) {
