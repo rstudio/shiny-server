@@ -14,13 +14,15 @@ var util = require('util'),
     websocket = require('faye-websocket'),
     url = require('url'),
     RMonitorClient = require('./RMonitorClient').RMonitorClient,
-    rc = require('./ReferenceCounter');
-
+    rc = require('./ReferenceCounter'),
+    MetaHandler = require('./meta-handler').MetaHandler,
+    SockJSUtils = require('sockjs/lib/utils');
 
 var ShinyProxy = function() {
    this.listenAddr = '0.0.0.0';
    this.listenPort = 8000;
    this.sockjsPrefix = '/sockjs';
+   this.sockjsHandlers = new MetaHandler();
    this.proxy =  null;
    this.proxiedUserApps = {};
    this.rmon = null;
@@ -68,6 +70,7 @@ ShinyProxy.prototype.proxyUserApp = function(userAppHash,rShinyProc){
 }
 
 ShinyProxy.prototype.unProxyUserApp = function(userAppHash){
+   console.log('Tearing down ' + userAppHash);
    var userApp, clientList, i;
 
    console.log('unProxyUserApp('+userAppHash+')');
@@ -87,11 +90,9 @@ ShinyProxy.prototype.unProxyUserApp = function(userAppHash){
       }
    }
 
-   // TODO:
-   // Extricate this sockjs server from the proxy. still need
-   // work here.
-   // userApp.sockjsServer.removeAllListeners('connection');
-   // userApp.sockjsServer = null;
+   // Extricate this sockjs server from the proxy.
+   if (userApp.dispose)
+      userApp.dispose();
 
    // Kill R process.
    this.rmon.stopProc(userApp.app.user,userApp.app.app);
@@ -114,14 +115,15 @@ ShinyProxy.prototype.sockjsServerEstablished = function(userAppHash){
    return false;
 }
 
-ShinyProxy.prototype.addUserAppSockjsServer = function(userAppHash,sockjsServer){
+ShinyProxy.prototype.addUserAppSockjsServer = function(userAppHash,dispose){
    if (this.userAppIsProxied(userAppHash)){
       // Ensure that the R user app stays around long enough for the client
       // to come back and establish a sockjs connection. This turns into a no-op
       // if the reference count on refdTimeout is > 0.
       this.proxiedUserApps[userAppHash].refdTimeout.delayTimeoutBy(5000);
 
-      this.proxiedUserApps[userAppHash].sockjsServer = sockjsServer;
+      // Cleanup function to be called when sockjs server is shut down
+      this.proxiedUserApps[userAppHash].dispose = dispose;
    }
 }
 
@@ -240,7 +242,7 @@ var sockjsProxyHandler = function(rShinyProc){
 }
 
 SHINY.proxy = httpProxy.createServer(function(req,res,proxy){
-   var sockjsServer, rShinyProc;
+   var sockjsServer, rShinyProc, listener, disposeListener;
    var userApp = SHINY.getUserAppFromUrl(req.url);
 
    console.log('proxy: '+req.url);
@@ -296,10 +298,11 @@ SHINY.proxy = httpProxy.createServer(function(req,res,proxy){
          sockjsServer = sockjs.createServer();
          sockjsServer.on('connection', sockjsProxyHandler(rShinyProc));
 
-         // TODO: Create our own meta handler for the proxy and manage them ourselves
-         sockjsServer.installHandlers(SHINY.proxy,{prefix: SHINY.sockjsPrefix+userApp.rootUrl});
+         // Create a listener and add it to the metahandler.
+         listener = sockjsServer.listener({prefix: SHINY.sockjsPrefix+userApp.rootUrl}).getHandler();
+         disposeListener = SHINY.sockjsHandlers.push(listener);
 
-         SHINY.addUserAppSockjsServer(userApp.hash,sockjsServer);
+         SHINY.addUserAppSockjsServer(userApp.hash,disposeListener);
 
       }
    } else {
@@ -307,5 +310,12 @@ SHINY.proxy = httpProxy.createServer(function(req,res,proxy){
       res.end('<h1>Internal Error! End of rope!</h1>');
    }
 });
+
+// Intercept the "request" and "upgrade" events for SockJS. Only if these handlers return
+// false do the other listeners get a crack.
+//
+// Any listeners added after the calls to overshadowListeners, will NOT be overshadowed!
+SockJSUtils.overshadowListeners(SHINY.proxy, 'request', SHINY.sockjsHandlers.getHandler());
+SockJSUtils.overshadowListeners(SHINY.proxy, 'upgrade', SHINY.sockjsHandlers.getHandler());
 
 SHINY.proxy.listen(SHINY.listenPort,SHINY.listenAddr);
