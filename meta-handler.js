@@ -1,18 +1,18 @@
 var DoublyLinkedList = require('./doubly-linked-list').DoublyLinkedList;
 
 var MetaHandler = function() {
-  this.$handlers = new DoublyLinkedList();
+  this._handlers = new DoublyLinkedList();
 };
 
 MetaHandler.prototype.push = function(handler) {
   if (!handler)
     throw "Invalid handler value";
 
-  return this.$handlers.push(handler);
+  return this._handlers.push(handler);
 };
 
 MetaHandler.prototype.getHandler = function() {
-  var handlers = this.$handlers;
+  var handlers = this._handlers;
 
   return function() {
     var self = this;

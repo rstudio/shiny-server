@@ -12,15 +12,15 @@ var ListNode = function(value) {
 };
 
 // Pretty standard doubly linked list.
-// O(1) operations: unshift, push, $remove
+// O(1) operations: unshift, push, _remove
 // O(n) operations: iterate, clear
 var DoublyLinkedList = function() {
   // The head of the list is always this dummy node; this makes for a cleaner
   // implementation than having the head be null when the list is empty, since
   // then we have to go around checking for null all the time. Just need to
   // always ignore the head node when iterating or counting.
-  this.$head = new ListNode(null);
-  this.$tail = this.$head;
+  this._head = new ListNode(null);
+  this._tail = this._head;
 };
 
 // Call to iterate over the values in the list. The callback function will be
@@ -40,7 +40,7 @@ var DoublyLinkedList = function() {
 // or `foreach` because the semantics are different than `jQuery.each` and
 // `Array.forEach`.)
 DoublyLinkedList.prototype.iterate = function(func) {
-  for (var node = this.$head.next, i = 0; node; node = node.next, i += 1) {
+  for (var node = this._head.next, i = 0; node; node = node.next, i += 1) {
     if (func.call(node.value, i, node.value) === false)
       return false;
   }
@@ -54,25 +54,25 @@ DoublyLinkedList.prototype.clear = function() {
   // Another easy thing to do would be to just run the constructor again,
   // without clearing out the fields of each of the list nodes. If we decide
   // to do that (to make clearing an O(1) operation) it'd be necessary to
-  // do more work to make sure $remove doesn't mutate the list incorrectly
+  // do more work to make sure _remove doesn't mutate the list incorrectly
   // when passed an orphaned node.
-  while (this.$tail !== this.$head)
-    this.$remove(this.$tail);
+  while (this._tail !== this._head)
+    this._remove(this._tail);
 };
 
 DoublyLinkedList.prototype.unshift = function(value) {
   var node = new ListNode(value);
 
-  node.next = this.$head.next;
-  node.prev = this.$head;
-  this.$head.next = node;
+  node.next = this._head.next;
+  node.prev = this._head;
+  this._head.next = node;
 
   if (node.next) {
     // List is not empty.
     node.next.prev = node;
   } else {
     // List is empty.
-    this.$tail = node;
+    this._tail = node;
   }
 };
 
@@ -84,19 +84,19 @@ DoublyLinkedList.prototype.push = function(value) {
 
   // Make the tail point to us, then make us the new tail.
 
-  // assert(this.$tail.next === null)
-  this.$tail.next = node;
-  node.prev = this.$tail;
+  // assert(this._tail.next === null)
+  this._tail.next = node;
+  node.prev = this._tail;
 
-  this.$tail = node;
+  this._tail = node;
 
   var self = this;
   return function() {
-    self.$remove(node);
+    self._remove(node);
   };
 };
 
-DoublyLinkedList.prototype.$remove = function(node) {
+DoublyLinkedList.prototype._remove = function(node) {
   // Check if already removed; if so, no-op
   if (!node.prev)
     return;
@@ -111,7 +111,7 @@ DoublyLinkedList.prototype.$remove = function(node) {
   else {
     // ...unless there is no next node, in which case, node was the tail and
     // now the previous node is the new tail
-    this.$tail = node.prev;
+    this._tail = node.prev;
   }
 
   node.prev = null;
