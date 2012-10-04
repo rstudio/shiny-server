@@ -255,8 +255,8 @@ SHINY.proxy = httpProxy.createServer(function(req,res,proxy){
    }
 
    if (!userApp){
-      res.writeHead(400, {'Content-Type': 'text/html'});
-      res.end('<h1>Bad Request!</h1>');
+      res.writeHead(404, {'Content-Type': 'text/html'});
+      res.end('<h1>Not found</h1>');
       return;
    }
 
