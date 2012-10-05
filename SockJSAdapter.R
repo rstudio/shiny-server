@@ -2,18 +2,14 @@ library(shiny)
 
 local({
 
-   initSockJS <- sprintf(
-      'Shiny.createSocket = function() {return new SockJS("%s");};',
-      Sys.getenv('SHINY_SOCKJSPREFIX')
-   )
-
    inject <- paste(
       tags$script(src='http://cdn.sockjs.org/sockjs-0.3.min.js'),
       tags$script(
          sprintf(
             'Shiny.createSocket = function() {return new SockJS("%s");};',
             Sys.getenv('SHINY_SOCKJSPREFIX')
-         )
+         ),
+         'Shiny.oncustommessage = function(message) {};'
       ),
       HTML("</head>"),
       sep="\n"
