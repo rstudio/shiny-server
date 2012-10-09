@@ -8,7 +8,7 @@ var cp = require('child_process');
 var getpwnam = require(__dirname + '/etcpasswd').getpwnam;
 
 // Need to pass this all the way to R, so make it absolute
-process.env.SOCKJSADAPTER=__dirname + '/SockJSAdapter.R';
+process.env.SOCKJSADAPTER='/usr/local/lib/shiny-proxy/SockJSAdapter.R';
 
 var RMonitorClient = exports.RMonitorClient = function(options){
    this.options = options;
@@ -95,6 +95,7 @@ RMonitorClient.prototype.startProc = function(user,app){
                proc.pid = m.pid;
                proc.launcher = null;
             } else if (m.status === "aborting"){
+               console.log("RMonitorClient: RMonitor abort: "+m.message);
                proc.status = "dead";
                proc.launcher = null;
             }

@@ -34,7 +34,7 @@ ShinyProxy.prototype.getUserAppFromUrl = function(url,prefix){
    if (prefix)
       url = url.replace(prefix,'')
   
-   results = /^\/([0-9.\-A-Za-z]+)\/([0-9.\-A-Za-z]+)(?:(\/).*)?$/.exec(url);
+   results = /^\/([0-9.\-A-Za-z_]+)\/([0-9.\-A-Za-z_]+)(?:(\/).*)?$/.exec(url);
 
    
    if (!results) return null;
@@ -62,7 +62,7 @@ ShinyProxy.prototype.proxyUserApp = function(userAppHash,rShinyProc){
                function(){
                   self.unProxyUserApp(userAppHash);
                },
-               5000
+               10000
          ).start(),
          clientList: []
       };

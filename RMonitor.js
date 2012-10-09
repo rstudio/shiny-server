@@ -18,8 +18,8 @@ var randomPort = function(){
    return Math.floor((Math.random()*16384+49152))
 }
 
-var abort = function(){
-   process.send({status: "aborting"});
+var abort = function(msg){
+   process.send({status: "aborting", message: msg});
    process.exit();
 }
 
@@ -30,24 +30,25 @@ process.on('message',function(m){
    var userInfo = getpwnam(m.user);
 
    if (!userInfo){
-      abort();
+      abort("getpwnam("+m.user+") failed");
    }
 
    try {
       process.setuid(userInfo.username);
    } catch (err){
-      abort();
+      abort("ALERT: Cannot setuid to "+userInfo.username);
    }
 
    try {
       process.chdir(userInfo.home + '/ShinyApps');
    } catch (err){
-      abort();
+      abort("ALERT: Cannot chdir to "+userInfo.home+"/ShinyApps");
    }
 
    sockjsPrefix = m.options.shinyOptions.sockjsPrefix;
 
    spawnR = function() {
+      var R;
       var env = {};
 
       env.SHINY_PORT=port;
@@ -58,7 +59,7 @@ process.on('message',function(m){
       env.HOME=userInfo.home;
 
 
-      var R = cp.spawn(RPROG,['--no-save','-f',env.SOCKJSADAPTER],{env: env, detach: true});
+      R = cp.spawn(RPROG,['--no-save','-f',env.SOCKJSADAPTER],{env: env, detach: true});
       message = {
          status: "started",
          port: port,
@@ -69,12 +70,12 @@ process.on('message',function(m){
       R.stdout.setEncoding('utf8');
 
       R.on('exit',function(code,signal){
-         abort();
+         abort('standard exit code: '+code+' signal: ' + signal);
       });
 
       R.stderr.on('data', function(m){
         if (/^execvp\(\)/.test(m)) {
-           abort();
+           abort("Spawn failed for "+RPROG+" --no-save -f "+env.SOCKJSADAPTER);
          } else {
             console.log('R stderr: '+m);
          }
