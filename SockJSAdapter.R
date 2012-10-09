@@ -5,8 +5,9 @@ local({
    inject <- paste(
       tags$script(src='http://cdn.sockjs.org/sockjs-0.3.min.js'),
       tags$script(
+            'console.log("starting up shiny app");',
          sprintf(
-            'Shiny.createSocket = function() {return new SockJS("%s");};',
+            'Shiny.createSocket = function() {return new SockJS("%s",null,{debug: true});};',
             Sys.getenv('SHINY_SOCKJSPREFIX')
          ),
          'Shiny.oncustommessage = function(message) {};'
