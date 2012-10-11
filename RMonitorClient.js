@@ -114,7 +114,9 @@ RMonitorClient.prototype.stopProc = function(user, app){
 
    for (i = 0; i < this.procs.length; i += 1){
       if (this.procs[i].user === user && this.procs[i].app == app){
-         process.kill(this.procs[i].pid,'SIGUSR1');
+         if (this.procs[i].status != "dead")
+            try{ process.kill(this.procs[i].pid,'SIGUSR1'); }
+            catch (ex) { /* no-op */}
          this.procs.splice(i,1);
       }
    }
