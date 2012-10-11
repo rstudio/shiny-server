@@ -8,6 +8,7 @@
 // node shiny-proxy-2.js
 //
 var util = require('util'),
+    net = require('net'),
     http = require('http'),
     httpProxy = require('http-proxy'),
     sockjs = require('sockjs'),
@@ -23,16 +24,32 @@ var ShinyProxy = function() {
    this.listenPort = 80;
    this.sockjsPrefix = '/sockjs'; // no trailing slash please
    this.sockjsHandlers = new MetaHandler();
-   this.proxy =  null;
+   this.server =  http.createServer(this.httpHandler());
    this.proxiedUserApps = {};
-   this.rmon = null;
+   this.rmon = new RMonitorClient(
+      {shinyOptions: {sockjsPrefix: this.sockjsPrefix}}
+   );
+
+   // Intercept the "request" and "upgrade" events for SockJS. Only if these handlers return
+   // false do the other listeners get a crack.
+   //
+   // Any listeners added after the calls to overshadowListeners, will NOT be overshadowed!
+   SockJSUtils.overshadowListeners(this.server, 'request', this.sockjsHandlers.getHandler());
+   SockJSUtils.overshadowListeners(this.server, 'upgrade', this.sockjsHandlers.getHandler());
 };
 
-ShinyProxy.prototype.getUserAppFromUrl = function(url,prefix){
-   var results;
+// Tease out user and app strings from URLs of the form:
+//
+//    "^prefix?/username/appname(/.*)?$
+// 
+ShinyProxy.prototype.getAppDetails = function(url,prefix){
+   var results, prefixReg;
 
-   if (prefix)
-      url = url.replace(prefix,'')
+   if (prefix){
+      prefixReg = new RegExp('^' + prefix);
+      if (url.match(prefixReg))
+         url = url.replace(prefixReg,'');
+   }
   
    results = /^\/([0-9.\-A-Za-z_]+)\/([0-9.\-A-Za-z_]+)(?:(\/).*)?$/.exec(url);
 
@@ -48,155 +65,211 @@ ShinyProxy.prototype.getUserAppFromUrl = function(url,prefix){
    };
 }
 
-ShinyProxy.prototype.userAppIsProxied = function(userAppHash){
+// always returns the user-app hash
+ShinyProxy.prototype.normalizeUserAppDetails = function(appDetails){
+   var userAppHash;
+
+   switch (typeof appDetails){
+      case 'string': userAppHash = appDetails; break;
+      case 'object': userAppHash = appDetails.hash; break;
+   }
+
+   return userAppHash;
+}
+
+ShinyProxy.prototype.userAppIsProxied = function(appDetails){
+   var userAppHash = this.normalizeUserAppDetails(appDetails);
+
    return (this.proxiedUserApps[userAppHash] !== undefined);
 }
 
-ShinyProxy.prototype.proxyUserApp = function(userAppHash,rShinyProc){
-   var self = this;
-   if (this.proxiedUserApps[userAppHash] === undefined){
-      this.proxiedUserApps[userAppHash] = {
-         app: rShinyProc,
-         sockjsServer: null,
-         refdTimeout: rc.createRefCounter(
-               function(){
-                  self.unProxyUserApp(userAppHash);
-               },
-               10000
-         ).start(),
-         clientList: []
-      };
+ShinyProxy.prototype.proxyUserApp = function(appDetails){
+   var proxiedApp;
+   if (this.proxiedUserApps[appDetails.hash] === undefined){
+      proxiedApp = new ProxiedUserApp(appDetails,this);
+      this.proxiedUserApps[appDetails.hash] = proxiedApp;
    }
+   return proxiedApp;
 }
 
-ShinyProxy.prototype.unProxyUserApp = function(userAppHash){
-   console.log('Tearing down ' + userAppHash);
-   var userApp, clientList, i;
+ShinyProxy.prototype.unProxyUserApp = function(appDetails){
+   var userAppHash = this.normalizeUserAppDetails(appDetails);
 
    console.log('unProxyUserApp('+userAppHash+')');
+
    if (!this.userAppIsProxied(userAppHash)) return;
 
-   userApp = this.proxiedUserApps[userAppHash];
-
-   // Close all connected clients.
-   clientList = userApp.clientList;
-   if (clientList.length > 0){
-      for (i = 0; i < clientList.length; i+=1){
-
-         // TODO: Notify the client of shutdown.
-         // clientList[i].sockjsClient.write(new ShutdownNotification());
-         clientList[i].sockjsClient.close();
-         clientList[i].wsClient.close();
-      }
-   }
-
-   // Extricate this sockjs server from the proxy.
-   if (userApp.dispose)
-      userApp.dispose();
-
-   // Kill R process.
-   this.rmon.stopProc(userApp.app.user,userApp.app.app);
+   this.proxiedUserApps[userAppHash].unProxy();
 
    delete this.proxiedUserApps[userAppHash];
+}
 
+ShinyProxy.prototype.getProxiedApp = function(appDetails,options){
+   var proxiedApp;
+
+   if (this.userAppIsProxied(appDetails)){
+      return this.proxiedUserApps[appDetails.hash];
+   }
+   if (options && options.start === true){
+      return this.proxyUserApp(appDetails);
+   }
+
+   return null;
 }
 
 ShinyProxy.prototype.shutdown = function(){
-   var userApps = Object.keys(this.proxiedUserApps);
-   for (userApp in userApps){
-      this.unProxyUserApp(userApp);
+   var i, apps = Object.keys(this.proxiedUserApps);
+   for (i = 0; i < apps.length; i++){
+      this.unProxyUserApp(apps[i]);
    }
 }
 
-ShinyProxy.prototype.sockjsServerEstablished = function(userAppHash){
-   if (this.userAppIsProxied(userAppHash)){
-      return (this.proxiedUserApps[userAppHash].dispose !== undefined)
-   }
-   return false;
+ShinyProxy.prototype.httpHandler = function(){
+   var self = this;
+   var handler = function(req,res){
+      var appDetails, newUrl;
+
+      appDetails = self.getAppDetails(req.url,self.sockjsPrefix);
+
+      console.log('proxy: '+req.url);
+
+      if (req.url === '/debug'){
+         res.writeHead(200, {'Content-Type': 'text/html'});
+         console.log(self.proxiedUserApps);
+         res.end("<h2>Debugging output to console</h2>");
+         return;
+      }
+
+      if (!appDetails){
+         res.writeHead(404, {'Content-Type': 'text/html'});
+         res.end('<h1>Not found</h1>');
+         return;
+      }
+
+      if (!appDetails.trailingSlash){
+         newUrl = '/' + appDetails.user + '/' + appDetails.app + '/';
+         res.writeHead(301, {
+            'Content-Type': 'text/html', 
+            'Location': newUrl
+         });
+         res.end('<h1><a href="'+newUrl+'">Moved Permanently</a></h1>');
+         return;
+      }
+
+      self.getProxiedApp(appDetails,{start: true}).handleRequest(req,res);
+
+   };
+
+   return handler;
 }
 
-ShinyProxy.prototype.addUserAppSockjsServer = function(userAppHash,dispose){
-   if (this.userAppIsProxied(userAppHash)){
-      // Ensure that the R user app stays around long enough for the client
-      // to come back and establish a sockjs connection. This turns into a no-op
-      // if the reference count on refdTimeout is > 0.
-      this.proxiedUserApps[userAppHash].refdTimeout.delayTimeoutBy(10000);
+var ProxiedUserApp = function(appDetails,sProxy){
+   var sockjsServer;
 
-      // Cleanup function to be called when sockjs server is shut down
-      this.proxiedUserApps[userAppHash].dispose = dispose;
-   }
-}
+   this.appDetails = appDetails;
+   this.sProxy = sProxy; // Shiny Proxy object
+   this.proxy = null; // our own HttpProxy
 
+   // List of connected clients. We use a reference counter
+   // that tracks with the number of clients. When there are no
+   // clients, then we unproxy the app.
+   this.clientList = [];
+   this.refdTimeout = rc.createRefCounter(
+         function(){
+            sProxy.unProxyUserApp(appDetails);
+         },
+         5000
+   ).start();
 
-ShinyProxy.prototype.addConnectedClient = function(userAppHash,sockjsClient,wsClient){
-   var clientList;
+   this.rShinyProc = sProxy.rmon.startProc(appDetails.user,appDetails.app);
+   sockjsServer = sockjs.createServer();
+   sockjsServer.on('connection', this.sockjsOnConnectHandler());
+   this.sockjsHandler = sockjsServer.listener({prefix: sProxy.sockjsPrefix+appDetails.rootUrl}).getHandler();
 
-   if (!this.userAppIsProxied(userAppHash)) return;
+   // metahandlers return a function when an object is pushed onto
+   // the array. It disposes of the object.
+   this.disposeOfSockjs = sProxy.sockjsHandlers.push(this.sockjsHandler);
 
-   this.proxiedUserApps[userAppHash].refdTimeout.increment();
+   // Request Queue
+   this.requestQueue = [];
 
-   this.proxiedUserApps[userAppHash].clientList.push({
+   // Interval properties associated with monitoring Rproc startup
+   this.startupCallbackId = null;
+   this.startupDelay = 500; // interval delay
+   this.startupMaxDelay = 10000 // Max amount of time to wait.
+   this.startupDelaySum = 0;
+   this._socketToR = null;
+
+};
+
+ProxiedUserApp.prototype.addConnectedClient = function(sockjsClient,wsClient){
+
+   this.refdTimeout.increment();
+
+   this.clientList.push({
       sockjsClient: sockjsClient, 
       wsClient: wsClient
    });
 }
 
-ShinyProxy.prototype.removeConnectedClient = function(userAppHash,sockjsClient,wsClient){
-   var i, clientList;
+ProxiedUserApp.prototype.removeConnectedClient = function(sockjsClient,wsClient){
+   var i;
 
-   if (!this.userAppIsProxied(userAppHash)) return;
+   for (i = 0; i < this.clientList.length; i++){
+      if (this.clientList[i].sockjsClient === sockjsClient &&
+          this.clientList[i].wsClient === wsClient){
+         this.clientList.splice(i,1);
+         this.refdTimeout.decrement();
+      }
+   }
+}
 
-   clientList = this.proxiedUserApps[userAppHash].clientList;
+ProxiedUserApp.prototype.unProxy = function(){
+   var i;
+   // Close all connected clients.
+   if (this.clientList.length > 0){
+      for (i = 0; i < this.clientList.length; i+=1){
 
-   for (i = 0; i < clientList.length; i++){
-      if (clientList[i].sockjsClient === sockjsClient &&
-          clientList[i].wsClient === wsClient){
-         clientList.splice(i,1);
-         this.proxiedUserApps[userAppHash].refdTimeout.decrement();
+         // TODO: Notify the client of shutdown.
+         // clientList[i].sockjsClient.write(new ShutdownNotification());
+         this.clientList[i].sockjsClient.close();
+         this.clientList[i].wsClient.close();
       }
    }
 
+   // Extricate the sockjs server from the proxy.
+   if (this.disposeOfSockjs)
+      this.disposeOfSockjs();
+
+   // Kill R process.
+   this.sProxy.rmon.stopProc(this.appDetails.user,this.appDetails.app);
 }
 
-SHINY = new ShinyProxy();
-
-SHINY.rmon = new RMonitorClient(
-      {shinyOptions: {sockjsPrefix: SHINY.sockjsPrefix}}
-);
-
-// Ctrl-c performs a hopefully graceful shutdown.
-//
-process.on('SIGINT',function(){
-  SHINY.shutdown();
-  process.exit();
-});
-
-var sockjsProxyHandler = function(rShinyProc){
+ProxiedUserApp.prototype.sockjsOnConnectHandler = function(){
+   var self = this;
    var handler = function(sockjsClient) {
-      var fmq, wsIsOpen, wsClient, userApp, userAppHash;
+      var fmq, wsIsOpen, wsClient;
+      var appDetails = self.appDetails;
+      var rShinyProc = self.rShinyProc;
 
       console.log('proxy: in sockjsProxyHandler');
-
-      userAppHash = rShinyProc.user+'-'+rShinyProc.app;
 
       // Forwarding Message Queue
       fmq = [];
 
       wsIsOpen = false;
 
-
       if (!rShinyProc) sockjsClient.close();
 
       wsClient = new websocket.Client('ws://'+rShinyProc.host+':'+rShinyProc.port+'/'); 
 
-      SHINY.addConnectedClient(userAppHash,sockjsClient,wsClient);
+      self.addConnectedClient(sockjsClient,wsClient);
 
-      console.log("ws("+userAppHash+"): "+sockjsClient.remotePort+"<->"+wsClient._uri.port+" ws open");
+      console.log("ws("+appDetails.hash+"): "+sockjsClient.remotePort+"<->"+wsClient._uri.port+" ws open");
 
       wsClient.onopen = function(event){
          wsIsOpen = true;
          var i;
-
 
          if (fmq.length){
             for (i = 0; i < fmq.length; i++){
@@ -207,22 +280,22 @@ var sockjsProxyHandler = function(rShinyProc){
       }
 
       wsClient.onmessage = function(event){
-         console.log("ws("+userAppHash+"): "+sockjsClient.remotePort+"<- "+wsClient._uri.port);
+         console.log("ws("+appDetails.hash+"): "+sockjsClient.remotePort+"<- "+wsClient._uri.port);
          sockjsClient.write(event.data);
       };
 
       wsClient.onclose = function(event){
-         console.log("ws("+userAppHash+"): "+sockjsClient.remotePort+" ->"+wsClient._uri.port+" close");
+         console.log("ws("+appDetails.hash+"): "+sockjsClient.remotePort+" ->"+wsClient._uri.port+" close");
          sockjsClient.close();
 
          // Do we need to call close here?
          wsClient.close();
 
-         SHINY.removeConnectedClient(userAppHash,sockjsClient,wsClient);
+         self.removeConnectedClient(sockjsClient,wsClient);
       };
 
       sockjsClient.on('data', function(message) {
-         console.log("ws("+userAppHash+"): "+sockjsClient.remotePort+" ->"+wsClient._uri.port);
+         console.log("ws("+appDetails.hash+"): "+sockjsClient.remotePort+" ->"+wsClient._uri.port);
          if (wsIsOpen){
             wsClient.send(message);
          } else {
@@ -231,113 +304,151 @@ var sockjsProxyHandler = function(rShinyProc){
       });
 
       sockjsClient.on('close', function(message){
-         console.log("ws("+userAppHash+"): "+sockjsClient.remotePort+"<- "+wsClient._uri.port+" close");
+         console.log("ws("+appDetails.hash+"): "+sockjsClient.remotePort+"<- "+wsClient._uri.port+" close");
          wsClient.close();
 
          // Do we need to call close here?
          sockjsClient.close();
 
-         SHINY.removeConnectedClient(userAppHash,sockjsClient,wsClient);
+         self.removeConnectedClient(sockjsClient,wsClient);
       });
    }
    return handler;
 }
 
-SHINY.proxy = httpProxy.createServer(function(req,res,proxy){
-   var userApp, sockjsServer, rShinyProc, listener, disposeListener,
-      sockjsUrlPrefixReg, newUrl;
-   
-   userApp = SHINY.getUserAppFromUrl(req.url);
+ProxiedUserApp.prototype.handleRequest = function(req,res){
 
-   console.log('proxy: '+req.url);
+   this.requestQueue.push({req:req, res:res, buffer: httpProxy.buffer(req)});
 
-   if (req.url === '/debug'){
-      res.writeHead(200, {'Content-Type': 'text/html'});
-      console.log(SHINY.proxiedUserApps);
-      res.end("<h2>Debugging output to console</h2>");
+   if (this.startupCallbackId != null){
+      // Already monitoring startup so nothing to do
       return;
+   } else if (this.rShinyProc.status === "starting"){
+      // Set up the interval to monitor R startup
+      this.setStartupCallback();
+   } else {
+      this.processRequestQueue();
    }
 
-   sockjsUrlPrefixReg = new RegExp('^' + SHINY.sockjsPrefix);
+}
 
-   // Urls aren't routing to sockjs. Issue a 404
-   if (req.url.match(sockjsUrlPrefixReg) !== null){
-      console.log("proxy: got sockjs url: "+req.url+" issuing 404");
-      res.writeHead(404, {'Content-Type': 'text/html'});
-      res.end('<h1>Not found</h1>');
-      return;
+ProxiedUserApp.prototype.clearStartupCallback = function(){
+   clearInterval(this.startupCallbackId);
+   this.startupCallbackId = null;
+
+   if (this._socketToR){
+      try { this.socketToR.close() }
+      catch (ex) { /* no-op */ }
+      this.socketToR = null;
    }
+}
+ProxiedUserApp.prototype.setStartupCallback = function(){
+   var self = this;
 
-   if (!userApp){
-      res.writeHead(404, {'Content-Type': 'text/html'});
-      res.end('<h1>Not found</h1>');
-      return;
-   }
+   self.startupDelaySum = 0;
 
+   console.log('interval start');
+   self.startupCallbackId = setInterval(
+      function(){
+         var rProcStatus = self.rShinyProc.status;
 
-   if (!userApp.trailingSlash){
-      newUrl = '/' + userApp.user + '/' + userApp.app + '/';
-      res.writeHead(301, {
-         'Content-Type': 'text/html', 
-         'Location': newUrl
-      });
-      res.end('<h1><a href="'+newUrl+'">Moved Permanently</a></h1>');
-      return;
-   }
+         self.startupDelaySum += self.startupDelay;
 
-   rShinyProc = SHINY.rmon.procInfo(userApp.user,userApp.app);
+         if (rProcStatus === "running"){
+            // Try to connect to it.
+            if (!self._socketToR){
+               self._socketToR = net.createConnection(
+                  {host: self.rShinyProc.host, port: self.rShinyProc.port},
+                  function(con){ self.processRequestQueue(); }
+               );
+               self._socketToR.on('error',function(err){
+                  console.log('_socketToR: '+err);
+                  self._socketToR = null;
+               });
+            }
+            return;
+         }
 
-   if (!rShinyProc){
-      console.log("proxy: new rShinyProc for "+userApp.hash);
-      rShinyProc = SHINY.rmon.startProc(userApp.user,userApp.app);
-      SHINY.proxyUserApp(userApp.hash,rShinyProc);
-      if (!SHINY.sockjsServerEstablished(userApp.hash)){
+         // Waited around long enough or the R process failed to start.
+         // Need to process queue and move on.
+         if (rProcStatus != "starting" || self.startupDelaySum > self.startupMaxDelay){
+            self.processRequestQueue();
+            return;
+         }
 
-         sockjsServer = sockjs.createServer();
-         sockjsServer.on('connection', sockjsProxyHandler(rShinyProc));
+      },
+      self.startupDelay
+   );
+}
 
-         // Create a listener and add it to the metahandler.
-         listener = sockjsServer.listener({prefix: SHINY.sockjsPrefix+userApp.rootUrl}).getHandler();
-         disposeListener = SHINY.sockjsHandlers.push(listener);
+ProxiedUserApp.prototype.processRequestQueue = function(){
+   var r, i, req, res, reqBuffer;
 
-         SHINY.addUserAppSockjsServer(userApp.hash,disposeListener);
+   this.clearStartupCallback();
 
+   if (this.requestQueue.length <= 0) return;
+
+   for (i = 0; i < this.requestQueue.length; i++){
+      req = this.requestQueue[i].req;
+      res = this.requestQueue[i].res;
+      reqBuffer = this.requestQueue[i].buffer;
+
+      // Quick return
+      if (this.rShinyProc.status === "nouser"){
+         res.writeHead(400, {'Content-Type': 'text/html'});
+         res.end('<h1>User '+this.appDetails.user+' Does Not Exist!</h1>');
+      } else if (this.rShinyProc.status === "dead"){
+         res.writeHead(500, {'Content-Type': 'text/html'});
+         res.end('<h1>Internal Error! Cannot start '+this.appDetails.hash+'!</h1>');
+      } else if (this.rShinyProc.status === "nouser"){
+         res.writeHead(400, {'Content-Type': 'text/html'});
+         res.end('<h1>User '+this.appDetails.user+' Does Not Exist!</h1>');
+      } else if (this.rShinyProc.status === "dead"){
+         res.writeHead(500, {'Content-Type': 'text/html'});
+         res.end('<h1>Internal Error! Cannot start '+this.appDetails.hash+'!</h1>');
+      } else if (this.rShinyProc.status === "running"){
+
+         // Give sockjs one more chance to handle request
+         if (this.sockjsHandler(req,res)) continue;
+         
+         req.url = req.url.replace(this.appDetails.rootUrl,'')
+
+         console.log('proxyto('+this.rShinyProc.host+':'+this.rShinyProc.port+'): '+req.url);
+
+         // Do our best to prevent caching of any web assets.
+         res.setHeader('Cache-Control','no-cache');
+         res.setHeader('Pragma','no-cache');
+         res.setHeader('Expires','Sat, 01 Jan 2000 00:00:00 GMT');
+
+         if (!this.proxy) {
+            console.log('proxyto: creating http proxy');
+            this.proxy = new httpProxy.HttpProxy({target: 
+               {host: this.rShinyProc.host, port: this.rShinyProc.port}});
+
+            this.proxy.on('proxyError',function(err,req,res){
+               console.log('proxyError fired:'+err);
+               res.writeHead(500, {'Content-Type': 'text/html'});
+               res.end('<h1>Internal Proxy Error!!'+err+'</h1>');
+            });
+         }
+
+         this.proxy.proxyRequest(req,res,reqBuffer);
+
+      } else {
+         res.writeHead(500, {'Content-Type': 'text/html'});
+         res.end('<h1>Internal Error! End of rope!</h1>');
       }
    }
+   this.requestQueue = [];
+}
 
-   if (rShinyProc.status === "starting"){
-      res.writeHead(200, {'Content-Type': 'text/html'});
-      res.write('<html><head><meta http-equiv="refresh" content="3"></head>');
-      res.end("<body><h1>Creating App. Just a Sec...</h1></body></html>");
-   } else if (rShinyProc.status === "nouser"){
-      res.writeHead(400, {'Content-Type': 'text/html'});
-      res.end('<h1>User '+userApp.user+' Does Not Exist!</h1>');
-   } else if (rShinyProc.status === "dead"){
-      res.writeHead(500, {'Content-Type': 'text/html'});
-      res.end('<h1>Internal Error! Cannot start '+userApp.hash+'!</h1>');
-   } else if (rShinyProc.status === "running"){
-      req.url = req.url.replace(userApp.rootUrl,'')
+SHINY = new ShinyProxy();
 
-      // Do our best to prevent caching of any web assets.
-      res.setHeader('Cache-Control','no-cache');
-      res.setHeader('Pragma','no-cache');
-      res.setHeader('Expires','Sat, 01 Jan 2000 00:00:00 GMT');
+SHINY.server.listen(SHINY.listenPort,SHINY.listenAddr);
 
-      proxy.proxyRequest(req,res,{
-         host: rShinyProc.host,
-         port: rShinyProc.port
-      });
-   } else {
-      res.writeHead(500, {'Content-Type': 'text/html'});
-      res.end('<h1>Internal Error! End of rope!</h1>');
-   }
-});
-
-// Intercept the "request" and "upgrade" events for SockJS. Only if these handlers return
-// false do the other listeners get a crack.
+// Ctrl-c performs a hopefully graceful shutdown.
 //
-// Any listeners added after the calls to overshadowListeners, will NOT be overshadowed!
-SockJSUtils.overshadowListeners(SHINY.proxy, 'request', SHINY.sockjsHandlers.getHandler());
-SockJSUtils.overshadowListeners(SHINY.proxy, 'upgrade', SHINY.sockjsHandlers.getHandler());
-
-SHINY.proxy.listen(SHINY.listenPort,SHINY.listenAddr);
+process.on('SIGINT',function(){
+  SHINY.shutdown();
+  process.exit();
+});
