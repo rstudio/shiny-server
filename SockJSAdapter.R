@@ -10,7 +10,7 @@ local({
             'Shiny.createSocket = function() {return new SockJS("%s",null,{debug:true});};',
             Sys.getenv('SHINY_SOCKJSPREFIX')
          ),
-         'Shiny.oncustommessage = function(message) {};'
+         'Shiny.oncustommessage = function(message) {alert(message);};'
       ),
       HTML("</head>"),
       sep="\n"
