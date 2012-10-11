@@ -7,7 +7,7 @@ local({
       tags$script(
             'console.log("starting up shiny app");',
          sprintf(
-            'Shiny.createSocket = function() {return new SockJS("%s",null,{debug: true});};',
+            'Shiny.createSocket = function() {return new SockJS("%s",null,{debug:true});};',
             Sys.getenv('SHINY_SOCKJSPREFIX')
          ),
          'Shiny.oncustommessage = function(message) {};'
