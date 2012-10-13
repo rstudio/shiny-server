@@ -369,9 +369,9 @@ ProxiedUserApp.prototype.clearStartupCallback = function(){
    this.startupCallbackId = null;
 
    if (this._socketToR){
-      try { this.socketToR.close() }
+      try { this._socketToR.close() }
       catch (ex) { /* no-op */ }
-      this.socketToR = null;
+      this._socketToR = null;
    }
 }
 
