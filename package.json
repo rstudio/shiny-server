@@ -4,14 +4,15 @@
   "version": "0.5.0",
   "author": "RStudio <shiny@rstudio.com>",
   "description": "Shiny application server",
-  "main": "./lib/shiny-server",
+  "scripts": {
+    "start": "node ./lib/shiny-server.js"
+  },
   "dependencies" : {
     "etc-passwd"        :  "*",
     "faye-websocket"    :  "*",
     "http-proxy"        :  "*",
     "sockjs"            :  "*",
-    "cjson"             :  "*",
-    "node-elf-logger"   :  "https://github.com/TooTallNate/node-elf-logger/tarball/master"
+    "cjson"             :  "*"
   },
   "bundleDependencies": [
     "etc-passwd",
