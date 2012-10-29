@@ -14,20 +14,21 @@ var util = require('util'),
     sockjs = require('sockjs'),
     websocket = require('faye-websocket'),
     url = require('url'),
+    cjson = require('cjson'),
     RMonitorClient = require('./RMonitorClient').RMonitorClient,
     rc = require('./ReferenceCounter'),
     MetaHandler = require('./meta-handler').MetaHandler,
     SockJSUtils = require('sockjs/lib/utils');
 
-var ShinyProxy = function() {
+var ShinyProxy = function(shinyConfig) {
+   this.config = shinyConfig;
    this.listenAddr = '0.0.0.0';
    this.listenPort = 80;
-   this.sockjsPrefix = '/sockjs'; // no trailing slash please
    this.sockjsHandlers = new MetaHandler();
    this.server =  http.createServer(this.httpHandler());
    this.proxiedUserApps = {};
    this.rmon = new RMonitorClient(
-      {shinyOptions: {sockjsPrefix: this.sockjsPrefix}}
+      {shinyOptions: shinyConfig}
    );
 
    // Intercept the "request" and "upgrade" events for SockJS. Only if these handlers return
@@ -133,9 +134,18 @@ ShinyProxy.prototype.httpHandler = function(){
    var handler = function(req,res){
       var appDetails, newUrl;
 
-      appDetails = self.getAppDetails(req.url,self.sockjsPrefix);
+      appDetails = self.getAppDetails(req.url,self.config["sockjsPrefix"]);
 
       console.log('proxy: '+req.url);
+
+      if (req.url === '/' && self.config['homepageRedirect']) {
+         res.writeHead(301, {
+            'Content-Type': 'text/html',
+            'Location': self.config['homepageRedirect']
+         });
+         res.end('<h1><a href="' + self.config['homepageRedirect'] +
+            '">Moved permanently</a></h1>');
+      }
 
       if (req.url === '/debug'){
          res.writeHead(200, {'Content-Type': 'text/html'});
@@ -146,7 +156,7 @@ ShinyProxy.prototype.httpHandler = function(){
 
       if (!appDetails){
          res.writeHead(404, {'Content-Type': 'text/html'});
-         res.end('<h1>Not found</h1>');
+         res.end('<h1>Not found</h1><p>The requested URL ' + req.url + ' was not found on this server.');
          return;
       }
 
@@ -425,7 +435,7 @@ ProxiedUserApp.prototype.finishStartup = function(options){
 
    sockjsServer = sockjs.createServer();
    this.sockjsHandler = sockjsServer.listener(
-         {prefix: this.sProxy.sockjsPrefix+this.appDetails.rootUrl}).getHandler();
+         {prefix: this.sProxy.config["sockjsPrefix"]+this.appDetails.rootUrl}).getHandler();
 
    // metahandlers return a function when an object is pushed onto
    // the array. It disposes of the object.
@@ -500,7 +510,9 @@ ProxiedUserApp.prototype.processRequestQueue = function(){
    this.requestQueue = [];
 }
 
-SHINY = new ShinyProxy();
+var shinyConfig = cjson.load("/etc/shiny-server.conf");
+
+SHINY = new ShinyProxy(shinyConfig);
 
 SHINY.server.listen(SHINY.listenPort,SHINY.listenAddr);
 

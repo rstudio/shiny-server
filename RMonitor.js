@@ -26,7 +26,7 @@ var abort = function(msg){
 process.send({status: 'ready'});
 
 process.on('message',function(m){
-   var i, spawnR, server, port, sockjsPrefix;
+   var i, spawnR, server, port, sockjsPrefix, gaTrackingId;
    var userInfo = getpwnam(m.user);
 
    if (!userInfo){
@@ -46,6 +46,7 @@ process.on('message',function(m){
    }
 
    sockjsPrefix = m.options.shinyOptions.sockjsPrefix;
+   gaTrackingId = m.options.shinyOptions.googleAnalyticsTrackingId;
 
    spawnR = function() {
       var R;
@@ -54,6 +55,7 @@ process.on('message',function(m){
       env.SHINY_PORT=port;
       env.SHINY_APP=m.app;
       env.SHINY_SOCKJSPREFIX = sockjsPrefix + '/' + m.user + '/' + m.app;
+      env.SHINY_GAID = gaTrackingId;
       env.SOCKJSADAPTER = process.env.SOCKJSADAPTER;
       env.USER=userInfo.username;
       env.HOME=userInfo.home;

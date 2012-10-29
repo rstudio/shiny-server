@@ -1,0 +1,27 @@
+{
+  "name": "shiny-server",
+  "preferGlobal": "false",
+  "version": "0.5.0",
+  "author": "RStudio <shiny@rstudio.com>",
+  "description": "Shiny application server",
+  "main": "./lib/shiny-server",
+  "dependencies" : {
+    "etc-passwd"        :  "*",
+    "faye-websocket"    :  "*",
+    "http-proxy"        :  "*",
+    "sockjs"            :  "*",
+    "cjson"             :  "*",
+    "node-elf-logger"   :  "https://github.com/TooTallNate/node-elf-logger/tarball/master"
+  },
+  "bundleDependencies": [
+    "etc-passwd",
+    "faye-websocket",
+    "http-proxy",
+    "sockjs",
+    "cjson"
+  ],  
+  "license": "Commercial",
+  "engines": {
+    "node": ">=8.5"
+  }
+}
