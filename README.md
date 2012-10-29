@@ -6,4 +6,4 @@
 
 * Copy shiny-server.conf.sample to /etc/shiny-server.conf and modify it for your particular setup.
 * Copy SockJSAdapter.R to /usr/local/lib/shiny-proxy/SockJSAdapter.R.
-* Run `sudo node shiny-proxy-2.js`.
+* Run `sudo npm start`.
