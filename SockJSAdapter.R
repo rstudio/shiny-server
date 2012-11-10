@@ -39,8 +39,8 @@ local({
       if (!grepl("^text/html\\b", response$content_type, perl=T))
          return(response)
                                                     
-      response$content <- charToRaw(sub("</head>", inject, rawToChar(response$content), 
-         ignore.case=T))
+      response$content <- sub("</head>", inject, response$content, 
+         ignore.case=T)
       return(response)
    }
                                                         
