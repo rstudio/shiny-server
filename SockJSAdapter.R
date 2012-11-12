@@ -38,7 +38,12 @@ local({
                                                 
       if (!grepl("^text/html\\b", response$content_type, perl=T))
          return(response)
-                                                    
+
+      # HTML files served from static handler are raw. Convert to char so we
+      # can inject our head content.
+      if (is.raw(response$content))
+         response$content <- rawToChar(response$content)
+
       response$content <- sub("</head>", inject, response$content, 
          ignore.case=T)
       return(response)
