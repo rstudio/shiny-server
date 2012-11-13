@@ -22,10 +22,7 @@ local({
    inject <- paste(
       tags$script(src='http://cdn.sockjs.org/sockjs-0.3.min.js'),
       tags$script(
-         sprintf(
-            'Shiny.createSocket = function() {return new SockJS("%s",null,{debug:true});};',
-            Sys.getenv('SHINY_SOCKJSPREFIX')
-         ),
+         'Shiny.createSocket = function() {return new SockJS(location.pathname + "__sockjs__",null,{debug:true});};',
          'Shiny.oncustommessage = function(message) {alert(message);};'
       ),
       gaTrackingCode,
