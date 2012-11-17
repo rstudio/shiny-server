@@ -12,14 +12,18 @@
     "faye-websocket"    :  "*",
     "http-proxy"        :  "*",
     "sockjs"            :  "*",
-    "cjson"             :  "*"
+    "cjson"             :  "*",
+    "handlebars"        :  "*",
+    "underscore"        :  "*"
   },
   "bundleDependencies": [
     "etc-passwd",
     "faye-websocket",
     "http-proxy",
     "sockjs",
-    "cjson"
+    "cjson",
+    "handlebars",
+    "underscore"
   ],  
   "license": "Commercial",
   "engines": {
