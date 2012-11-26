@@ -8,25 +8,15 @@
     "start": "node ./lib/shiny-server.js"
   },
   "dependencies" : {
-    "etc-passwd"        :  "*",
-    "faye-websocket"    :  "*",
-    "http-proxy"        :  "*",
-    "sockjs"            :  "*",
-    "cjson"             :  "*",
-    "handlebars"        :  "*",
-    "underscore"        :  "*"
+    "faye-websocket"    :  "0.4.3",
+    "http-proxy"        :  "0.8.2",
+    "sockjs"            :  "0.3.1",
+    "cjson"             :  "0.2.1",
+    "handlebars"        :  "1.0.7",
+    "underscore"        :  "1.4.2"
   },
-  "bundleDependencies": [
-    "etc-passwd",
-    "faye-websocket",
-    "http-proxy",
-    "sockjs",
-    "cjson",
-    "handlebars",
-    "underscore"
-  ],  
-  "license": "Commercial",
+  "license": "AGPL-3",
   "engines": {
-    "node": ">=8.5"
+    "node": ">=0.8.5"
   }
 }
