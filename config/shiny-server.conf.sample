@@ -6,8 +6,8 @@
   // "listenAddr" : "0.0.0.0",
 
   // If GA tracking is desired, provide ID
-  "googleAnalyticsTrackingId" : "UA-20375833-4",
+  // "googleAnalyticsTrackingId" : "UA-18988-1",
 
   // The URL to redirect to when the root URL is requested
-  "homepageRedirect" : "http://www.rstudio.com/",
+  // "homepageRedirect" : "http://www.example.com/",
 }
