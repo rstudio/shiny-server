@@ -18,7 +18,7 @@
     "q"                 :  "0.8.x",
     "bash"              :  "0.0.1",
     "log4js"            :  "0.5.x",
-    "unixgroups"        :  "https://github.com/rstudio/node-unixgroups/tarball/5a348df193c"
+    "unixgroups"        :  "https://github.com/rstudio/node-unixgroups/tarball/af6544c"
   },
   "license": "AGPL-3",
   "engines": {
