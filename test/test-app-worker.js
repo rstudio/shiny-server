@@ -3,7 +3,7 @@ var AppSpec = require('../lib/worker/app-spec');
 var app_worker = require('../lib/worker/app-worker');
 
 var rw_p = app_worker.runWorker_p(new AppSpec(
-  '/Users/jcheng/ShinyApps/diamonds', 'jcheng', null, {}),
+  '/Users/jcheng/ShinyApps/diamonds', 'jcheng', '', null, {}),
   8103, './testlog.log');
 
 rw_p
