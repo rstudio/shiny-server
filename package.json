@@ -10,7 +10,7 @@
   },
   "dependencies" : {
     "faye-websocket"    :  "0.4.3",
-    "http-proxy"        :  "0.8.5",
+    "http-proxy"        :  "https://github.com/rstudio/node-http-proxy/tarball/4252933",
     "sockjs"            :  "0.3.1",
     "cjson"             :  "0.2.1",
     "handlebars"        :  "1.0.7",
