@@ -34,8 +34,17 @@ local({
    inject <- paste(
       tags$script(src='http://cdn.sockjs.org/sockjs-0.3.min.js'),
       tags$script(
-         'Shiny.createSocket = function() {return new SockJS(location.pathname + "__sockjs__",null,{debug:true});};',
-         'Shiny.oncustommessage = function(message) {alert(message);};'
+        HTML(
+          paste(
+           'Shiny.createSocket = function() {return new SockJS(location.pathname + "__sockjs__",null,{});};',
+           'Shiny.oncustommessage = function(message) {',
+           '  if (typeof message === "string") alert(message);', # Legacy format
+           '  if (message.alert) alert(message.alert);',
+           '  if (message.console && console.log) console.log(message.console);',
+           '};',
+           sep = '\r\n'
+          )
+        )
       ),
       gaTrackingCode,
       HTML("</head>"),
