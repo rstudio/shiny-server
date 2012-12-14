@@ -1,12 +1,12 @@
 {
   "name": "shiny-server",
-  "preferGlobal": "false",
-  "version": "0.0.1",
+  "preferGlobal": "true",
+  "version": "0.1.0",
   "author": "RStudio <shiny@rstudio.com>",
   "description": "Shiny application server",
-  "bin": "./lib/shiny-server.js",
+  "bin": "./lib/main.js",
   "scripts": {
-    "start": "node ./lib/shiny-server.js"
+    "start": "node ./lib/main.js"
   },
   "dependencies" : {
     "faye-websocket"    :  "0.4.3",

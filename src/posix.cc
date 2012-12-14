@@ -31,8 +31,7 @@ Handle<Value> GetPwNam(const Arguments& args) {
   errno = 0;
   if ((err = getpwnam_r(*pwnam, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
     if (errno == 0)
-      return ThrowException(Exception::Error(
-        String::New("getpwnam user does not exist")));
+      return scope.Close(Null());
     else
       return ThrowException(ErrnoException(errno, "getpwnam_r"));
   }
