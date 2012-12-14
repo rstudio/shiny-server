@@ -17,11 +17,13 @@ local({
    # Read config directives from stdin and put them in the environment.
    # This makes it possible for root users to see what app a proc is running
    # (via /proc/<pid>/environ).
-   input <- readLines(file('stdin'))
+   fd = file('stdin')
+   input <- readLines(fd)
    Sys.setenv(
     SHINY_APP=input[1],
     SHINY_PORT=input[2],
     SHINY_GAID=input[3])
+   close(fd)
 
 
    gaTrackingCode <- ''
