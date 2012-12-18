@@ -1,9 +1,9 @@
 var assert = require('assert');
 var util = require('util');
-var lexer = require('../lib/config/lexer');
-var TT = lexer.TT;
+var config_lexer = require('../lib/config/lexer');
+var TT = config_lexer.TT;
 
-var lex = new lexer.ConfigLexer("");
+var lex = new config_lexer.Lexer("");
 
 var c_ = 1;
 var C_ALPHA = c_++;
@@ -86,8 +86,13 @@ assertLex('#\nhi', [
   [TT.WORD, 'hi', 2, 1],
 ]);
 
+assert.throws(lexAll('"'));
+assert.throws(lexAll('"\\'));
+assert.throws(lexAll('"\\"'));
+assert.throws(lexAll('\x01'));
+
 function assertLex(data, tokens) {
-  var tmpLex = new lexer.ConfigLexer(data);
+  var tmpLex = new config_lexer.Lexer(data);
   var tok;
   while ((tok = tmpLex.nextToken()).type != TT.EOD) {
     var testTok = tokens.shift();
@@ -100,4 +105,12 @@ function assertLex(data, tokens) {
   }
   if (tokens.length > 0)
     assert(false, 'Not all tokens were matched');
+}
+
+function lexAll(data) {
+  return function() {
+    var tmpLex = new config_lexer.Lexer(data);
+    while (tmpLex.nextToken().type != TT.EOD)
+    {}
+  };
 }
