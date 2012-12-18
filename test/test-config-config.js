@@ -1,17 +1,21 @@
 var assert = require('assert');
+var path = require('path');
 var util = require('util');
 var config = require('../lib/config/config');
 
 var configData = config.parseConfigData('\
-user nobody;\n\
-http {\n\
-  location ~ / {\n\
+runas nobody;\n\
+server {\n\
+  location / {\n\
     runas jcheng;\n\
     appdir ~/myshinyapp;\n\
   }\n\
 }');
 
-assert.equal(configData.getValue('user'), 'nobody');
-assert.deepEqual(configData.getOne('user').args, ['nobody']);
-assert.equal(configData.getOne('http').getOne('location').getValue('runas'), 'jcheng');
+assert.equal(configData.getValue('runas'), 'nobody');
+assert.deepEqual(configData.getOne('runas').args, ['nobody']);
+assert.equal(configData.getOne('server').getOne('location').getValue('runas'), 'jcheng');
 assert.equal(configData.search('location')[0].getValue('runas'), 'jcheng');
+
+var validationRules = config.readSync(path.join(__dirname, '../lib/config/shiny-server-rules.config'));
+config.validate(validationRules, configData);
