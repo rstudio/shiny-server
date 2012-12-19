@@ -4,17 +4,17 @@ var path = require('path');
 var util = require('util');
 var config = require('../lib/config/config');
 var schema = require('../lib/config/schema');
+var config_router = require('../lib/router/config-router');
 
-var schemaPath = path.join(__dirname, '../lib/config/shiny-server-rules.config');
+var schemaPath = path.join(__dirname, '../lib/router/shiny-server-rules.config');
 
 var configData = config.parse('\
 runas nobody;\n\
 max_workers 10;\n\
 server {\n\
   location / {\n\
-    runas jcheng jcheng;\n\
-    runas jcheng; # valid because second arg is optional\n\
-    appdir ~/myshinyapp;\n\
+    runas jcheng;\n\
+    app_dir ~/myshinyapp;\n\
   }\n\
 }');
 
@@ -42,3 +42,9 @@ function assertBad(file, schemaPath, regex) {
       throw err;
   }
 }
+
+config_router.createRouter_p(path.join(__dirname, 'config/good.config'))
+.then(function(router) {
+  //console.log(util.inspect(router, false, null, true));
+})
+.done();

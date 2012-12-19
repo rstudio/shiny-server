@@ -19,7 +19,8 @@
     "bash"              :  "0.0.1",
     "log4js"            :  "0.5.x",
     "unixgroups"        :  "https://github.com/rstudio/node-unixgroups/tarball/af6544c",
-    "moment"            :  "1.7.x"
+    "moment"            :  "1.7.x",
+    "regexp-quote"      :  "0.0.0"
   },
   "license": "AGPL-3",
   "engines": {
