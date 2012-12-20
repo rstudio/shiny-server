@@ -20,7 +20,8 @@
     "log4js"            :  "0.5.x",
     "unixgroups"        :  "https://github.com/rstudio/node-unixgroups/tarball/af6544c",
     "moment"            :  "1.7.x",
-    "regexp-quote"      :  "0.0.0"
+    "regexp-quote"      :  "0.0.0",
+    "stable"            :  "0.1.2"
   },
   "license": "AGPL-3",
   "engines": {
