@@ -19,7 +19,7 @@
 ## Installing
 
 * `sudo npm -g install shiny-server`
-* [Optional] Copy config/config.sample to /etc/shiny-server/config and modify it for your particular setup. If you skip this step, sensible defaults will be used (note: port 80 will be used by default).
+* Create a config file and put it at `/etc/shiny-server/shiny-server.conf`.
 
 ## Running from Upstart
 
@@ -27,6 +27,7 @@ For those UNIX systems that use the [Upstart](http://upstart.ubuntu.com/) init s
 
 * Copy config/upstart/shiny-server.conf to /etc/init/
 * Run `sudo start shiny-server` to start and `sudo stop shiny-server` to stop.
+* Run `sudo reload shiny-server` to re-read the config file without needing to restart the server.
 
 The upstart script is set to start shiny-server on boot/reboot, and it will also
 respawn shiny-server if it goes down.
