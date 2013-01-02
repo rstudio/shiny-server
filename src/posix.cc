@@ -68,7 +68,7 @@ Handle<Value> GetGroupList(const Arguments& args) {
     bufsize = 16384;
   char buf[bufsize];
 
-#if __linux__
+#ifdef __linux__
   typedef gid_t result_t;
 #else
   typedef int result_t;
@@ -94,8 +94,11 @@ Handle<Value> GetGroupList(const Arguments& args) {
     if (err == -1) {
       // Not enough buffer space; ngrp has the necessary number
       continue;
+#ifndef __linux__
     } else if (err != 0) {
+      // On BSD, return value is 0 on success
       return ThrowException(Exception::Error(String::New("Unexpected error calling getgrouplist")));
+#endif
     }
     else {
       Local<Array> groupList = Array::New();
@@ -138,8 +141,7 @@ Handle<Value> GetGrNam(const Arguments& args) {
     members->Set(members->Length(), String::New(group->gr_mem[i]));
   }
 
-    return ThrowException(Exception::Error(String::New("Unexpected getgrouplist behavior")));
-//return scope.Close(groupInfo);
+  return scope.Close(groupInfo);
 }
 
 void Initialize(Handle<Object> target) {
