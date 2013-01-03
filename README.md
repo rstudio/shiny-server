@@ -1,25 +1,27 @@
 # Shiny Server
 
-[Shiny](http://shiny.rstudio.org/) makes it easy to write powerful, interactive applications in R. Shiny Server is a server program that makes Shiny applications available over the web.
+Shiny Server is a server program that makes [Shiny](http://shiny.rstudio.org/) applications available over the web.
 
 ## Features
 
-* Any user on the system can create and deploy their own Shiny applications
+* Host multiple Shiny applications, each with its own URL
+* Can be configured to allow any user on the system to create and deploy their own Shiny applications
 * Supports non-websocket-capable browsers, like IE8/9
-* Free and open source (AGPL-3 license)
+* Free and open source ([AGPLv3](http://www.gnu.org/licenses/agpl-3.0.html) license)
 * **Experimental quality. Use at your own risk!**
 
-## System Requirements
+## Prerequisites
 
-* [NodeJS 0.8.5 or later](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
-* Linux, for now
+A Linux server, with the following installed:
+
+* [Node.js 0.8.17 or later](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
 * R 2.15 or later
 * [Shiny](https://github.com/rstudio/shiny) R package, installed by root
 
 ## Installing
 
 * `sudo npm -g install shiny-server`
-* Create a config file and put it at `/etc/shiny-server/shiny-server.conf`.
+* Create a config file (see below) and put it at `/etc/shiny-server/shiny-server.conf`.
 
 ## Running from Upstart
 
@@ -36,11 +38,86 @@ respawn shiny-server if it goes down.
 
 * Run `sudo shiny-server`.
 
-## How to Use
+## Configuration
 
-Once Shiny Server is installed and running, any user account on the server can create a Shiny app by going to his or her home directory, creating a `ShinyApps` subdirectory, and placing Shiny app directories under `ShinyApps`.
+Shiny Server offers two distinct ways of deploying applications:
 
-For example, if the user `jeffreyhorner` creates a folder `~/ShinyApps/testapp` that contains a `server.R` and a `ui.R` file, then browsing to `http://hostname/jeffreyhorner/testapp/` would automatically load that application.
+* Explicitly declare one or more applications in the configuration file. For each application you can specify the URL, application directory path, log directory, and which user to run the application as.
+* Configure a URL path to be "autouser"; any user with a home directory on the system can deploy applications simply by creating a `~/ShinyApp` directory and placing their Shiny applications in direct subdirectories.<p>For example, if `/users` is configured to be an autouser path, and the user `jeffreyhorner` creates a folder `~/ShinyApps/testapp` that contains a `server.R` and a `ui.R` file, then browsing to `http://hostname/users/jeffreyhorner/testapp/` would automatically load that application.</p>
+
+A single Shiny Server instance can host zero or more explicitly-declared applications and zero or more autouser URLs at the same time; you don't need to choose one or the other.
+
+Here is a minimal configuration file for a server that only does autouser hosting:
+
+```
+server {
+  # The TCP/IP port to listen on
+  listen 80;
+  
+  # Configure the root URL to be autouser
+  location / {
+    user_apps on;
+  }
+}
+```
+
+Here is a minimal configuration file for a server that hosts two apps:
+
+```
+# By default, use the 'shiny' user to run the applications; this
+# user should have the minimum amount of privileges necessary to
+# successfully run the applications (i.e. read-only access to the
+# Shiny app dirs).
+run_as shiny;
+
+server {
+  listen 80;
+  
+  location /app1 {
+    app_dir /var/shiny-apps/app1;
+  }
+  
+  location /app2 {
+    app_dir /var/shiny-apps/app2;
+  }
+}
+```
+
+<!--
+```
+server {
+  listen 80;  # The TCP/IP port this server should listen on
+  
+  # Configure http://hostname/users
+  location /users {
+  	# Make this path autouser
+  	user_apps on;
+  	
+  	# Uncomment the following line to require users to be a member
+  	# of either the "shiny-users" or "power-users" groups
+  	#
+  	# members_of shiny-users power-users;
+  }
+  
+  # Declare a Shiny application at http://hostname/app1
+  location /app1 {
+    # The path to the Shiny application directory
+    app_dir /var/shiny-apps/app1;
+    
+    # The user the app should be run as. This user should have the
+    # minimal amount of privileges necessary to successfully run
+    # the application (i.e. read-only access to the Shiny app dir).
+    run_as shiny;
+    
+    # The directory this application's logs should be written to.
+    # You can have multiple applications configured with the same
+    # log directory; the log filenames differ by application and
+    # user.
+    log_dir /var/log/shiny-apps/
+  }
+}
+```
+-->
 
 ## Contact
 

@@ -9,19 +9,19 @@ var config_router = require('../lib/router/config-router');
 var schemaPath = path.join(__dirname, '../lib/router/shiny-server-rules.config');
 
 var configData = config.parse('\
-runas nobody;\n\
+run_as nobody;\n\
 max_workers 10;\n\
 server {\n\
   location / {\n\
-    runas jcheng;\n\
+    run_as jcheng;\n\
     app_dir ~/myshinyapp;\n\
   }\n\
 }');
 
-assert.equal(configData.getValue('runas'), 'nobody');
-assert.deepEqual(configData.getOne('runas').args, ['nobody']);
-assert.equal(configData.getOne('server').getOne('location').getValue('runas'), 'jcheng');
-assert.equal(configData.search('location')[0].getValue('runas'), 'jcheng');
+assert.equal(configData.getValue('run_as'), 'nobody');
+assert.deepEqual(configData.getOne('run_as').args, ['nobody']);
+assert.equal(configData.getOne('server').getOne('location').getValue('run_as'), 'jcheng');
+assert.equal(configData.search('location')[0].getValue('run_as'), 'jcheng');
 
 var validationRules = config.parse(fs.readFileSync(schemaPath, 'utf8'));
 schema.applySchema(configData, validationRules);
