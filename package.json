@@ -22,7 +22,8 @@
     "moment"            :  "1.7.x",
     "regexp-quote"      :  "0.0.0",
     "stable"            :  "0.1.2",
-    "optimist"          :  "0.3.5"
+    "optimist"          :  "0.3.5",
+    "pause"             :  "0.0.1"
   },
   "license": "AGPL-3",
   "engines": {
