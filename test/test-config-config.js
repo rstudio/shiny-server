@@ -10,7 +10,6 @@ var schemaPath = path.join(__dirname, '../lib/router/shiny-server-rules.config')
 
 var configData = config.parse('\
 run_as nobody;\n\
-max_workers 10;\n\
 server {\n\
   location / {\n\
     run_as jcheng;\n\
