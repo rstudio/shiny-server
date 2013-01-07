@@ -82,6 +82,7 @@ server {
     site_dir /var/shiny-www;
   }
 }
+```
 
 Here is a minimal configuration file for a server that hosts two apps:
 
