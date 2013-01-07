@@ -1,9 +1,9 @@
 {
   "name": "shiny-server",
   "preferGlobal": "true",
-  "version": "0.1.0",
-  "author": "RStudio <shiny@rstudio.com>",
-  "description": "Shiny application server",
+  "version": "0.2.0",
+  "author": "RStudio <node@rstudio.com>",
+  "description": "Application server for the Shiny web framework for R",
   "bin": "./lib/main.js",
   "scripts": {
     "start": "node ./lib/main.js"
