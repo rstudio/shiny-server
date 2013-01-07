@@ -23,6 +23,31 @@ A Linux server, with the following installed:
 * `sudo npm -g install shiny-server`
 * Create a config file (see below) and put it at `/etc/shiny-server/shiny-server.conf`.
 
+## Quick start
+```
+# Create a user to run Shiny apps under
+sudo useradd --system shiny
+# Create a root directory for your website
+sudo mkdir /var/shiny-server/www
+# Create a directory for application logs
+sudo mkdir /var/shiny-server/log
+
+# Copy your app directory to the website root, adding ".shiny" suffix
+sudo cp -R ~/MY-APP /var/shiny-server/www/MY-APP.shiny
+
+# Start Shiny Server
+sudo shiny-server
+```
+
+Now start a web browser and point it to `http://localhost:3838/MY-APP`.
+
+To customize any of the above, or to explore the other ways Shiny Server can host Shiny apps, see the [Configuration](#configuration) section below.
+
+## Running from the Command Line
+
+* Run `sudo shiny-server`
+* Optionally, you can pass a custom configuration file path (see below) as a parameter. Otherwise, `/etc/shiny-server/shiny-server.conf` will be assumed as the config file path.
+
 ## Running from Upstart
 
 For those UNIX systems that use the [Upstart](http://upstart.ubuntu.com/) init system, such as RHEL/CentOS 6+ and Ubuntu:
@@ -34,17 +59,15 @@ For those UNIX systems that use the [Upstart](http://upstart.ubuntu.com/) init s
 The upstart script is set to start shiny-server on boot/reboot, and it will also
 respawn shiny-server if it goes down.
 
-## Running from the Command Line
-
-* Run `sudo shiny-server`.
-
 ## Configuration
+
+By default, Shiny Server will look for a config file at `/etc/shiny-server/shiny-server.conf`; if no file is found, a default configuration will be used.
 
 Shiny Server offers three distinct ways of deploying applications:
 
-* Explicitly declare one or more applications in the configuration file. For each application you can specify the URL, application directory path, log directory, and which user to run the application as.
-* Serve up a directory which can contain a combination of static assets (HTML files, images, PDFs, etc.), Shiny applications, and subdirectories. Any subdirectory name that ends with `.shiny` is assumed to be a Shiny application directory (note that `.shiny` should not be included in the URL).
-* Configure a URL path to be "autouser"; any user with a home directory on the system can deploy applications simply by creating a `~/ShinyApp` directory and placing their Shiny applications in direct subdirectories.<p>For example, if `/users` is configured to be an autouser path, and the user `jeffreyhorner` creates a folder `~/ShinyApps/testapp` that contains a `server.R` and a `ui.R` file, then browsing to `http://hostname/users/jeffreyhorner/testapp/` would automatically load that application.</p>
+* **Serve up a directory which can contain a combination of static assets (HTML files, images, PDFs, etc.), Shiny applications, and subdirectories.**<p>Any subdirectory name that ends with `.shiny` is assumed to be a Shiny application directory. For example, if `/var/shiny-server/www` is your root dir and `/var/shiny-server/www/sales/historical.shiny` contains a Shiny application, then the URL for that application would be `http://hostname:port/sales/historical/`.</p>
+* **Configure a URL path to be "autouser"; any user with a home directory on the system can deploy applications simply by creating a `~/ShinyApp` directory and placing their Shiny applications in direct subdirectories.**<p>For example, if `/users` is configured to be an autouser path, and the user `jeffreyhorner` creates a folder `~/ShinyApps/testapp` that contains a `server.R` and a `ui.R` file, then browsing to `http://hostname/users/jeffreyhorner/testapp/` would automatically load that application.</p>
+* **Explicitly declare one or more applications in the configuration file.** For each individual application you can specify the URL, application directory path, log directory, and which user to run the application as.
 
 A single Shiny Server instance can host zero or more explicitly-declared applications and zero or more autouser URLs at the same time; you don't need to choose one or the other.
 
@@ -84,7 +107,7 @@ server {
 }
 ```
 
-Here is a minimal configuration file for a server that hosts two apps:
+Here is a simple configuration file for a server that hosts two apps:
 
 ```
 # By default, use the 'shiny' user to run the applications; this
@@ -106,6 +129,29 @@ server {
   
   location /app2 {
     app_dir /var/shiny-apps/app2;
+  }
+}
+```
+
+You can have multiple `location` directives per `server` block, and they don't need to all be of the same kind; you can easily incorporate all three hosting models in the same server instance.
+
+```
+run_as shiny;
+log_dir /var/log/shiny-server/log/;
+
+server {
+  listen 80;
+
+  location /users {
+    user_apps on;
+  }
+
+  location /dashboard {
+    app_dir /var/dashboard/shinyapp;
+  }
+
+  location / {
+    site_dir /var/shiny-server/www;
   }
 }
 ```
