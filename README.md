@@ -40,9 +40,10 @@ respawn shiny-server if it goes down.
 
 ## Configuration
 
-Shiny Server offers two distinct ways of deploying applications:
+Shiny Server offers three distinct ways of deploying applications:
 
 * Explicitly declare one or more applications in the configuration file. For each application you can specify the URL, application directory path, log directory, and which user to run the application as.
+* Serve up a directory which can contain a combination of static assets (HTML files, images, PDFs, etc.), Shiny applications, and subdirectories. Any subdirectory name that ends with `.shiny` is assumed to be a Shiny application directory (note that `.shiny` should not be included in the URL).
 * Configure a URL path to be "autouser"; any user with a home directory on the system can deploy applications simply by creating a `~/ShinyApp` directory and placing their Shiny applications in direct subdirectories.<p>For example, if `/users` is configured to be an autouser path, and the user `jeffreyhorner` creates a folder `~/ShinyApps/testapp` that contains a `server.R` and a `ui.R` file, then browsing to `http://hostname/users/jeffreyhorner/testapp/` would automatically load that application.</p>
 
 A single Shiny Server instance can host zero or more explicitly-declared applications and zero or more autouser URLs at the same time; you don't need to choose one or the other.
@@ -61,6 +62,27 @@ server {
 }
 ```
 
+Here is a minimal configuration file for a server that is backed by a directory that contains a combination of static assets and Shiny applications:
+
+```
+# By default, use the 'shiny' user to run the applications; this
+# user should have the minimum amount of privileges necessary to
+# successfully run the applications (i.e. read-only access to the
+# site dir).
+run_as shiny;
+
+# The directory where application log files should be written to.
+# This directory must exist--it will NOT be automatically created.
+log_dir /var/log/shiny-server/apps/;
+
+server {
+  listen 80;
+
+  location / {
+    site_dir /var/shiny-www;
+  }
+}
+
 Here is a minimal configuration file for a server that hosts two apps:
 
 ```
@@ -69,6 +91,10 @@ Here is a minimal configuration file for a server that hosts two apps:
 # successfully run the applications (i.e. read-only access to the
 # Shiny app dirs).
 run_as shiny;
+
+# The directory where application log files should be written to.
+# This directory must exist--it will NOT be automatically created.
+log_dir /var/log/shiny-server/apps/;
 
 server {
   listen 80;
