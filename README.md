@@ -21,7 +21,7 @@ A Linux server, with the following installed:
 ## Installing
 
 * `sudo npm -g install shiny-server`
-* Create a config file (see below) and put it at `/etc/shiny-server/shiny-server.conf`.
+* Optional: Create a config file (see below).
 
 ## Quick start
 ```
