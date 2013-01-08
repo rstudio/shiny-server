@@ -14,7 +14,7 @@ Shiny Server is a server program that makes [Shiny](http://shiny.rstudio.org/) a
 
 A Linux server, with the following installed:
 
-* [Node.js 0.8.17 or later](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
+* [Node.js 0.8.16 or later](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
 * R 2.15 or later
 * [Shiny](https://github.com/rstudio/shiny) R package, installed by root
 
