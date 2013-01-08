@@ -24,22 +24,25 @@ A Linux server, with the following installed:
 * Optional: Create a config file (see below).
 
 ## Quick start
+
 ```
 # Create a user to run Shiny apps under
 sudo useradd --system shiny
 # Create a root directory for your website
-sudo mkdir /var/shiny-server/www
+sudo mkdir -p /var/shiny-server/www
 # Create a directory for application logs
-sudo mkdir /var/shiny-server/log
-
-# Copy your app directory to the website root, adding ".shiny" suffix
-sudo cp -R ~/MY-APP /var/shiny-server/www/MY-APP.shiny
+sudo mkdir -p /var/shiny-server/log
 
 # Start Shiny Server
 sudo shiny-server
 ```
 
-Now start a web browser and point it to `http://localhost:3838/MY-APP`.
+Next, copy your app directory to the website root, but append `.shiny` to the directory name.
+```
+sudo cp -R ~/MY-APP /var/shiny-server/www/MY-APP.shiny
+```
+
+Now start a web browser and point it to `http://localhost:3838/MY-APP/`. (Notice that ".shiny" does not appear in the URL.)
 
 To customize any of the above, or to explore the other ways Shiny Server can host Shiny apps, see the [Configuration](#configuration) section below.
 
