@@ -14,27 +14,29 @@ Shiny Server is a server program that makes [Shiny](http://shiny.rstudio.org/) a
 
 A Linux server, with the following installed:
 
-* [Node.js 0.8.16 or later](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
-* R 2.15 or later
+* [Node.js 0.8.16 or later](http://nodejs.org) (we have found [these instructions](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to work well)
+* [R 2.15 or later](http://www.r-project.org)
 * [Shiny](https://github.com/rstudio/shiny) R package, installed by root
 
 ## Installing
 
-* `sudo npm -g install shiny-server`
+* Run as root (or `sudo`): `npm -g install shiny-server`
 * Optional: Create a config file (see below).
 
 ## Quick start
 
+Run as root (or `sudo`):
+
 ```
 # Create a user to run Shiny apps under
-sudo useradd --system shiny
+useradd --system shiny
 # Create a root directory for your website
-sudo mkdir -p /var/shiny-server/www
+mkdir -p /var/shiny-server/www
 # Create a directory for application logs
-sudo mkdir -p /var/shiny-server/log
+mkdir -p /var/shiny-server/log
 
 # Start Shiny Server
-sudo shiny-server
+shiny-server
 ```
 
 Next, copy your app directory to the website root, but append `.shiny` to the directory name.
