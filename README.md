@@ -23,7 +23,7 @@ sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')
 
 ## Installing
 
-* Run as root (or `sudo`): `npm -g install shiny-server`
+* Run as root (or `sudo`): `npm install -g shiny-server`
 * Optional: Create a config file (see below).
 
 ## Quick start

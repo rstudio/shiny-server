@@ -1,12 +1,16 @@
 {
   "name": "shiny-server",
   "preferGlobal": "true",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "RStudio <node@rstudio.com>",
   "description": "Application server for the Shiny web framework for R",
   "bin": "./lib/main.js",
   "scripts": {
     "start": "node ./lib/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rstudio/shiny-server.git"
   },
   "dependencies" : {
     "faye-websocket"    :  "0.4.3",
@@ -29,6 +33,6 @@
   },
   "license": "AGPL-3",
   "engines": {
-    "node": ">=0.8.5"
+    "node": ">=0.8.16"
   }
 }
