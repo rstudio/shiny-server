@@ -43,7 +43,7 @@ sudo cp -R ~/MY-APP /var/shiny-server/www/MY-APP.shiny
 
 Finally, start Shiny Server:
 ```
-shiny-server
+sudo shiny-server
 ```
 
 Now start a web browser and point it to `http://localhost:3838/MY-APP/`. (Notice that ".shiny" does not appear in the URL.)
