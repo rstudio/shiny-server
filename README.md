@@ -79,7 +79,7 @@ Shiny Server offers three distinct ways of deploying applications:
 * **Configure a URL path to be "autouser"; any user with a home directory on the system can deploy applications simply by creating a `~/ShinyApp` directory and placing their Shiny applications in direct subdirectories.** For example, if `/users` is configured to be an autouser path, and the user `jeffreyhorner` creates a folder `~/ShinyApps/testapp` that contains a `server.R` and a `ui.R` file, then browsing to `http://hostname/users/jeffreyhorner/testapp/` would automatically load that application.
 * **Explicitly declare one or more applications in the configuration file.** For each individual application you can specify the URL, application directory path, log directory, and which user to run the application as.
 
-A single Shiny Server instance can host zero or more explicitly-declared applications and zero or more autouser URLs at the same time; you don't need to choose one or the other.
+A single Shiny Server instance can host all three of the above types of URL paths at the same time; you don't have to restrict yourself to just one.
 
 Here is a minimal configuration file for a server that only does autouser hosting:
 
