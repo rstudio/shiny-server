@@ -34,14 +34,16 @@ useradd --system shiny
 mkdir -p /var/shiny-server/www
 # Create a directory for application logs
 mkdir -p /var/shiny-server/log
-
-# Start Shiny Server
-shiny-server
 ```
 
-Next, copy your app directory to the website root, but append `.shiny` to the directory name.
+Next, copy your app directory to the website root, but append `.shiny` to the directory name. (This is very important! If the application folder does not end with `.shiny` it will be deployed as static assets, not a Shiny application!)
 ```
 sudo cp -R ~/MY-APP /var/shiny-server/www/MY-APP.shiny
+```
+
+Finally, start Shiny Server:
+```
+shiny-server
 ```
 
 Now start a web browser and point it to `http://localhost:3838/MY-APP/`. (Notice that ".shiny" does not appear in the URL.)
