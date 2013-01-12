@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shiny Server v{{version}} Configuration Reference</title>
+  <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>  <style type="text/css">
+  body {
+    font-family: 'Source Sans Pro', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #222;
+  }
+
+  #container {
+    max-width: 800px;
+    margin: 20px auto 80px auto;
+  }
+
+  code, .code {
+    font-family: 'Source Code Pro';
+  }
+
+  h1 {
+    margin: 0;
+  }
+
+  #toc {
+    display: inline-block;
+    width: auto;
+    border: 1px solid #CCC;
+    padding: 12px 48px 12px 18px;
+    margin-top: 30px;
+  }
+
+  #toc h2 {
+    margin: 0;
+  }
+
+  #toc ul {
+    list-style: square outside;
+    margin: 0;
+  }
+
+  ul.directives {
+    list-style: none;
+    padding-left: 0;
+  }
+  ul.directives li {
+    margin: 40px 0 0 0;
+    padding-left: 20px;
+  }
+  ul.directives h3 {
+    color: black;
+    font-size: 20px;
+    margin-bottom: 8px;
+    margin-left: -20px;
+  }
+
+  table.params {
+    margin-top: 16px;
+    border-spacing: 0;
+    border-collapse: collapse;
+    width: 100%;
+  }
+  table.params td, table.params th {
+    padding: 3px 12px;
+    border: 1px solid #CCC;
+  }
+  table.params th {
+    text-align: left;
+  }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Shiny Server Configuration Reference</h1>
+    <div>Version {{version}}</div>
+
+    <div id="toc">
+      <h2>Table of Contents</h2>
+      <ul class="code">
+        {{#each directives}}
+          <li><a href="#{{name}}">{{name}}</a></li>
+        {{/each}}
+      </ul>
+    </div>
+
+    <ul class="directives">
+      {{#each directives}}
+        <li>
+          <h3 class="code"><a name="{{name}}"></a>{{name}}</h3>
+          <p class="desc">{{{desc}}}</p>
+          {{#if params}}
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              {{#each params}}
+                <tr>
+                  <td>{{name}}</td>
+                  <td>{{type}}</td>
+                  <td>{{#if optional}}No{{else}}Yes{{/if}}</td>
+                  <td>{{{desc}}}</td>
+                  <td>{{defaultValue}}</td>
+                </tr>
+              {{/each}}
+            </table>
+          {{else}}
+            <p class="noparams">This directive has no parameters.</p>
+          {{/if}}
+
+          <p>
+            <strong>Applies to:</strong> {{primaryLoc}}<br/>
+            {{#if otherLocs}}
+              <strong>Can also appear in:</strong> {{otherLocs}}
+            {{/if}}
+          </p>
+        </li>
+      {{/each}}
+    </ul>
+  </div>
+</body>
+</html>

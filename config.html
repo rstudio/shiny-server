@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shiny Server v0.2.2 Configuration Reference</title>
+  <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>  <style type="text/css">
+  body {
+    font-family: 'Source Sans Pro', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #222;
+  }
+
+  #container {
+    max-width: 800px;
+    margin: 20px auto 80px auto;
+  }
+
+  code, .code {
+    font-family: 'Source Code Pro';
+  }
+
+  h1 {
+    margin: 0;
+  }
+
+  #toc {
+    display: inline-block;
+    width: auto;
+    border: 1px solid #CCC;
+    padding: 12px 48px 12px 18px;
+    margin-top: 30px;
+  }
+
+  #toc h2 {
+    margin: 0;
+  }
+
+  #toc ul {
+    list-style: square outside;
+    margin: 0;
+  }
+
+  ul.directives {
+    list-style: none;
+    padding-left: 0;
+  }
+  ul.directives li {
+    margin: 40px 0 0 0;
+    padding-left: 20px;
+  }
+  ul.directives h3 {
+    color: black;
+    font-size: 20px;
+    margin-bottom: 8px;
+    margin-left: -20px;
+  }
+
+  table.params {
+    margin-top: 16px;
+    border-spacing: 0;
+    border-collapse: collapse;
+    width: 100%;
+  }
+  table.params td, table.params th {
+    padding: 3px 12px;
+    border: 1px solid #CCC;
+  }
+  table.params th {
+    text-align: left;
+  }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Shiny Server Configuration Reference</h1>
+    <div>Version 0.2.2</div>
+
+    <div id="toc">
+      <h2>Table of Contents</h2>
+      <ul class="code">
+        
+          <li><a href="#run_as">run_as</a></li>
+        
+          <li><a href="#access_log">access_log</a></li>
+        
+          <li><a href="#server">server</a></li>
+        
+          <li><a href="#listen">listen</a></li>
+        
+          <li><a href="#server_name">server_name</a></li>
+        
+          <li><a href="#location">location</a></li>
+        
+          <li><a href="#site_dir">site_dir</a></li>
+        
+          <li><a href="#user_apps">user_apps</a></li>
+        
+          <li><a href="#app_dir">app_dir</a></li>
+        
+          <li><a href="#redirect">redirect</a></li>
+        
+          <li><a href="#log_dir">log_dir</a></li>
+        
+          <li><a href="#members_of">members_of</a></li>
+        
+          <li><a href="#google_analytics_id">google_analytics_id</a></li>
+        
+      </ul>
+    </div>
+
+    <ul class="directives">
+      
+        <li>
+          <h3 class="code"><a name="run_as"></a>run_as</h3>
+          <p class="desc">The user the app should be run as. This user should have the minimal amount of privileges necessary to successfully run the application (i.e. read-only access to the Shiny application directory). Note that this directive cannot be used with user_apps, as user_apps always run as the user who owns the application.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>user</td>
+                  <td>String</td>
+                  <td>Yes</td>
+                  <td>The username that should be used to run the app</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> location<br/>
+            
+              <strong>Can also appear in:</strong> Top-level, server
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="access_log"></a>access_log</h3>
+          <p class="desc">The file path of the HTTP access log.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>path</td>
+                  <td>String</td>
+                  <td>Yes</td>
+                  <td>The file path where the access log should be written</td>
+                  <td></td>
+                </tr>
+              
+                <tr>
+                  <td>format</td>
+                  <td>String</td>
+                  <td>No</td>
+                  <td>The log file format; see http://www.senchalabs.org/connect/logger.html</td>
+                  <td>default</td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> Top-level<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="server"></a>server</h3>
+          <p class="desc">Declares an HTTP server. You need one of these for each port/IP address combination this Shiny Server instance should listen on.</p>
+          
+            <p class="noparams">This directive has no parameters.</p>
+          
+
+          <p>
+            <strong>Applies to:</strong> Top-level<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="listen"></a>listen</h3>
+          <p class="desc">Directs the enclosing server scope to listen on the specified port/IP address combination.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>port</td>
+                  <td>Integer</td>
+                  <td>Yes</td>
+                  <td>Port to listen on</td>
+                  <td></td>
+                </tr>
+              
+                <tr>
+                  <td>host</td>
+                  <td>String</td>
+                  <td>No</td>
+                  <td>IPv4 address to listen on (`*` or `0.0.0.0` for all); hostnames are not currently allowed, please use raw IPv4 address only</td>
+                  <td>*</td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> server<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="server_name"></a>server_name</h3>
+          <p class="desc">Directs the enclosing server scope to only honor requests that have the given host headers (i.e. virtual hosts).</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>names</td>
+                  <td>String</td>
+                  <td>Yes</td>
+                  <td>The virtual hostname(s) to bind this server to</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> server<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="location"></a>location</h3>
+          <p class="desc">Creates a scope that configures the given URL as an application (<code>app_dir</code>), autouser root (<code>user_apps on;</code>), or redirect to a different URL (<code>redirect</code>).</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>path</td>
+                  <td>String</td>
+                  <td>Yes</td>
+                  <td>The request path that this location should match</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> server<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="site_dir"></a>site_dir</h3>
+          <p class="desc">Configures the enclosing location scope to be a website that can contain both Shiny applications and unrelated static assets in a single directory tree.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>rootPath</td>
+                  <td>String</td>
+                  <td>Yes</td>
+                  <td>The path to the root directory of the website</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> location<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="user_apps"></a>user_apps</h3>
+          <p class="desc">Configures the enclosing location scope to be an autouser root, meaning that applications will be served up from users' ~/ShinyApps directories.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>enabled</td>
+                  <td>Boolean</td>
+                  <td>No</td>
+                  <td>Whether this location should serve up all users' ~/ShinyApps directories</td>
+                  <td>true</td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> location<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="app_dir"></a>app_dir</h3>
+          <p class="desc">Configures the enclosing location scope to serve up the specified Shiny application.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>path</td>
+                  <td>String</td>
+                  <td>Yes</td>
+                  <td>The path to the Shiny application directory</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> location<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="redirect"></a>redirect</h3>
+          <p class="desc">Configures the enclosing location to redirect all requests to the specified URL.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>url</td>
+                  <td>String</td>
+                  <td>Yes</td>
+                  <td>The URL (or base URL) to redirect to</td>
+                  <td></td>
+                </tr>
+              
+                <tr>
+                  <td>statusCode</td>
+                  <td>Integer</td>
+                  <td>No</td>
+                  <td>The status code to send with the response (see http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#3xx_Redirection)</td>
+                  <td>302</td>
+                </tr>
+              
+                <tr>
+                  <td>exact</td>
+                  <td>Boolean</td>
+                  <td>No</td>
+                  <td>Whether to match on the URL exactly; if false, any subpaths will match as well</td>
+                  <td>true</td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> location<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="log_dir"></a>log_dir</h3>
+          <p class="desc">Directs the application to write error logs to the specified directory. Only applies to location scopes that are configured with <code>app_dir</code>, as <code>user_app</code> (autouser) always writes error logs to <code>~/ShinyApps/log</code>.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>path</td>
+                  <td>String</td>
+                  <td>Yes</td>
+                  <td>The path to which application log files should be written</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> location<br/>
+            
+              <strong>Can also appear in:</strong> Top-level, server
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="members_of"></a>members_of</h3>
+          <p class="desc">Restricts a <code>user_app</code> (autouser) scope to require membership in one or more groups (or, if no arguments are passed, lifts group restrictions from a <code>members_of</code> directive in a parent scope).</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>groups</td>
+                  <td>String</td>
+                  <td>Yes</td>
+                  <td>Users must be a member of at least one of these groups in order to deploy applications; if no groups are provided, then all users are allowed</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> location<br/>
+            
+              <strong>Can also appear in:</strong> Top-level, server
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="google_analytics_id"></a>google_analytics_id</h3>
+          <p class="desc">Configure Google Analytics tracking code to be inserted in Shiny application pages.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100px"></col>
+                <col style="width: 100%"></col>
+                <col style="width: 100px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>gaid</td>
+                  <td>String</td>
+                  <td>Yes</td>
+                  <td>The Google tracking ID, for example, UA-18988-1</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <strong>Applies to:</strong> location<br/>
+            
+              <strong>Can also appear in:</strong> Top-level, server
+            
+          </p>
+        </li>
+      
+    </ul>
+  </div>
+</body>
+</html>
