@@ -14,7 +14,9 @@ Shiny Server is a server program that makes [Shiny](http://shiny.rstudio.org/) a
 
 A Linux server, with the following installed:
 
-* [Node.js 0.8.16 or later](http://nodejs.org) (for Ubuntu, we have found [these instructions](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to work well)
+* [Node.js 0.8.16 or later](http://nodejs.org)
+  * For Ubuntu, we have found [these instructions](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to work well.
+  * For Red Hat/CentOS, we recommend [installing from source](https://github.com/joyent/node/wiki/Installation).
 * [R 2.15 or later](http://www.r-project.org)
 * [Shiny](https://github.com/rstudio/shiny) R package, installed into the site-wide library. This is one easy way to do that:<br/>
 ```
@@ -49,7 +51,9 @@ Finally, start Shiny Server:
 sudo shiny-server
 ```
 
-Now start a web browser and point it to `http://localhost:3838/MY-APP/`. (Notice that ".shiny" does not appear in the URL.) If the browser is not able to connect to the server, configure your server's firewall to allow inbound TCP connections on port 3838.
+Now start a web browser and point it to `http://localhost:3838/MY-APP/`. (Notice that ".shiny" does not appear in the URL.)
+
+**If the browser is not able to connect to the server, configure your server's firewall to allow inbound TCP connections on port 3838.**
 
 To customize any of the above, or to explore the other ways Shiny Server can host Shiny apps, see the [Configuration](#configuration) section below.
 
