@@ -51,7 +51,7 @@ Finally, start Shiny Server:
 sudo shiny-server
 ```
 
-Now start a web browser and point it to `http://localhost:3838/MY-APP/`. (Notice that ".shiny" does not appear in the URL.)
+Now start a web browser and point it to `http://<hostname>:3838/MY-APP/`. (Notice that ".shiny" does not appear in the URL.)
 
 **If the browser is not able to connect to the server, configure your server's firewall to allow inbound TCP connections on port 3838.**
 
