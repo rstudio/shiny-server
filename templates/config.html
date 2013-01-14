@@ -1,9 +1,21 @@
 <!DOCTYPE html>
+
+{{{warning}}}
+
 <html>
 <head>
   <title>Shiny Server v{{version}} Configuration Reference</title>
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>  <style type="text/css">
+  <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+  <style type="text/css">
+  a {
+    color: #44A;
+    text-decoration: none;
+  }
+  label {
+    font-weight: 600;
+  }
+
   body {
     font-family: 'Source Sans Pro', sans-serif;
     margin: 0;
@@ -17,7 +29,8 @@
   }
 
   code, .code {
-    font-family: 'Source Code Pro';
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
   }
 
   h1 {
@@ -33,6 +46,7 @@
   }
 
   #toc h2 {
+    font-weight: 600;
     margin: 0;
   }
 
@@ -47,13 +61,15 @@
   }
   ul.directives li {
     margin: 40px 0 0 0;
-    padding-left: 20px;
   }
   ul.directives h3 {
     color: black;
-    font-size: 20px;
-    margin-bottom: 8px;
-    margin-left: -20px;
+    font-weight: 600;
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+  ul.directives h3+p {
+    margin-top: 0;
   }
 
   table.params {
@@ -67,6 +83,7 @@
     border: 1px solid #CCC;
   }
   table.params th {
+    font-weight: 600;
     text-align: left;
   }
   </style>
@@ -93,16 +110,16 @@
           {{#if params}}
             <table class="params">
               <colgroup>
-                <col style="width: 100px"></col>
-                <col style="width: 100px"></col>
-                <col style="width: 100px"></col>
-                <col style="width: 100%"></col>
-                <col style="width: 100px"></col>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
               </colgroup>
               <tr>
                 <th>Parameter</th>
                 <th>Type</th>
-                <th>Required</th>
+                <th>foo</th>
                 <th>Description</th>
                 <th>Default</th>
               </tr>
@@ -110,7 +127,7 @@
                 <tr>
                   <td>{{name}}</td>
                   <td>{{type}}</td>
-                  <td>{{#if optional}}No{{else}}Yes{{/if}}</td>
+                  <td>{{#if optional}}optional{{else}}{{#if vararg}}multiple{{else}}required{{/if}}{{/if}}</td>
                   <td>{{{desc}}}</td>
                   <td>{{defaultValue}}</td>
                 </tr>
@@ -121,9 +138,10 @@
           {{/if}}
 
           <p>
-            <strong>Applies to:</strong> {{primaryLoc}}<br/>
-            {{#if otherLocs}}
-              <strong>Can also appear in:</strong> {{otherLocs}}
+            <label>Applies to:</label> {{{scopelist primaryLoc}}}<br/>
+            <label>Inheritable:</label> {{YesNo otherLocs}}<br/>
+            {{#if children}}
+              <label>Child directives:</label> {{{scopelist children}}}<br/>
             {{/if}}
           </p>
         </li>
