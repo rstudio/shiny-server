@@ -33,8 +33,8 @@ sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')
 Run as root (or `sudo`):
 
 ```
-# Create a user to run Shiny apps under
-useradd --system shiny
+# Create a system account to run Shiny apps
+useradd -r shiny
 # Create a root directory for your website
 mkdir -p /var/shiny-server/www
 # Create a directory for application logs
