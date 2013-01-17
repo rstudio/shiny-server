@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
  * makedocs.js
  *
@@ -24,9 +26,9 @@ var util = require('util');
 var htmlEscape = require('connect/lib/utils').escape;
 var Handlebars = require('handlebars');
 var _ = require('underscore');
-var map = require('./core/map');
-var config = require('./config/config');
-var schema = require('./config/schema');
+var map = require('../lib/core/map');
+var config = require('../lib/config/config');
+var schema = require('../lib/config/schema');
 
 function filterDesc(desc) {
   if (!desc)
@@ -74,7 +76,7 @@ var packageInfo =
   JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json')));
 var version = packageInfo['version'];
 
-var rulesPath = path.join(__dirname, 'router/shiny-server-rules.config');
+var rulesPath = path.join(__dirname, '../lib/router/shiny-server-rules.config');
 var ruleConfig = config.parse(fs.readFileSync(rulesPath, 'utf-8'), rulesPath);
 
 var rules = _.map(ruleConfig.children, function(child) {
