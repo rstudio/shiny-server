@@ -144,6 +144,8 @@
             
               <li><a href="#site_dir">site_dir</a></li>
             
+              <li><a href="#directory_index">directory_index</a></li>
+            
               <li><a href="#user_apps">user_apps</a></li>
             
               <li><a href="#app_dir">app_dir</a></li>
@@ -500,7 +502,7 @@ server {
             <label>Applies to:</label> <code><a href="#server">server</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
-              <label>Child directives:</label> <code><a href="#run_as">run_as</a></code>, <code><a href="#site_dir">site_dir</a></code>, <code><a href="#user_apps">user_apps</a></code>, <code><a href="#app_dir">app_dir</a></code>, <code><a href="#redirect">redirect</a></code>, <code><a href="#log_dir">log_dir</a></code>, <code><a href="#members_of">members_of</a></code>, <code><a href="#google_analytics_id">google_analytics_id</a></code><br/>
+              <label>Child directives:</label> <code><a href="#run_as">run_as</a></code>, <code><a href="#site_dir">site_dir</a></code>, <code><a href="#directory_index">directory_index</a></code>, <code><a href="#user_apps">user_apps</a></code>, <code><a href="#app_dir">app_dir</a></code>, <code><a href="#redirect">redirect</a></code>, <code><a href="#log_dir">log_dir</a></code>, <code><a href="#members_of">members_of</a></code>, <code><a href="#google_analytics_id">google_analytics_id</a></code><br/>
             
           </p>
         </li>
@@ -530,6 +532,44 @@ server {
                   <td>String</td>
                   <td>required</td>
                   <td>The path to the root directory of the website</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="directory_index"></a>directory_index</h3>
+          <p class="desc">When enabled, if a directory is requested by the client and an <code>index.html</code> file is not present, a list of the directory contents is created automatically and returned to the client. If this directive is not present in a custom config file, the default behavior is to disable directory indexes. However, it is enabled if no config file is present at all (in other words, the default config file has it enabled).</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>enabled</td>
+                  <td>Boolean</td>
+                  <td>required</td>
+                  <td>Whether directory contents should automatically displayed</td>
                   <td></td>
                 </tr>
               

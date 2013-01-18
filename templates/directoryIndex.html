@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{title}}</title>
+  <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+  <style type="text/css">
+  body {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+  pre, tt, code, .code, #detail {
+    font-family: 'Source Code Pro', monospace;
+  }
+  h1 {
+    font-size: 40px;
+  }
+  a {
+    text-decoration: none;
+  }
+  </style>
+</head>
+<body>
+
+<h1>{{title}}</h1>
+
+<ul>
+  {{#each apps}}
+    <li><a class="code" href="{{this.url}}">{{this.name}}</a> (application)</li>
+  {{/each}}
+  {{#each dirs}}
+    <li><a class="code" href="{{this.url}}">{{this.name}}/</a></li>
+  {{/each}}
+  {{#each files}}
+    <li><a class="code" href="{{this.url}}">{{this.name}}</a></li>
+  {{/each}}
+</ul>
+
+</body>
+</html>
