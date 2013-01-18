@@ -4,7 +4,7 @@
 
 <html>
 <head>
-  <title>Shiny Server v0.2.2 Configuration Reference</title>
+  <title>Shiny Server v0.3.0 Configuration Reference</title>
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
   <style type="text/css">
@@ -119,7 +119,7 @@
 <body>
   <div id="container">
     <h1>Shiny Server Configuration Reference</h1>
-    <p>Version 0.2.2</p>
+    <p>Version 0.3.0</p>
 
     <div id="toc">
       <h2>Table of Contents</h2>
@@ -176,7 +176,7 @@
     <h3>Site directory [<code><a href="#site_dir">site_dir</a></code>]</h3>
     <p>Serve up a directory which can contain a combination of static assets (HTML files, images, PDFs, etc.), Shiny applications, and subdirectories.</p>
     <p>
-      Any subdirectory name that ends with <code>.shiny</code> is assumed to be a Shiny application directory. For example, if <code>/var/shiny-server/www</code> is your root dir and <code>/var/shiny-server/www/sales/historical.shiny</code> contains a Shiny application, then the URL for that application would be <code>http://hostname:port/sales/historical/</code>.
+      Any subdirectory that contains a <code>shiny.R</code> file is assumed to be a Shiny application directory. For example, if <code>/var/shiny-server/www</code> is your root dir and <code>/var/shiny-server/www/sales/historical/server.R</code> exists, then the URL for that application would be <code>http://hostname:port/sales/historical/</code>.
     </p>
   </li>
   <li>
