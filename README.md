@@ -10,25 +10,29 @@ Shiny Server is a server program that makes [Shiny](http://shiny.rstudio.org/) a
 * Free and open source ([AGPLv3](http://www.gnu.org/licenses/agpl-3.0.html) license)
 * **Experimental quality. Use at your own risk!**
 
-## Prerequisites
+## Installing
 
-A Linux server, with the following installed:
+(Ubuntu users: [this wiki page](https://github.com/rstudio/shiny-server/wiki/Ubuntu-step-by-step-install-instructions) lists all the commands that are needed to install the prerequisites and Shiny Server.)
+
+You'll need a Linux server, with the following prerequisites installed:
 
 * [Node.js 0.8.16 or later](http://nodejs.org)
   * For Ubuntu, we have found [these instructions](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to work well.
   * For Red Hat/CentOS, we recommend [installing from source](https://github.com/joyent/node/wiki/Installation).
 * [R 2.15 or later](http://www.r-project.org)
-* [Shiny](https://github.com/rstudio/shiny) R package, installed into the site-wide library. This is one easy way to do that:<br/>
+* [Shiny](https://github.com/rstudio/shiny) R package, **installed into the machine-wide site library**. This is one easy way to do that:<br/>
 ```
 sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')\""
 ```
 
-## Installing
+Now you're ready to install Shiny Server:
 
 * Run as root (or `sudo`): `npm install -g shiny-server`
-* Optional: Create a config file (see below).
+* Optional: Create a config file (see below)
 
 ## Quick start
+
+If you don't create a configuration file, Shiny Server will use a [hardcoded default config](https://github.com/rstudio/shiny-server/blob/master/config/default.config). Follow these instructions to prepare your machine to run with these default settings.
 
 Run as root (or `sudo`):
 
