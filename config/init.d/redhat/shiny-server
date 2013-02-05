@@ -9,6 +9,7 @@
 
 prog=shiny-server
 logfile="/var/log/${prog}"
+lockfile="/var/lock/subsys/${prog}"
 
 # Exit if the package is not installed
 [ -x "$prog" ] || exit 0
