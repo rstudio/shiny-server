@@ -8,13 +8,16 @@
 . /etc/rc.d/init.d/functions
 
 prog=shiny-server
+logfile="/var/log/${prog}"
+lockfile="/var/lock/subsys/${prog}"
 
 # Exit if the package is not installed
-[ -x "$rserver" ] || exit 0
+[ -x "$prog" ] || exit 0
 
 start() {
-    echo -n $"Starting shiny-server: "
-    daemon $rserver
+    touch $logfile
+    echo -n "Starting shiny-server: "
+    daemon $prog >> $logfile &
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
@@ -63,4 +66,3 @@ case "$1" in
         echo $"Usage: $0 {start|stop|status|restart}"
         exit 2
 esac
-
