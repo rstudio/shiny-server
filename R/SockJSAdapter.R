@@ -48,12 +48,14 @@ local({
       tags$script(
         HTML(
           paste(
-           'Shiny.createSocket = function() {return new SockJS(location.pathname + "__sockjs__",null,{});};',
-           'Shiny.oncustommessage = function(message) {',
-           '  if (typeof message === "string") alert(message);', # Legacy format
-           '  if (message.alert) alert(message.alert);',
-           '  if (message.console && console.log) console.log(message.console);',
-           '};',
+           'if (typeof(Shiny) != "undefined") {',
+           '  Shiny.createSocket = function() {return new SockJS(location.pathname + "__sockjs__",null,{});};',
+           '  Shiny.oncustommessage = function(message) {',
+           '    if (typeof message === "string") alert(message);', # Legacy format
+           '    if (message.alert) alert(message.alert);',
+           '    if (message.console && console.log) console.log(message.console);',
+           '  };',
+           '}',
            sep = '\r\n'
           )
         )
@@ -63,7 +65,13 @@ local({
       sep="\n"
    )
                             
-   filter <- function(ws, header, response) {
+   filter <- function(...) {
+      # The signature of filter functions changed between Shiny 0.4.0 and
+      # 0.4.1; previously the parameters were (ws, headers, response) and
+      # after they became (request, response). To work with both types, we
+      # just grab the last argument.
+      response <- list(...)[[length(list(...))]]
+
       if (response$status < 200 || response$status > 300) return(response)
                                                 
       if (!grepl("^text/html\\b", response$content_type, perl=T))
