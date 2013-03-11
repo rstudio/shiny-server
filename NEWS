@@ -1,0 +1,20 @@
+shiny-server 0.3.3
+--------------------------------------------------------------------------------
+
+* Remove pausing which is causing corruption in proxied HTTP request bodies.
+
+shiny-server 0.3.2
+--------------------------------------------------------------------------------
+
+* Make shiny-server compatible with httpuv package which we are introducing to
+  Shiny.
+
+shiny-server 0.3.1
+--------------------------------------------------------------------------------
+
+* Fix crashing bug when "req" object has no address.
+
+shiny-server 0.3.0
+--------------------------------------------------------------------------------
+
+* Initial release.
