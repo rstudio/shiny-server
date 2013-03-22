@@ -22,7 +22,8 @@ local({
    Sys.setenv(
     SHINY_APP=input[1],
     SHINY_PORT=input[2],
-    SHINY_GAID=input[3])
+    SHINY_GAID=input[3],
+    SHINY_SERVER_VERSION=input[4])
    close(fd)
 
 
