@@ -5,6 +5,8 @@ shiny-server 0.3.4
   directory root. Existing sessions will not be terminated, but the next session
   to be initiated will cause a new R process to be launched.
 
+* shiny-server now passes its version number to R processes it launches.
+
 shiny-server 0.3.3
 --------------------------------------------------------------------------------
 
