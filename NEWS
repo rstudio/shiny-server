@@ -1,6 +1,13 @@
 shiny-server 0.3.4
 --------------------------------------------------------------------------------
 
+* Fix crash on Node 0.10.x when serving static files.
+
+* Fix slow memory leak and log file descriptor leak.
+
+shiny-server 0.3.4
+--------------------------------------------------------------------------------
+
 * You can now force an app to restart by calling "touch restart.txt" in the app
   directory root. Existing sessions will not be terminated, but the next session
   to be initiated will cause a new R process to be launched.
