@@ -4,7 +4,7 @@ var app_worker = require('../lib/worker/app-worker');
 
 var rw_p = app_worker.runWorker_p(new AppSpec(
   '/Users/jcheng/ShinyApps/diamonds', 'jcheng', '', null, {}),
-  8103, './testlog.log');
+  '/tmp/test-app-worker.sock', './testlog.log');
 
 rw_p
 .then(

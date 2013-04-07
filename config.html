@@ -4,7 +4,7 @@
 
 <html>
 <head>
-  <title>Shiny Server v0.3.0 Configuration Reference</title>
+  <title>Shiny Server v0.3.5 Configuration Reference</title>
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
   <style type="text/css">
@@ -119,7 +119,7 @@
 <body>
   <div id="container">
     <h1>Shiny Server Configuration Reference</h1>
-    <p>Version 0.3.0</p>
+    <p>Version 0.3.5</p>
 
     <div id="toc">
       <h2>Table of Contents</h2>
@@ -131,6 +131,8 @@
           <ul class="code">
             
               <li><a href="#run_as">run_as</a></li>
+            
+              <li><a href="#socket_dir">socket_dir</a></li>
             
               <li><a href="#access_log">access_log</a></li>
             
@@ -316,6 +318,44 @@ server {
 
           <p>
             <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="socket_dir"></a>socket_dir</h3>
+          <p class="desc">The path to the (empty) directory within which Shiny worker processes should create domain sockets. The directory should be owned by root with permissions set to <code>0222</code>. Defaults to <code>$TMPDIR/shiny-session</code> if this directive is not present.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>path</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td>The domain socket directory path (should be absolute).</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> Top-level<br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
