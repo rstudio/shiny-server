@@ -29,7 +29,8 @@
     "optimist"          :  "0.3.5",
     "pause"             :  "0.0.1",
     "send"              :  "0.1.x",
-    "connect"           :  "2.7.x"
+    "connect"           :  "2.7.x",
+    "webkit-devtools-agent" :  "*"
   },
   "license": "AGPL-3",
   "engines": {

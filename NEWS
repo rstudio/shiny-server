@@ -1,4 +1,12 @@
-shiny-server 0.3.4
+shiny-server 0.3.6
+--------------------------------------------------------------------------------
+
+* Support for node-webkit-agent (https://github.com/c4milo/node-webkit-agent).
+  Use by setting DEBUG_PORT environment variable to a port number, then follow
+  the instructions on the node-webkit-agent GitHub page under "Connecting to the
+  agent".
+
+shiny-server 0.3.5
 --------------------------------------------------------------------------------
 
 * Fix crash on Node 0.10.x when serving static files.
