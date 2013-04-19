@@ -25,3 +25,8 @@ setInterval(function() {
   return true;
 }, 200);
 
+setInterval(function() {
+  new Visit(Math.random() * 10000, 'http://localhost:3838/bad');
+  return true;
+}, 200);
+
