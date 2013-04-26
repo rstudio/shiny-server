@@ -30,7 +30,8 @@
     "pause"             :  "0.0.1",
     "send"              :  "0.1.x",
     "connect"           :  "2.7.x",
-    "webkit-devtools-agent" :  "*"
+    "webkit-devtools-agent" :  "*",
+    "client-sessions"   :  "0.2.x"
   },
   "license": "AGPL-3",
   "engines": {
