@@ -45,7 +45,7 @@ local({
    }
 
    inject <- paste(
-      tags$script(src='http://cdn.sockjs.org/sockjs-0.3.min.js'),
+      tags$script(src='//d1fxtkz8shb9d2.cloudfront.net/sockjs-0.3.min.js'),
       tags$script(
         HTML(
           paste(
