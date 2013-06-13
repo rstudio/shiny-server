@@ -71,7 +71,8 @@ describe('SimpleScheduler', function(){
       //check that the worker has the necessary fields created.
       var worker = relWorkers[Object.keys(relWorkers)[0]];
       worker.should.have.keys(['data', 'promise']);
-    })
+    }),
+    it('should not surpass the MAX_REQUESTS directive.')
   })
 
 })
