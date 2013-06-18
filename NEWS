@@ -1,3 +1,13 @@
+
+shiny-server 0.4.0
+--------------------------------------------------------------------------------
+
+* Use UNIX domain sockets for data transfer instead of TCP/IP for enhanced 
+  security.
+
+* Added scheduler and traffic direction which require shiny >= 0.6.0.99 to be
+  compatible.
+
 shiny-server 0.3.6
 --------------------------------------------------------------------------------
 
