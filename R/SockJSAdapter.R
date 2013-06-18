@@ -89,4 +89,6 @@ local({
    }
    options(shiny.http.response.filter=filter)
 })
-runApp(Sys.getenv('SHINY_APP'),port=as.integer(Sys.getenv('SHINY_PORT')),launch.browser=FALSE)
+port <- Sys.getenv('SHINY_PORT')
+attr(port, 'mask') <- strtoi('0777', 8)
+runApp(Sys.getenv('SHINY_APP'),port=port,launch.browser=FALSE)
