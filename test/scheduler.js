@@ -18,7 +18,8 @@ var Q = require('q');
 var _ = require('underscore');
 
 var scheduler = new Scheduler();
-var appSpec = new AppSpec("/var/shiny-www/testA/", "jalle6", "", "/tmp", {})
+var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
+scheduler.setSocketDir("/tmp/shiny-session/");
 
 
 SHINY_SERVER_VERSION = "0.3.5";
@@ -31,20 +32,23 @@ describe('Scheduler', function(){
 
       //request a worker
       scheduler.spawnWorker_p(appSpec, {a:5, b:"test"})
-      .then(function(wh){ wh.kill('SIGABRT'); })
+      .then(function(wh){
+        //check that exactly one app had workers created
+        Object.keys(scheduler.$workers).should.have.length(1);
+
+        //check that exactly one worker has been created for this app's key.
+        var relWorkers = scheduler.$workers[appSpec.getKey()];
+        Object.keys(relWorkers).should.have.length(1);
+
+        //check that the worker has the necessary fields created.
+        var worker = relWorkers[Object.keys(relWorkers)[0]];
+        worker.should.have.keys(['data', 'promise']);
+        worker.data.should.have.keys(['a', 'b', 'sockConn', 'httpConn', 'pendingConn']);
+        return (wh);
+      })
+      .then(function(wh){ wh.kill('SIGABRT'); return(wh.exitPromise); })
+      .then(function() {})
       .then(done, done).done();
-
-      //check that exactly one app had workers created
-      Object.keys(scheduler.$workers).should.have.length(1);
-
-      //check that exactly one worker has been created for this app's key.
-      var relWorkers = scheduler.$workers[appSpec.getKey()];
-      Object.keys(relWorkers).should.have.length(1);
-
-      //check that the worker has the necessary fields created.
-      var worker = relWorkers[Object.keys(relWorkers)[0]];
-      worker.should.have.keys(['data', 'promise']);
-      worker.data.should.have.keys(['a', 'b', 'sockConn', 'httpConn']);
     }),
     it('properly handles acquire and release.', function(done){
       //check that we're starting off with the last.
@@ -118,11 +122,11 @@ describe('Scheduler', function(){
           wh.release('sock');
           wh.release('http');
           //ensure that no timer has been activated yet.
-          Object.keys(worker.data).should.have.length(2); // just conn counts.
+          Object.keys(worker.data).should.have.length(3); // just conn counts.
 
           wh.release('http');
           //ensure timer is now active
-          Object.keys(worker.data).should.have.length(3); // added timer
+          Object.keys(worker.data).should.have.length(4); // added timer
           worker.data.timer.should.exist;
 
           //create a promise that can be used to reference the outcome of this check.
@@ -131,7 +135,7 @@ describe('Scheduler', function(){
           // create a timer that will check periodically to see if the worker has been
           // killed. If it isn't destroyed by the time it should have been, then this
           // test fails.
-          var timeout = 7000;
+          var timeout = 7500;
           var elapsed = 0;
           var interval = 1000;
           var intervalId = setInterval(function() {

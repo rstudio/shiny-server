@@ -17,7 +17,8 @@ var sinon = require('sinon');
 var Q = require('q');
 
 var scheduler = new SimpleScheduler();
-var appSpec = new AppSpec("/var/shiny-www/testA/", "jalle6", "", "/tmp", {})
+var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
+scheduler.setSocketDir("/tmp/shiny-session/");
 
 describe('SimpleScheduler', function(){
   describe('#acquireWorker_p()', function(){
@@ -27,20 +28,23 @@ describe('SimpleScheduler', function(){
 
       //request a worker
       scheduler.acquireWorker_p(appSpec)
-      .then(function(wh){ wh.kill(); })
+      .then(function(wh){
+        //check that exactly one app had workers created
+        Object.keys(scheduler.$workers).should.have.length(1);
+
+        //check that exactly one worker has been created for this app's key.
+        var relWorkers = scheduler.$workers[appSpec.getKey()];
+        Object.keys(relWorkers).should.have.length(1);
+
+        //check that the worker has the necessary fields created.
+        var worker = relWorkers[Object.keys(relWorkers)[0]];
+        worker.should.have.keys(['data', 'promise']);
+        Object.keys(worker.data).should.have.length(3);
+        return wh;
+      })
+      .then(function(wh){ wh.kill(); return(wh.exitPromise); })
+      .then(function(){})
       .then(done, done).done();
-
-      //check that exactly one app had workers created
-      Object.keys(scheduler.$workers).should.have.length(1);
-
-      //check that exactly one worker has been created for this app's key.
-      var relWorkers = scheduler.$workers[appSpec.getKey()];
-      Object.keys(relWorkers).should.have.length(1);
-
-      //check that the worker has the necessary fields created.
-      var worker = relWorkers[Object.keys(relWorkers)[0]];
-      worker.should.have.keys(['data', 'promise']);
-      Object.keys(worker.data).should.have.length(2);
     }),
     it('should not create a new worker for requests to the same app.', function(done){
       //check that we have the one worker left from the previous app
