@@ -61,6 +61,46 @@ Handle<Value> GetPwNam(const Arguments& args) {
   return scope.Close(userInfo);
 }
 
+Handle<Value> GetPwUid(const Arguments& args) {
+  HandleScope scope;
+
+  if (args.Length() < 1) {
+    return ThrowException(Exception::Error(
+          String::New("getpwuid requires 1 argument")));
+  }
+
+  uid_t pwuid = args[0]->IntegerValue();
+  printf("%d", pwuid);
+
+  int err = 0;
+  struct passwd pwd;
+  struct passwd *pwdp = NULL;
+
+  int bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+  if (bufsize == -1)  // value was indeterminant
+    bufsize = 16384;
+  char buf[bufsize];
+
+  errno = 0;
+  if ((err = getpwuid_r(pwuid, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
+    if (errno == 0)
+      return scope.Close(Null());
+    else
+      return ThrowException(ErrnoException(errno, "getpwuid_r"));
+  }
+
+  Local<Object> userInfo = Object::New();
+  userInfo->Set(String::NewSymbol("name"), String::New(pwd.pw_name));
+  userInfo->Set(String::NewSymbol("passwd"), String::New(pwd.pw_passwd));
+  userInfo->Set(String::NewSymbol("uid"), Number::New(pwd.pw_uid));
+  userInfo->Set(String::NewSymbol("gid"), Number::New(pwd.pw_gid));
+  userInfo->Set(String::NewSymbol("gecos"), String::New(pwd.pw_gecos));
+  userInfo->Set(String::NewSymbol("home"), String::New(pwd.pw_dir));
+  userInfo->Set(String::NewSymbol("shell"), String::New(pwd.pw_shell));
+
+  return scope.Close(userInfo);
+}
+
 Handle<Value> GetGroupList(const Arguments& args) {
   HandleScope scope;
 
@@ -159,6 +199,8 @@ Handle<Value> GetGrNam(const Arguments& args) {
 void Initialize(Handle<Object> target) {
   target->Set(String::NewSymbol("getpwnam"),
       FunctionTemplate::New(GetPwNam)->GetFunction());
+  target->Set(String::NewSymbol("getpwuid"),
+      FunctionTemplate::New(GetPwUid)->GetFunction());
   target->Set(String::NewSymbol("getgrouplist"),
       FunctionTemplate::New(GetGroupList)->GetFunction());
   target->Set(String::NewSymbol("getgrnam"),
