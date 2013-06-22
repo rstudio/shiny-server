@@ -32,8 +32,8 @@ describe('SimpleScheduler', function(){
         //check that exactly one app had workers created
         Object.keys(scheduler.$workers).should.have.length(1);
 
-        //check that exactly one worker has been created for this app's key.
-        var relWorkers = scheduler.$workers[appSpec.getKey()];
+        //check that exactly one worker has been created for this scheduler.
+        var relWorkers = scheduler.$workers;
         Object.keys(relWorkers).should.have.length(1);
 
         //check that the worker has the necessary fields created.
@@ -47,47 +47,26 @@ describe('SimpleScheduler', function(){
       .then(done, done).done();
     }),
     it('should not create a new worker for requests to the same app.', function(done){
-      //check that we have the one worker left from the previous app
-      Object.keys(scheduler.$workers).should.have.length(1);
+      //check that we're starting fresh.
+      Object.keys(scheduler.$workers).should.have.length(0);
 
       //request a worker for the new app
       scheduler.acquireWorker_p(appSpec)
-      .then(function(wh){ wh.kill(); })
+      .then(function(wh){
+        //check that exactly one worker has been created for this scheduler.
+        var relWorkers = scheduler.$workers;
+        Object.keys(relWorkers).should.have.length(1);
+
+        //check that the worker has the necessary fields created.
+        var worker = relWorkers[Object.keys(relWorkers)[0]];
+        worker.should.have.keys(['data', 'promise']);
+
+        return wh;
+      })
+      .then(function(wh){ wh.kill(); return(wh.exitPromise); })
+      .then(function(){})
       .then(done, done).done();
 
-      //check that one additional app had workers created
-      Object.keys(scheduler.$workers).should.have.length(1);
-
-      //check that exactly one worker has been created for this app's key.
-      var relWorkers = scheduler.$workers[appSpec.getKey()];
-      Object.keys(relWorkers).should.have.length(1);
-
-      //check that the worker has the necessary fields created.
-      var worker = relWorkers[Object.keys(relWorkers)[0]];
-      worker.should.have.keys(['data', 'promise']);
-    }),
-    it('should create a new worker for a modified/new app.', function(done){
-      //check that we have the one worker left from the previous app
-      Object.keys(scheduler.$workers).should.have.length(1);
-
-      //modify the settings of the app slightly.
-      appSpec.settings = {a:1};
-
-      //request a worker for the new app
-      scheduler.acquireWorker_p(appSpec)
-      .then(function(wh){ wh.kill(); })
-      .then(done, done).done();
-
-      //check that one additional app had workers created
-      Object.keys(scheduler.$workers).should.have.length(2);
-
-      //check that exactly one worker has been created for this app's key.
-      var relWorkers = scheduler.$workers[appSpec.getKey()];
-      Object.keys(relWorkers).should.have.length(1);
-
-      //check that the worker has the necessary fields created.
-      var worker = relWorkers[Object.keys(relWorkers)[0]];
-      worker.should.have.keys(['data', 'promise']);
     }),
     it('should not surpass the MAX_REQUESTS directive.')
   })

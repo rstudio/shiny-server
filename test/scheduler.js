@@ -33,15 +33,11 @@ describe('Scheduler', function(){
       //request a worker
       scheduler.spawnWorker_p(appSpec, {a:5, b:"test"})
       .then(function(wh){
-        //check that exactly one app had workers created
+        //check that exactly one worker has been created
         Object.keys(scheduler.$workers).should.have.length(1);
 
-        //check that exactly one worker has been created for this app's key.
-        var relWorkers = scheduler.$workers[appSpec.getKey()];
-        Object.keys(relWorkers).should.have.length(1);
-
         //check that the worker has the necessary fields created.
-        var worker = relWorkers[Object.keys(relWorkers)[0]];
+        var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
         worker.should.have.keys(['data', 'promise']);
         worker.data.should.have.keys(['a', 'b', 'sockConn', 'httpConn', 'pendingConn']);
         return (wh);
@@ -51,16 +47,16 @@ describe('Scheduler', function(){
       .then(done, done).done();
     }),
     it('properly handles acquire and release.', function(done){
-      //check that we're starting off with the last.
-      Object.keys(scheduler.$workers).should.have.length(1);
+      //check that we're starting off fresh
+      Object.keys(scheduler.$workers).should.have.length(0);
 
       //slightly modify the settings to get a new app
       appSpec.settings = {x:1};
 
       var workerPromise = scheduler.spawnWorker_p(appSpec);
 
-      //check that exactly one worker has been created for this app's key.
-      var relWorkers = scheduler.$workers[appSpec.getKey()];
+      //check that exactly one worker has been created
+      var relWorkers = scheduler.$workers;
       Object.keys(relWorkers).should.have.length(1);
 
       //get the created worker
@@ -86,26 +82,26 @@ describe('Scheduler', function(){
         wh.release('http');
         worker.data.httpConn.should.equal(0);
 
-        wh.kill();
+        return(wh)
       })
+      .then(function(wh){ wh.kill('SIGABRT'); return(wh.exitPromise); })
+      .then(function() {})
       .then(done, done).done();
-      // note that the `.then(done, done)` is imperative if you actually want to wait
-      // until the R process starts. Without this, all the background async stuff will 
-      // just drag on after the (synchronous) test assertions have long been completed.
     }),
     it('sets timer after last connection.', function(done){
-        this.timeout(10000);
+        this.timeout(3000);
 
-        //check that we're starting off with the last two apps.
-        Object.keys(scheduler.$workers).should.have.length(2);
+        //check that we're starting off fresh.
+        Object.keys(scheduler.$workers).should.have.length(0);
 
         //slightly modify the settings to get a new app
-        appSpec.settings = {x:2};
+        appSpec.settings = {x:2, appDefaults: { idleTimeout: 1 }}
+        
 
         var workerPromise = scheduler.spawnWorker_p(appSpec);
 
         //check that exactly one worker has been created for this app's key.
-        var relWorkers = scheduler.$workers[appSpec.getKey()];
+        var relWorkers = scheduler.$workers;
         Object.keys(relWorkers).should.have.length(1);
 
         //get the created worker
@@ -135,9 +131,9 @@ describe('Scheduler', function(){
           // create a timer that will check periodically to see if the worker has been
           // killed. If it isn't destroyed by the time it should have been, then this
           // test fails.
-          var timeout = 7500;
+          var timeout = 2500;
           var elapsed = 0;
-          var interval = 1000;
+          var interval = 500;
           var intervalId = setInterval(function() {
             elapsed += interval;
             if (elapsed > timeout) {
@@ -148,7 +144,7 @@ describe('Scheduler', function(){
             }
 
             logger.trace('Checking to see if worker has closed...');
-            if (_.size(scheduler.$workers[appSpec.getKey()]) == 0){
+            if (_.size(scheduler.$workers) == 0){
               logger.trace('Worker is closed.');
               clearInterval(intervalId);
               defer.resolve();
