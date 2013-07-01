@@ -74,6 +74,10 @@ local({
       response <- list(...)[[length(list(...))]]
 
       if (response$status < 200 || response$status > 300) return(response)
+
+      # Don't break responses that use httpuv's file-based bodies.
+      if ('file' %in% names(response$content))
+         return(response)
                                                 
       if (!grepl("^text/html\\b", response$content_type, perl=T))
          return(response)
