@@ -1,4 +1,10 @@
-shiny-server 0.3.4
+shiny-server 0.3.6
+--------------------------------------------------------------------------------
+
+* Fix bug where certain text/html file downloads served from Shiny have their
+  contents replaced a filename that contains the body data.
+
+shiny-server 0.3.5
 --------------------------------------------------------------------------------
 
 * Fix crash on Node 0.10.x when serving static files.
