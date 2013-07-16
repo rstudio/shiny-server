@@ -17,7 +17,8 @@ var AppConfig = require('../lib/config/app-config');
 describe('AppConfig', function(){
   describe('#addLocalConfig', function(){
     it('properly supplements data.', function(){
-      var merged = AppConfig.addLocalConfig({
+      var appConfig = new AppConfig();
+      var merged = appConfig.addLocalConfig({
             appDir: '/dir',
             runAs: 'user',
             settings: {
@@ -40,7 +41,8 @@ describe('AppConfig', function(){
 
     }),
     it('properly overrides data.', function(){
-      var merged = AppConfig.addLocalConfig({
+      var appConfig = new AppConfig();
+      var merged = appConfig.addLocalConfig({
             appDir: '/dir',
             runAs: 'user',
             settings: {
@@ -66,7 +68,8 @@ describe('AppConfig', function(){
       merged.settings.scheduler.should.have.keys('simple');
     }),
     it('properly merges data.', function(){
-      var merged = AppConfig.addLocalConfig({
+      var appConfig = new AppConfig();
+      var merged = appConfig.addLocalConfig({
           appDir: '/dir',
           runAs: 'user',
           settings: {
@@ -91,7 +94,8 @@ describe('AppConfig', function(){
       merged.settings.scheduler.should.have.keys('simple');
     }),
     it('only overrides specific fields.', function(){
-      var merged = AppConfig.addLocalConfig({
+      var appConfig = new AppConfig();
+      var merged = appConfig.addLocalConfig({
           appDir: '/dir',
           runAs: 'user',
           settings: {

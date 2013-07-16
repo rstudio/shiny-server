@@ -17,10 +17,9 @@ var sinon = require('sinon');
 var Q = require('q');
 var _ = require('underscore');
 
-var scheduler = new Scheduler();
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
+var scheduler = new Scheduler(appSpec.getKey());
 scheduler.setSocketDir("/tmp/shiny-session/");
-
 
 SHINY_SERVER_VERSION = "0.3.5";
 
@@ -39,7 +38,8 @@ describe('Scheduler', function(){
         //check that the worker has the necessary fields created.
         var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
         worker.should.have.keys(['data', 'promise']);
-        worker.data.should.have.keys(['a', 'b', 'sockConn', 'httpConn', 'pendingConn']);
+        worker.data.should.have.keys(['a', 'b', 'sockConn', 'httpConn', 
+          'pendingConn', 'timer']);
         return (wh);
       })
       .then(function(wh){ wh.kill('SIGABRT'); return(wh.exitPromise); })
@@ -117,8 +117,8 @@ describe('Scheduler', function(){
           wh.acquire('sock');
           wh.release('sock');
           wh.release('http');
-          //ensure that no timer has been activated yet.
-          Object.keys(worker.data).should.have.length(3); // just conn counts.
+          //should have initialized a timer initialaly when there were no conncetions.
+          Object.keys(worker.data).should.have.length(4); // just conn counts.
 
           wh.release('http');
           //ensure timer is now active

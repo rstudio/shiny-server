@@ -16,8 +16,8 @@ var AppSpec = require('../lib/worker/app-spec.js');
 var sinon = require('sinon');
 var Q = require('q');
 
-var scheduler = new SimpleScheduler();
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
+var scheduler = new SimpleScheduler(appSpec);
 scheduler.setSocketDir("/tmp/shiny-session/");
 
 describe('SimpleScheduler', function(){
@@ -39,7 +39,7 @@ describe('SimpleScheduler', function(){
         //check that the worker has the necessary fields created.
         var worker = relWorkers[Object.keys(relWorkers)[0]];
         worker.should.have.keys(['data', 'promise']);
-        Object.keys(worker.data).should.have.length(3);
+        Object.keys(worker.data).should.have.length(4);
         return wh;
       })
       .then(function(wh){ wh.kill(); return(wh.exitPromise); })
