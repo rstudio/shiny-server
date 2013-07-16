@@ -95,4 +95,5 @@ local({
 })
 port <- Sys.getenv('SHINY_PORT')
 attr(port, 'mask') <- strtoi('0777', 8)
+cat(paste("\nStarting Shiny with process ID: '",Sys.getpid(),"'\n", sep=""))
 runApp(Sys.getenv('SHINY_APP'),port=port,launch.browser=FALSE)

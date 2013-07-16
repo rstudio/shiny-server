@@ -32,9 +32,10 @@
     "connect"           :  "2.7.x",
     "webkit-devtools-agent" :  "*",
     "client-sessions"   :  "0.2.x",
-    "should"         	:  "1.2.2",
-    "sinon"          	:  "1.7.2",
-    "qs"		:  "0.6.5"
+    "should"         	:  "1.2.x",
+    "sinon"          	:  "1.7.x",
+    "qs"		:  "0.6.x",
+    "split" :   "0.2.x"
   },
   "license": "AGPL-3",
   "engines": {
