@@ -15,8 +15,9 @@ var SimpleScheduler = require('../lib/scheduler/simple-scheduler.js');
 var AppSpec = require('../lib/worker/app-spec.js');
 var sinon = require('sinon');
 var Q = require('q');
+var OutOfCapacityError = require('../lib/core/errors').OutOfCapacity;
 
-var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
+var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {scheduler: {}})
 var scheduler = new SimpleScheduler(appSpec);
 scheduler.setSocketDir("/tmp/shiny-session/");
 
@@ -68,7 +69,72 @@ describe('SimpleScheduler', function(){
       .then(done, done).done();
 
     }),
-    it('should not surpass the MAX_REQUESTS directive.'),
+    it('should not limit if there is no max', function(done){
+      //check that we're starting fresh.
+      Object.keys(scheduler.$workers).should.have.length(0);
+
+      appSpec.settings.scheduler = {simple: {maxRequests: 0}};
+
+      //request a worker for the new app
+      scheduler.acquireWorker_p(appSpec)
+      .then(function(wh){
+        //check that exactly one worker has been created for this scheduler.
+        var relWorkers = scheduler.$workers;
+        Object.keys(relWorkers).should.have.length(1);
+
+        //check that the worker has the necessary fields created.
+        var worker = relWorkers[Object.keys(relWorkers)[0]];
+        worker.should.have.keys(['data', 'promise']);
+
+        worker.data.sockConn = 10000;
+
+        return scheduler.acquireWorker_p(appSpec);
+      })
+      .then(function(wh){
+        return wh;
+      })
+      .then(function(wh){ wh.kill(); return(wh.exitPromise); })
+      .then(function(){})
+      .then(done, done).done();
+    }),
+    it('should not surpass the MAX_REQUESTS directive.', function(done){
+      //check that we're starting fresh.
+      Object.keys(scheduler.$workers).should.have.length(0);
+
+      appSpec.settings.scheduler = {simple: {maxRequests: 10}};
+
+      var origWorker = null;
+
+      //request a worker for the new app
+      scheduler.acquireWorker_p(appSpec)
+      .then(function(wh){
+        origWorker = wh;
+        //check that exactly one worker has been created for this scheduler.
+        var relWorkers = scheduler.$workers;
+        Object.keys(relWorkers).should.have.length(1);
+
+        //check that the worker has the necessary fields created.
+        var worker = relWorkers[Object.keys(relWorkers)[0]];
+        worker.should.have.keys(['data', 'promise']);
+
+        worker.data.sockConn = 1000;
+
+        return scheduler.acquireWorker_p(appSpec);
+      })
+      .then(function(wh){
+        // shouldn't have obtained a worker.
+        throw new Error("Should have thrown 503, but didn't");
+      }, function(error){
+        if (!error instanceof OutOfCapacityError){
+          throw error;
+        }
+        // should have failed, return the original worker
+        return origWorker;
+      })
+      .then(function(wh){ wh.kill(); return(wh.exitPromise); })
+      .then(function(){})
+      .then(done, done).done();
+    }),
     it('should 503 base URL requests ahead of MAX_REQUESTS')
   })
 
