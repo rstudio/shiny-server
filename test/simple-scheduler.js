@@ -68,7 +68,8 @@ describe('SimpleScheduler', function(){
       .then(done, done).done();
 
     }),
-    it('should not surpass the MAX_REQUESTS directive.')
+    it('should not surpass the MAX_REQUESTS directive.'),
+    it('should 503 base URL requests ahead of MAX_REQUESTS')
   })
 
 })
