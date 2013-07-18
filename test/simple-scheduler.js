@@ -16,6 +16,7 @@ var AppSpec = require('../lib/worker/app-spec.js');
 var sinon = require('sinon');
 var Q = require('q');
 var OutOfCapacityError = require('../lib/core/errors').OutOfCapacity;
+var _ = require('underscore');
 
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {scheduler: {}})
 var scheduler = new SimpleScheduler(appSpec);
@@ -104,6 +105,7 @@ describe('SimpleScheduler', function(){
       appSpec.settings.scheduler = {simple: {maxRequests: 10}};
 
       var origWorker = null;
+      var worker = null;
 
       //request a worker for the new app
       scheduler.acquireWorker_p(appSpec)
@@ -114,19 +116,33 @@ describe('SimpleScheduler', function(){
         Object.keys(relWorkers).should.have.length(1);
 
         //check that the worker has the necessary fields created.
-        var worker = relWorkers[Object.keys(relWorkers)[0]];
+        worker = relWorkers[_.keys(relWorkers)[0]];
         worker.should.have.keys(['data', 'promise']);
 
-        worker.data.sockConn = 1000;
+        worker.data.pendingConn = 0;
+        worker.data.sockConn = 9;
+        worker.data.httpConn = 100; // shouldn't matter
 
-        return scheduler.acquireWorker_p(appSpec);
+        return scheduler.acquireWorker_p(appSpec, '/');
       })
       .then(function(wh){
+        //should have been able to create a worker, we had room for one more
+
+        var relWorkers = scheduler.$workers;
+        worker = relWorkers[_.keys(relWorkers)[0]];
+        //bump up the number of ws's by one.
+        worker.data.sockConn = 10;
+        return scheduler.acquireWorker_p(appSpec, '/test'); // don't ever 503 non-root
+      })
+      .then(function(wh){
+        return scheduler.acquireWorker_p(appSpec, '/'); // do 503 roots
+      }, done)
+      .then(function(wh){
         // shouldn't have obtained a worker.
-        throw new Error("Should have thrown 503, but didn't");
+        done(new Error("Should have thrown 503, but didn't"));
       }, function(error){
         if (!error instanceof OutOfCapacityError){
-          throw error;
+          done(error);
         }
         // should have failed, return the original worker
         return origWorker;
@@ -137,5 +153,4 @@ describe('SimpleScheduler', function(){
     }),
     it('should 503 base URL requests ahead of MAX_REQUESTS')
   })
-
 })
