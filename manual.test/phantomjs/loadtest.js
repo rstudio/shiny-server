@@ -18,15 +18,35 @@ function Visit(duration, url) {
 setInterval(function() {
   new Visit(Math.random() * 10000, 'http://localhost:3838/06_tabsets');
   return true;
-}, 200);
+}, 50);
 
 setInterval(function() {
   new Visit(Math.random() * 10000, 'http://localhost:3838/09_upload');
   return true;
-}, 200);
+}, 50);
 
 setInterval(function() {
   new Visit(Math.random() * 10000, 'http://localhost:3838/bad');
   return true;
-}, 200);
+}, 50);
+/*
+setInterval(function() {
+  new Visit(Math.random() * 100, 'http://localhost:3838/05_sliders');
+  return true;
+}, 6000);
+*/
+/*
+setInterval(function() {
+  new Visit(Math.max(0.3, Math.random()) * 10000, 'http://localhost:3838/users/jcheng/06_tabsets/');
+  return true;
+}, 30);
+*/
+/*setInterval(function() {
+  new Visit(Math.random() * 10000, 'http://localhost:3838/users/jcheng/10_download/');
+  return true;
+}, 50);*/
 
+// setInterval(function() {
+//   new Visit(Math.random() * 100, 'http://localhost:3838/users/jcheng/08_html/');
+//   return true;
+// }, 6000);
