@@ -1,0 +1,5 @@
+#!/bin/sh
+
+dir=`dirname "$0"`
+"$dir/node/bin/node" "$dir/node/lib/node_modules/npm/bin/npm-cli.js" "$@"
+

@@ -32,5 +32,8 @@ ExternalProject_Add(
                     "--prefix=${NODE_PREFIX}"
   BUILD_COMMAND make -j4 PYTHON=${PYTHON}
   INSTALL_COMMAND make install &&
-                  cp "${NODE_PREFIX}/bin/node" "${NODE_PREFIX}/bin/shiny-server"
+                  cp "${NODE_PREFIX}/bin/node" "${NODE_PREFIX}/bin/shiny-server" &&
+                  rm "${NODE_PREFIX}/bin/npm" &&
+                  cd "${NODE_PREFIX}/lib/node_modules/npm" &&
+                  ./scripts/relocate.sh
 )
