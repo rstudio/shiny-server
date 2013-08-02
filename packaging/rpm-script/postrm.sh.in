@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# errors shouldn't cause script to exit
+set +e 
+
+# # remove metrics local packages
+# sudo rm -rf ${CMAKE_INSTALL_PREFIX}/metrics/local-packages
+
+# # remove softlink to admin script 
+# rm -f /usr/sbin/rstudio-server
+
+# # remove temporary streams
+# # remove temporary streams
+# sudo rm -rf /tmp/rstudio-rsession
+# sudo rm -rf /tmp/rstudio-rserver
+
+# # clear error termination state
+# set -e
