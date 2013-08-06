@@ -8,11 +8,15 @@
 . /etc/rc.d/init.d/functions
 
 prog=shiny-server
+execute=$(which $prog)
 logfile="/var/log/${prog}"
 lockfile="/var/lock/subsys/${prog}"
 
 # Exit if the package is not installed
-[ -x "$prog" ] || exit 0
+if [ ! -x $execute ] ; then 
+   echo "$prog wasn't found or isn't executable."
+   exit 1
+fi
 
 start() {
     touch $logfile
