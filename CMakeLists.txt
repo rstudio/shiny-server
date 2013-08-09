@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.10)
 
 project(shiny-server)
 
 # Extract the shiny-server version number from package.json
-execute_process(COMMAND sed -n "s/\\s*\"version\":\\s*\"\\(.*\\)\",\\s*/\\1/p"
+execute_process(COMMAND sed -n "s/\\s*\"version\": \"\\(.*\\)\",\\s*/\\1/p"
                 INPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/package.json"
                 OUTPUT_VARIABLE CPACK_PACKAGE_VERSION
                 OUTPUT_STRIP_TRAILING_WHITESPACE)

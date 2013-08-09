@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -e
+
+# If it's a softlink, resolve it
+SCRIPT_PATH="$0"
+while [ -h "$SCRIPT_PATH" ]
+do
+  SCRIPT_PATH="`readlink \"$SCRIPT_PATH\"`"
+done
+# Retrieve dir
+BIN_DIR="`dirname \"$SCRIPT_PATH\"`"
+ROOT_DIR="`dirname \"$BIN_DIR\"`"
+# Absolute and normalized path
+ROOT_DIR="`( cd \"$ROOT_DIR\" && pwd )`"
+
+NODE="$ROOT_DIR/bin/node/bin/shiny-server"
+
+"$NODE" "$ROOT_DIR/lib/main.js" $*
