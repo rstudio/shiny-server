@@ -1,17 +1,13 @@
 #!/bin/sh
 
 # errors shouldn't cause script to exit
-set +e 
+set +e
 
-# remove metrics local packages
-# sudo rm -rf ${CMAKE_INSTALL_PREFIX}/metrics/local-packages
+rm -f /usr/bin/shiny-server
+rm -f /etc/init/shiny-server.conf
 
-# # remove softlink to admin script 
-# sudo rm -f /usr/sbin/rstudio-server
+# remove temporary sockets
+rm -rf /tmp/shiny-rsession
 
-# # remove temporary streams
-# sudo rm -rf /tmp/rstudio-rsession
-# sudo rm -rf /tmp/rstudio-rserver
-
-# # clear error termination state
-# set -e
+# clear error termination state
+set -e

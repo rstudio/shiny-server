@@ -16,4 +16,4 @@ ROOT_DIR="`( cd \"$ROOT_DIR\" && pwd )`"
 
 NODE="$ROOT_DIR/bin/node/bin/shiny-server"
 
-"$NODE" "$ROOT_DIR/lib/main.js" $*
+"$NODE" "$ROOT_DIR/lib/main.js" "$@"

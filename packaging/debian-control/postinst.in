@@ -1,42 +1,25 @@
 #!/bin/sh
 
 # errors shouldn't cause script to exit
-set +e 
+set +e
 
-# # install psutil
-# METRICS_DIR=${CMAKE_INSTALL_PREFIX}/metrics
-# LOCAL_PACKAGES=$METRICS_DIR/local-packages 
-# mkdir -p $LOCAL_PACKAGES
-# sudo bash <<EOF
-# cd $METRICS_DIR/external/psutil
-# PYTHONPATH=$LOCAL_PACKAGES python setup.py install --install-purelib=$LOCAL_PACKAGES --install-platlib=$LOCAL_PACKAGES > /dev/null
-# EOF
+sudo ln -f -s "${CMAKE_INSTALL_PREFIX}/shiny-server/bin/shiny-server" /usr/bin/shiny-server
+# See if "shiny" user exists
+if id -u shiny >/dev/null 2>&1;
+then
+   echo User "shiny" already exists
+else
+   echo Creating user "shiny"
+   sudo useradd -r -m shiny
+fi
 
-# # add rserver user account
-# sudo useradd -r rstudio-server
+sudo mkdir -p /var/log/shiny-server
+# Log directory must be writable by "shiny" user
+sudo chown shiny:shiny /var/log/shiny-server
+sudo mkdir -p /srv/shiny-server
 
-# # create softlink to admin script in /usr/sbin
-# sudo ln -f -s ${CMAKE_INSTALL_PREFIX}/bin/rstudio-server /usr/sbin/rstudio-server
-
-# # create config directory
-# sudo mkdir -p /etc/rstudio
-
-# # create var directories
-# sudo mkdir -p /var/run/rstudio-server
-# sudo mkdir -p /var/lock/rstudio-server
-# sudo mkdir -p /var/log/rstudio-server
-# sudo mkdir -p /var/lib/rstudio-server
-# sudo mkdir -p /var/lib/rstudio-server/conf
-# sudo mkdir -p /var/lib/rstudio-server/body
-# sudo mkdir -p /var/lib/rstudio-server/proxy
-
-# # write installed indicator then force suspend active sessions
-# # (so that the new client is never paired against the old server)
-# sudo sh -c "echo `date +%s` > /var/lib/rstudio-server/installed"
-# sudo rstudio-server force-suspend-all
-
-# # check lsb release
-# LSB_RELEASE=`lsb_release --id --short`
+# check lsb release
+LSB_RELEASE=`lsb_release --id --short`
 
 # # add apparmor profile
 # if test $LSB_RELEASE = "Ubuntu" && test -d /etc/apparmor.d/
@@ -45,20 +28,20 @@ set +e
 #    sudo apparmor_parser -r /etc/apparmor.d/rstudio-server 2>/dev/null
 # fi
 
-# # add upstart profile or init.d script and start the server
-# if test $LSB_RELEASE = "Ubuntu" && test -d /etc/init/
-# then
-#    sudo cp ${CMAKE_INSTALL_PREFIX}/extras/upstart/rstudio-server.conf /etc/init/
-#    sudo initctl reload-configuration
-#    sudo initctl stop rstudio-server 2>/dev/null
-#    sudo initctl start rstudio-server
-# else
-#    sudo cp ${CMAKE_INSTALL_PREFIX}/extras/init.d/debian/rstudio-server /etc/init.d/
-#    sudo chmod +x /etc/init.d/rstudio-server
-#    sudo update-rc.d rstudio-server defaults
-#    sudo /etc/init.d/rstudio-server stop  2>/dev/null
-#    sudo /etc/init.d/rstudio-server start
-# fi
+# add upstart profile or init.d script and start the server
+if test $LSB_RELEASE = "Ubuntu" && test -d /etc/init/
+then
+   sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/upstart/shiny-server.conf /etc/init/
+   sudo initctl reload-configuration
+   sudo initctl stop shiny-server 2>/dev/null
+   sudo initctl start shiny-server
+else
+   sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/debian/shiny-server /etc/init.d/
+   sudo chmod +x /etc/init.d/shiny-server
+   sudo update-rc.d shiny-server defaults
+   sudo /etc/init.d/shiny-server stop  2>/dev/null
+   sudo /etc/init.d/shiny-server start
+fi
 
-# # clear error termination state
-# set -e
+# clear error termination state
+set -e

@@ -66,6 +66,7 @@ endif()
 
 # debian control files
 set(DEBIAN_POSTINST postinst.in)
+set(DEBIAN_PRERM prerm.in)
 set(DEBIAN_POSTRM postrm.in)
 
 # rpm scripts
@@ -88,10 +89,12 @@ endif()
 # dynamically configured debian control scripts
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/debian-control/${DEBIAN_POSTINST}
                ${CMAKE_CURRENT_BINARY_DIR}/packaging/debian-control/postinst)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/debian-control/${DEBIAN_PRERM}
+               ${CMAKE_CURRENT_BINARY_DIR}/packaging/debian-control/prerm)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/debian-control/${DEBIAN_POSTRM}
                ${CMAKE_CURRENT_BINARY_DIR}/packaging/debian-control/postrm)
 
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_BINARY_DIR}/packaging/debian-control/postinst;${CMAKE_CURRENT_BINARY_DIR}/packaging/debian-control/postrm")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_BINARY_DIR}/packaging/debian-control/postinst;${CMAKE_CURRENT_BINARY_DIR}/packaging/debian-control/prerm;${CMAKE_CURRENT_BINARY_DIR}/packaging/debian-control/postrm")
 
 # dynamically configured rpm scripts (only works with cmake 2.8.1 or higher). 
 # alternatively you can get CPackRPM.cmake from the cmake tip and copy it into
