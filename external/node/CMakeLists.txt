@@ -7,6 +7,13 @@ set(NODEJS_SHA1 14174896de074c244b0ed2251a95d7163d5a5e87)
 
 include(ExternalProject)
 
+# Allow overriding of Python command used to build node.js; this is
+# necessary for RedHat/CentOS 5, whose "python" command is Python 2.4
+# whereas node requires 2.6 or 2.7.
+if(NOT PYTHON)
+  set(PYTHON python)
+endif()
+
 get_filename_component(NODE_PREFIX 
                        "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/node"
                        REALPATH)
@@ -21,9 +28,9 @@ ExternalProject_Add(
   DOWNLOAD_DIR download
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}
   BUILD_IN_SOURCE 1
-  CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}/configure
+  CONFIGURE_COMMAND ${PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}/configure
                     "--prefix=${NODE_PREFIX}"
-  BUILD_COMMAND make -j4
+  BUILD_COMMAND make -j4 PYTHON=${PYTHON}
   INSTALL_COMMAND make install &&
                   cp "${NODE_PREFIX}/bin/node" "${NODE_PREFIX}/bin/shiny-server"
 )
