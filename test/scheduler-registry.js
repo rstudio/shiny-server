@@ -18,14 +18,16 @@ var AppSpec = require('../lib/worker/app-spec');
 var sinon = require('sinon');
 var Q = require('q');
 var _ = require('underscore');
+var SimpleEventBus = require('../lib/events/simple-event-bus');
 
-var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
+var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", 
+    {scheduler: {}, appDefaults: {}});
 var socketDir = "/tmp/shiny-session/";
 
 describe('SchedulerRegistry', function(){
   describe('#getWorker_p', function(){
     it('Creates a new scheduler on initial request.', function(done){
-      var schedReg = new SchedulerRegistry();
+      var schedReg = new SchedulerRegistry(new SimpleEventBus());
       schedReg.setSocketDir(socketDir);
 
       _.size(schedReg.$schedulers).should.equal(0);

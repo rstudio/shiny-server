@@ -16,9 +16,10 @@ var AppSpec = require('../lib/worker/app-spec.js');
 var sinon = require('sinon');
 var Q = require('q');
 var _ = require('underscore');
+var SimpleEventBus = require('../lib/events/simple-event-bus');
 
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
-var scheduler = new Scheduler(appSpec.getKey());
+var scheduler = new Scheduler(new SimpleEventBus(), appSpec.getKey());
 scheduler.setSocketDir("/tmp/shiny-session/");
 
 SHINY_SERVER_VERSION = "0.3.5";

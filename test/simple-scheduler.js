@@ -17,9 +17,10 @@ var sinon = require('sinon');
 var Q = require('q');
 var OutOfCapacityError = require('../lib/core/errors').OutOfCapacity;
 var _ = require('underscore');
+var SimpleEventBus = require('../lib/events/simple-event-bus');
 
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {scheduler: {}})
-var scheduler = new SimpleScheduler(appSpec);
+var scheduler = new SimpleScheduler(new SimpleEventBus(), appSpec);
 scheduler.setSocketDir("/tmp/shiny-session/");
 
 describe('SimpleScheduler', function(){

@@ -13,11 +13,12 @@
 
 var sinon = require('sinon');
 var AppConfig = require('../lib/config/app-config');
+var SimpleEventBus = require('../lib/events/simple-event-bus.js');
 
 describe('AppConfig', function(){
   describe('#addLocalConfig', function(){
     it('properly supplements data.', function(){
-      var appConfig = new AppConfig();
+      var appConfig = new AppConfig(new SimpleEventBus());
       var merged = appConfig.addLocalConfig({
             appDir: '/dir',
             runAs: 'user',
@@ -41,7 +42,7 @@ describe('AppConfig', function(){
 
     }),
     it('properly overrides data.', function(){
-      var appConfig = new AppConfig();
+      var appConfig = new AppConfig(new SimpleEventBus());
       var merged = appConfig.addLocalConfig({
             appDir: '/dir',
             runAs: 'user',
@@ -68,7 +69,7 @@ describe('AppConfig', function(){
       merged.settings.scheduler.should.have.keys('simple');
     }),
     it('properly merges data.', function(){
-      var appConfig = new AppConfig();
+      var appConfig = new AppConfig(new SimpleEventBus());
       var merged = appConfig.addLocalConfig({
           appDir: '/dir',
           runAs: 'user',
@@ -94,7 +95,7 @@ describe('AppConfig', function(){
       merged.settings.scheduler.should.have.keys('simple');
     }),
     it('only overrides specific fields.', function(){
-      var appConfig = new AppConfig();
+      var appConfig = new AppConfig(new SimpleEventBus());
       var merged = appConfig.addLocalConfig({
           appDir: '/dir',
           runAs: 'user',
