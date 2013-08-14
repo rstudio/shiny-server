@@ -1,62 +1,37 @@
 #!/bin/sh
 
 # errors shouldn't cause script to exit
-set +e 
+set +e
 
-# # install psutil
-# METRICS_DIR=${CMAKE_INSTALL_PREFIX}/metrics
-# LOCAL_PACKAGES=$METRICS_DIR/local-packages 
-# mkdir -p $LOCAL_PACKAGES
-# cd $METRICS_DIR/external/psutil
-# PYTHONPATH=$LOCAL_PACKAGES python setup.py install --install-purelib=$LOCAL_PACKAGES --install-platlib=$LOCAL_PACKAGES > /dev/null
+sudo ln -f -s "${CMAKE_INSTALL_PREFIX}/shiny-server/bin/shiny-server" /usr/bin/shiny-server
+# See if "shiny" user exists
+if id -u shiny >/dev/null 2>&1;
+then
+   echo User "shiny" already exists
+else
+   echo Creating user "shiny"
+   sudo useradd -r -m shiny
+fi
 
-# # add rserver user account
-# useradd -r rstudio-server
+sudo mkdir -p /var/log/shiny-server
+# Log directory must be writable by "shiny" user
+sudo chown shiny:shiny /var/log/shiny-server
+sudo mkdir -p /srv/shiny-server
 
-# # create softlink to admin script in /usr/sbin
-# ln -f -s ${CMAKE_INSTALL_PREFIX}/bin/rstudio-server /usr/sbin/rstudio-server
+# add upstart profile or init.d script and start the server
+if test -d /etc/init/
+then
+   sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/upstart/shiny-server.conf /etc/init/
+   sudo initctl reload-configuration
+   sudo initctl stop shiny-server 2>/dev/null
+   sudo initctl start shiny-server
+else
+   sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/redhat/shiny-server /etc/init.d/
+   sudo chmod +x /etc/init.d/shiny-server
+   sudo update-rc.d shiny-server defaults
+   sudo /etc/init.d/shiny-server stop  2>/dev/null
+   sudo /etc/init.d/shiny-server start
+fi
 
-# # create config directory
-# mkdir -p /etc/rstudio
-
-# # create var directories
-# mkdir -p /var/run/rstudio-server
-# mkdir -p /var/lock/rstudio-server
-# mkdir -p /var/log/rstudio-server
-# mkdir -p /var/lib/rstudio-server
-# mkdir -p /var/lib/rstudio-server/conf
-# mkdir -p /var/lib/rstudio-server/body
-# mkdir -p /var/lib/rstudio-server/proxy
-
-# # write installed indicator then force suspend active sessions
-# # (so that the new client is never paired against the old server)
-# sh -c "echo `date +%s` > /var/lib/rstudio-server/installed"
-# rstudio-server force-suspend-all
-
-# # add upstart profile or init.d script and start the server
-# if test -d /etc/init/
-# then
-#    # remove any previously existing init.d based scheme
-#    service rstudio-server stop 2>/dev/null
-#    rm -f /etc/init.d/rstudio-server
-
-#    cp ${CMAKE_INSTALL_PREFIX}/extras/upstart/rstudio-server.redhat.conf /etc/init/rstudio-server.conf
-#    initctl reload-configuration
-#    initctl stop rstudio-server 2>/dev/null
-#    initctl start rstudio-server
-# else
-#    cp ${CMAKE_INSTALL_PREFIX}/extras/init.d/redhat/rstudio-server /etc/init.d/
-#    chmod +x /etc/init.d/rstudio-server
-#    chkconfig --add rstudio-server
-#    service rstudio-server stop 2>/dev/null
-#    service rstudio-server start
-# fi
-
-# # add pam profile
-# if [ ! -e /etc/pam.d/rstudio ]
-# then
-#    cp ${CMAKE_INSTALL_PREFIX}/extras/pam/rstudio /etc/pam.d/
-# fi
-
-# # clear error termination state
-# set -e
+# clear error termination state
+set -e
