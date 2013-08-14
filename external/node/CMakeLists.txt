@@ -7,11 +7,15 @@ set(NODEJS_SHA1 14174896de074c244b0ed2251a95d7163d5a5e87)
 
 include(ExternalProject)
 
-# Allow overriding of Python command used to build node.js; this is
-# necessary for RedHat/CentOS 5, whose "python" command is Python 2.4
-# whereas node requires 2.6 or 2.7.
+# Allow overriding of Python command used to build node.js (pass
+# -DPYTHON=<path> to cmake).
 if(NOT PYTHON)
-  set(PYTHON python)
+  if(EXISTS /usr/bin/python26)
+    # RedHat/CentOS 5 requires python26, because python means Python 2.4
+    set(PYTHON python26)
+  else()
+    set(PYTHON python)
+  endif()
 endif()
 
 get_filename_component(NODE_PREFIX 
