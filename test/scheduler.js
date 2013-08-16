@@ -20,7 +20,7 @@ var SimpleEventBus = require('../lib/events/simple-event-bus');
 
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
 var scheduler = new Scheduler(new SimpleEventBus(), appSpec.getKey());
-scheduler.setSocketDir("/tmp/shiny-session/");
+scheduler.setSocketDir("/var/shiny-server/sockets");
 
 SHINY_SERVER_VERSION = "0.3.5";
 

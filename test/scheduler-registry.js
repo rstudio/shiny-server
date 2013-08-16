@@ -22,7 +22,7 @@ var SimpleEventBus = require('../lib/events/simple-event-bus');
 
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", 
     {scheduler: {}, appDefaults: {}});
-var socketDir = "/tmp/shiny-session/";
+var socketDir = "/var/shiny-server/sockets";
 
 describe('SchedulerRegistry', function(){
   describe('#getWorker_p', function(){

@@ -21,7 +21,7 @@ var SimpleEventBus = require('../lib/events/simple-event-bus');
 
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {scheduler: {}})
 var scheduler = new SimpleScheduler(new SimpleEventBus(), appSpec);
-scheduler.setSocketDir("/tmp/shiny-session/");
+scheduler.setSocketDir("/var/shiny-server/sockets");
 
 describe('SimpleScheduler', function(){
   describe('#acquireWorker_p()', function(){
