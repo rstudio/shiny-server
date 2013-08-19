@@ -5,6 +5,7 @@ set -e
 if [ "$1" != "DEB" -a "$1" != "RPM" ]
 then
 	echo "Usage: make-package.sh [DEB|RPM]"
+	exit 1
 fi
 
 DIR=`dirname $0`
