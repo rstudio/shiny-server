@@ -17,14 +17,14 @@ STRING(REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+)"
 
 add_subdirectory(external/node)
 
-install(DIRECTORY bin
+install(DIRECTORY assets
+                  bin
                   build
                   config
                   lib
                   manual.test
                   node_modules
                   R
-                  src
                   templates
                   test
                   tools

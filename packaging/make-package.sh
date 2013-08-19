@@ -13,7 +13,7 @@ cd "$DIR"
 DIR=`pwd`
 mkdir -p build
 cd build
-cmake --prefix=/opt/shiny-server ../..
+cmake -DCMAKE_INSTALL_PREFIX=/opt ../..
 make
 (cd ../.. && bin/npm install)
 cpack -G "$1"
