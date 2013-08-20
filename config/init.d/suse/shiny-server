@@ -23,7 +23,7 @@ case "$1" in
 
 	## Start daemon with startproc(8). If this fails
 	## the return value is set appropriately by startproc.
-	/sbin/startproc shiny-server
+	/sbin/startproc -u shiny shiny-server
 
 	# Remember status and be verbose
 	rc_status -v

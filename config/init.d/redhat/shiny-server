@@ -21,7 +21,7 @@ fi
 start() {
     touch $logfile
     echo -n "Starting shiny-server: "
-    daemon $prog >> $logfile &
+    daemon --user shiny $prog >> $logfile &
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
