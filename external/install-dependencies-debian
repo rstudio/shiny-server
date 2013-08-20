@@ -1,0 +1,15 @@
+#!/usr/bin/env false
+
+# This is not an executable shell script--please execute each line by hand
+
+# Install build prerequisites
+sudo apt-get install make gcc g++ git python libssl-dev cmake
+
+# Download, build, and install CMake (must be 2.8.10 or later). If a suitable
+# version is available from apt-get, then use it instead.
+wget http://www.cmake.org/files/v2.8/cmake-2.8.11.2.tar.gz
+tar xzf cmake-2.8.11.2.tar.gz
+cd cmake-2.8.11.2
+./configure
+make
+sudo make install
