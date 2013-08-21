@@ -1,0 +1,24 @@
+#!/usr/bin/env false
+
+# This is not an executable shell script--please execute each line by hand
+
+# If you've never done so before, install the EPEL repo information
+wget http://dl.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm
+sudo rpm -Uvh epel-release-5-4.noarch.rpm
+
+# Install build prerequisites
+sudo yum -y install make gcc gcc-c++ git python26 openssl-devel rpm-build
+
+# If you are not able to connect to https URLs during build, it's probably
+# because of the limited number of certificate authorities that are included
+# with the OS by default. Use this command to replace the default bundle with
+# a more extensive list.
+sudo curl http://curl.haxx.se/ca/cacert.pem -o /etc/pki/tls/certs/ca-bundle.crt
+
+# Download, build, and install CMake (must be 2.8.10 or later).
+wget http://www.cmake.org/files/v2.8/cmake-2.8.11.2.tar.gz
+tar xzf cmake-2.8.11.2.tar.gz
+cd cmake-2.8.11.2
+./configure
+make
+sudo make install
