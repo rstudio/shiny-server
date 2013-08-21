@@ -2,6 +2,11 @@
 
 set -e
 
+CMAKE=cmake
+if hash cmake28 2>/dev/null; then
+   CMAKE=cmake28
+fi
+
 cd "$(dirname $0)"
 
 # See if "shiny" user exists
@@ -23,6 +28,6 @@ sudo chown shiny:shiny /var/log/shiny-server
 sudo chmod 333 /var/shiny-server/sockets
 
 mkdir -p build
-(cd build && cmake ../.. && make)
+(cd build && "$CMAKE" ../.. && make)
 
 (cd .. && bin/npm install)
