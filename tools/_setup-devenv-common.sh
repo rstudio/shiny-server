@@ -19,13 +19,10 @@ else
 fi
 
 sudo mkdir -p /var/log/shiny-server
-sudo mkdir -p /var/shiny-server/sockets
 sudo mkdir -p /srv/shiny-server
 
 # Log dir must be writable by "shiny" user
 sudo chown shiny:shiny /var/log/shiny-server
-# All users must be able to write to socket dir
-sudo chmod 333 /var/shiny-server/sockets
 
 mkdir -p build
 (cd build && "$CMAKE" ../.. && make)
