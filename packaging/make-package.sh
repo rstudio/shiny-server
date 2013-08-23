@@ -13,7 +13,18 @@ then
 	fi
 fi
 
-if [ "$1" != "DEB" -a "$1" != "RPM" ]
+GENERATOR="$1"
+if [ "$GENERATOR" == "" ]
+then
+	if [ -f /etc/debian_version ]; then
+		GENERATOR=DEB
+	fi
+	if [ -f /etc/redhat-release ]; then
+		GENERATOR=RPM
+	fi
+fi
+
+if [ "$GENERATOR" != "DEB" -a "$GENERATOR" != "RPM" ]
 then
 	echo "Usage: make-package.sh [DEB|RPM]"
 	exit 1
