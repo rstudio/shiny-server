@@ -85,6 +85,7 @@ var rules = _.map(ruleConfig.children, function(child) {
   var params = _.map(child.getAll('param'), function(param) {
     return new schema.ConfigSchemaParam(param);
   });
+  var undocumented = !!child.getOne('undocumented');
   var at = child.getOne('at').args;
   var primaryLoc = _.last(at);
   var otherLocs = _.clone(at);
@@ -99,8 +100,13 @@ var rules = _.map(ruleConfig.children, function(child) {
     primaryLoc: primaryLoc,
     otherLocs: otherLocs,
     children: [],
-    inheritedChildren: []
+    inheritedChildren: [],
+    undocumented: undocumented
   }
+});
+
+rules = _.filter(rules, function(rule) {
+  return !rule.undocumented;
 });
 
 var rulesByName = map.create();
