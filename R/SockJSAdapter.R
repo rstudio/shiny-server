@@ -79,7 +79,15 @@ local({
    }
    options(shiny.http.response.filter=filter)
 })
-port <- Sys.getenv('SHINY_PORT')
-attr(port, 'mask') <- strtoi('0077', 8)
+
+# Port can be either a TCP port number, in which case we need to cast to
+# integer; or else a Unix domain socket path, in which case we need to
+# leave it as a string
+port <- suppressWarnings(as.integer(Sys.getenv('SHINY_PORT')))
+if (is.na(port)) {
+  port <- Sys.getenv('SHINY_PORT')
+  attr(port, 'mask') <- strtoi('0077', 8)
+}
+
 cat(paste("\nStarting Shiny with process ID: '",Sys.getpid(),"'\n", sep=""))
 runApp(Sys.getenv('SHINY_APP'),port=port,launch.browser=FALSE)
