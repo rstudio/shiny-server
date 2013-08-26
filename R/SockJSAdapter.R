@@ -10,6 +10,11 @@
 # AGPL (http://www.gnu.org/licenses/agpl-3.0.txt) for more details.
 #
 
+cat(paste("R version: ", getRversion(), "\n", sep=""))
+cat(paste("Shiny version: ",  
+    tryCatch({packageVersion("shiny")}, error=function(e){"0.0.0"}),
+    "\n", sep=""))
+
 library(shiny)
 
 local({
