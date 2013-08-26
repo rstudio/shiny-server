@@ -15,16 +15,17 @@ library(shiny)
 local({
 
    # Read config directives from stdin and put them in the environment.
-   # This makes it possible for root users to see what app a proc is running
-   # (via /proc/<pid>/environ).
    fd = file('stdin')
    input <- readLines(fd)
    Sys.setenv(
     SHINY_APP=input[1],
     SHINY_PORT=input[2],
     SHINY_GAID=input[3],
-    SHINY_SERVER_VERSION=input[4])
+    SHINY_SHARED_SECRET=input[4],
+    SHINY_SERVER_VERSION=input[5])
    close(fd)
+
+   options(shiny.sharedSecret = Sys.getenv('SHINY_SHARED_SECRET'))
 
 
    gaTrackingCode <- ''
