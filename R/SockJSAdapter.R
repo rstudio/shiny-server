@@ -10,27 +10,41 @@
 # AGPL (http://www.gnu.org/licenses/agpl-3.0.txt) for more details.
 #
 
-cat(paste("R version: ", getRversion(), "\n", sep=""))
-cat(paste("Shiny version: ",  
-    tryCatch({packageVersion("shiny")}, error=function(e){"0.0.0"}),
-    "\n", sep=""))
-
-library(shiny)
-
 local({
+  # Read config directives from stdin and put them in the environment.
+  fd = file('stdin')
+  input <- readLines(fd)
+  Sys.setenv(
+  SHINY_APP=input[1],
+  SHINY_PORT=input[2],
+  SHINY_GAID=input[3],
+  SHINY_SHARED_SECRET=input[4],
+  SHINY_SERVER_VERSION=input[5],
+  # Skip input[6]
+  MIN_R_VERSION=input[7],
+  MIN_SHINY_VERSION=input[8])
+  close(fd)
 
-   # Read config directives from stdin and put them in the environment.
-   fd = file('stdin')
-   input <- readLines(fd)
-   Sys.setenv(
-    SHINY_APP=input[1],
-    SHINY_PORT=input[2],
-    SHINY_GAID=input[3],
-    SHINY_SHARED_SECRET=input[4],
-    SHINY_SERVER_VERSION=input[5])
-   close(fd)
+  options(shiny.sharedSecret = Sys.getenv('SHINY_SHARED_SECRET'))
 
-   options(shiny.sharedSecret = Sys.getenv('SHINY_SHARED_SECRET'))
+  rVer <- as.character(getRversion());
+  shinyVer <- tryCatch({as.character(packageVersion("shiny"))},
+      error=function(e){"0.0.0"});
+  cat(paste("R version: ", rVer, "\n", sep=""))
+  cat(paste("Shiny version: ", shinyVer, "\n", sep=""))
+
+  if (compareVersion(Sys.getenv('MIN_R_VERSION'),rVer)>0){
+    # R is out of date
+    stop(paste("R version '", rVer, "' found. Shiny Server requires at least '",
+        Sys.getenv('MIN_R_VERSION'), "'."), sep="")
+  }
+  if (compareVersion(Sys.getenv('MIN_SHINY_VERSION'),shinyVer)>0){
+    # Shiny is out of date
+    stop(paste("Shiny version '", shinyVer, "' found. Shiny Server requires at least '",
+        Sys.getenv('MIN_SHINY_VERSION'), "'."), sep="")
+  }
+
+  library(shiny)
 
 
    gaTrackingCode <- ''
