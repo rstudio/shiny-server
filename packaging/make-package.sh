@@ -39,6 +39,15 @@ then
 	fi
 fi
 
+if [ "$CPACK" == "" ]
+then
+	CPACK="cpack"
+	if which cpack28
+	then
+		CPACK="cpack28"
+	fi
+fi
+
 DIR=`dirname $0`
 cd "$DIR"
 DIR=`pwd`
@@ -47,5 +56,5 @@ cd build
 "$CMAKE" -DCMAKE_INSTALL_PREFIX=/opt -DPYTHON="$PYTHON" ../..
 make
 (cd ../.. && bin/npm --python="$PYTHON" install)
-cpack -G "$GENERATOR"
+"$CPACK" -G "$GENERATOR"
 
