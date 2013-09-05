@@ -2,18 +2,26 @@ cmake_minimum_required(VERSION 2.8.10)
 
 project(shiny-server)
 
+if ("$ENV{BUILD_VERSION}" STREQUAL "")
+  set(BUILD_VERSION "0")
+else()
+  set(BUILD_VERSION $ENV{BUILD_VERSION})
+endif()
+
 # Extract the shiny-server version number from package.json
 execute_process(COMMAND sed -n "s/\\s*\"version\": \"\\(.*\\)\",\\s*/\\1/p"
                 INPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/package.json"
-                OUTPUT_VARIABLE CPACK_PACKAGE_VERSION
+                OUTPUT_VARIABLE NPM_PACKAGE_VERSION
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-# Parse major, minor, and patch values from CPACK_PACKAGE_VERSION
+# Parse major, minor, and patch values from NPM_PACKAGE_VERSION
 STRING(REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+)"
-       "\\1" CPACK_PACKAGE_VERSION_MAJOR ${CPACK_PACKAGE_VERSION})
+       "\\1" CPACK_PACKAGE_VERSION_MAJOR ${NPM_PACKAGE_VERSION})
 STRING(REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+)"
-       "\\2" CPACK_PACKAGE_VERSION_MINOR ${CPACK_PACKAGE_VERSION})
+       "\\2" CPACK_PACKAGE_VERSION_MINOR ${NPM_PACKAGE_VERSION})
 STRING(REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+)"
-       "\\3" CPACK_PACKAGE_VERSION_PATCH ${CPACK_PACKAGE_VERSION})
+       "\\3" CPACK_PACKAGE_VERSION_PATCH ${NPM_PACKAGE_VERSION})
+
+set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}.${BUILD_VERSION}")
 
 add_subdirectory(external/node)
 
