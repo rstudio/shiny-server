@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8.10)
 
 project(shiny-server)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+
 # Extract the shiny-server version number from package.json
 execute_process(COMMAND sed -n "s/\\s*\"version\": \"\\(.*\\)\",\\s*/\\1/p"
                 INPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/package.json"
@@ -15,6 +17,7 @@ STRING(REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+)"
 STRING(REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+)"
        "\\3" CPACK_PACKAGE_VERSION_PATCH ${CPACK_PACKAGE_VERSION})
 
+add_subdirectory(src)
 add_subdirectory(external/node)
 
 install(DIRECTORY assets
