@@ -1,0 +1,1 @@
+#define SHINY_SERVER_DEFAULT_BIN_PATH "${CMAKE_INSTALL_PREFIX}/shiny-server/bin/shiny-server"

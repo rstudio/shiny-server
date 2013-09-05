@@ -1,11 +1,11 @@
 build/
 node_modules/
-npm-debug.log
+npm-debug.log$
 *.swp
-.DS_Store
+.DS_Store$
 bin/node
 bin/shiny-server
 external/node/ex-node1234/
 external/node/node-*
-src/launcher.h.in
+src/launcher.h.in$
 
