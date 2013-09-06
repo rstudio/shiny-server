@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
+#include <fcntl.h>
 
 using namespace node;
 using namespace v8;
@@ -196,6 +197,39 @@ Handle<Value> GetGrNam(const Arguments& args) {
   return scope.Close(groupInfo);
 }
 
+Handle<Value> AcquireRecordLock(const Arguments& args) {
+  HandleScope scope;
+
+  // Args: fd, lockType, whence, start, len
+
+  if (args.Length() < 5) {
+    return ThrowException(Exception::Error(
+          String::New("acquireRecordLock requires 5 arguments")));
+  }
+
+  int fd = args[0]->IntegerValue();
+  short lockType = args[1]->IntegerValue();
+  short whence = args[2]->IntegerValue();
+  off_t start = args[3]->IntegerValue();
+  off_t len = args[4]->IntegerValue();
+
+  struct flock flk;
+  flk.l_type = lockType;
+  flk.l_whence = whence;
+  flk.l_start = start;
+  flk.l_len = len;
+
+  if (-1 == fcntl(fd, F_SETLK, &flk)) {
+    if (errno == EACCES || errno == EAGAIN) {
+      return scope.Close(Boolean::New(false));
+    } else {
+      return ThrowException(ErrnoException(errno, "acquireRecordLock"));
+    }
+  } else {
+    return scope.Close(Boolean::New(true));
+  }
+}
+
 void Initialize(Handle<Object> target) {
   target->Set(String::NewSymbol("getpwnam"),
       FunctionTemplate::New(GetPwNam)->GetFunction());
@@ -205,5 +239,7 @@ void Initialize(Handle<Object> target) {
       FunctionTemplate::New(GetGroupList)->GetFunction());
   target->Set(String::NewSymbol("getgrnam"),
       FunctionTemplate::New(GetGrNam)->GetFunction());
+  target->Set(String::NewSymbol("acquireRecordLock"),
+      FunctionTemplate::New(AcquireRecordLock)->GetFunction());
 }
 NODE_MODULE(posix, Initialize)
