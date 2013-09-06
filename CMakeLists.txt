@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8.10)
 
 project(shiny-server)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+
 if ("$ENV{BUILD_VERSION}" STREQUAL "")
   set(BUILD_VERSION "0")
 else()
@@ -23,6 +25,7 @@ STRING(REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+)"
 
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}.${BUILD_VERSION}")
 
+add_subdirectory(src)
 add_subdirectory(external/node)
 
 install(DIRECTORY assets
