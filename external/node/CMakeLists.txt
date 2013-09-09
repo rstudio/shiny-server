@@ -19,7 +19,7 @@ if(NOT PYTHON)
 endif()
 
 get_filename_component(NODE_PREFIX 
-                       "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/node"
+                       "${CMAKE_CURRENT_SOURCE_DIR}/../../ext/node"
                        REALPATH)
 
 # Download and build Node.js.

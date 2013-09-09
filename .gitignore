@@ -3,8 +3,8 @@ node_modules/
 npm-debug.log
 *.swp
 .DS_Store
-bin/node
 bin/shiny-server
 external/node/ex-node1234/
 external/node/node-*
+ext/
 src/launcher.h

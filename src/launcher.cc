@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
   if (result != 0)
     return result;
 
-  std::string nodePath = shinyServerPath + "/bin/node/bin/shiny-server";
+  std::string nodePath = shinyServerPath + "/ext/node/bin/shiny-server";
   std::string mainPath = shinyServerPath + "/lib/main.js";
 
   // Two extra args: one for mainPath, one for NULL terminator

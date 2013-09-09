@@ -32,6 +32,7 @@ install(DIRECTORY assets
                   bin
                   build
                   config
+                  ext
                   lib
                   manual.test
                   node_modules
