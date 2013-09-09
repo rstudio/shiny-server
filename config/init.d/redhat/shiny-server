@@ -9,31 +9,43 @@
 
 prog=shiny-server
 execute=$(which $prog)
-logfile="/var/log/${prog}"
-lockfile="/var/lock/subsys/${prog}"
+logfile="/var/log/${prog}.log"
+lockfile="/var/run/${prog}.pid"
 
 # Exit if the package is not installed
 if [ ! -x $execute ] ; then 
-   echo "$prog wasn't found or isn't executable."
+   echo -n $"$prog wasn't found or isn't executable."
    exit 1
 fi
 
 start() {
     touch $logfile
-    echo -n "Starting shiny-server: "
-    daemon $prog >> $logfile &
+    echo -n $"Starting shiny-server: "
+    if [ -e $lockfile ] && [ -e /proc/`cat /var/run/shiny-server.pid` ]; then
+        echo -n $"already running.";
+        failure $"cannot start shiny-server: already running.";
+        echo
+        return 1
+    fi
+    $prog --daemon "--pidfile=$lockfile" >> $logfile &
     retval=$?
+    [ $retval -eq 0 ] && success || failure
     echo
-    [ $retval -eq 0 ] && touch $lockfile
     return $retval
 }
 
 stop() {
     echo -n $"Stopping shiny-server: "
-    killproc $prog
+    if [ ! -e $lockfile ] || [ ! -e /proc/`cat /var/run/shiny-server.pid` ]; then
+        echo -n $"not running.";
+        failure $"cannot stop shiny-server: not running.";
+        echo
+        return 1
+    fi
+    kill `cat "$lockfile"`
     retval=$?
+    [ $retval -eq 0 ] && success || failure
     echo
-    [ $retval -eq 0 ] && rm -f $lockfile
     return $retval
 }
 
@@ -41,6 +53,21 @@ restart() {
     stop
     sleep 1
     start
+}
+
+reload() {
+    echo -n $"Reloading shiny-server: "
+    if [ ! -e $lockfile ] || [ ! -e /proc/`cat /var/run/shiny-server.pid` ]; then
+        echo -n $"not running.";
+        failure $"cannot reload shiny-server: not running.";
+        echo
+        return 1
+    fi
+    kill -1 `cat "$lockfile"`
+    retval=$?
+    [ $retval -eq 0 ] && success || failure
+    echo
+    return $retval 
 }
 
 rh_status() {
@@ -53,14 +80,15 @@ rh_status_q() {
 
 case "$1" in
     start)
-        rh_status_q && exit 0
-        $1
+        start
         ;;
     stop)
-        rh_status_q || exit 0
-        $1
+        stop
         ;;
     restart)
+        $1
+        ;;
+    reload)
         $1
         ;;
     status)
