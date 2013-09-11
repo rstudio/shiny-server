@@ -24,18 +24,15 @@ var SimpleScheduler =  function (eventBus, appSpec, timeout) {
   this.type = "MockSimpleScheduler";
 };
 SimpleScheduler.prototype.acquireWorker_p = function(appSpec, url, worker){
-  
+  return {type: "MockWorker"};
 }
 SchedulerRegistry.__set__("SimpleScheduler", SimpleScheduler);
-var mockSimpleScheduler = sinon.mock(SimpleScheduler.prototype);
-
 
 // Stub an appSpec
 var appSpec = {
-  getKey: function(){},
+  getKey: function(){return "appSpecKey"},
   settings: {appDefaults: {sessionTimeout: 10}}
 };
-sinon.stub(appSpec, "getKey", function(){return "appSpecKey"})
 
 //  Init an eventBus on which we can spy.
 var eventBus =  new SimpleEventBus();
@@ -44,45 +41,74 @@ var eventBus =  new SimpleEventBus();
 var URL = "/URL";
 var WORKER = "SomeWorker";
 
+// Spy on the acquireWorker_p function.
+var acquireWorkerSpy = sinon.spy(SimpleScheduler.prototype, "acquireWorker_p");
 
-describe('SchedulerRegistry', function(){
-  
-  // Init the spies
-  before(function(){
-    sinon.spy(eventBus, "on");
-    sinon.spy(eventBus, "emit");
-  });
+
+describe('SchedulerRegistry', function(){  
+  afterEach(function(){
+    acquireWorkerSpy.reset();
+  })
 
   describe('#getWorker_p', function(){
     it('Creates a new scheduler on initial request.', function(){
-      // Define the expectations on the mock
-      mockSimpleScheduler.expects("acquireWorker_p")
-        .once()
-        .withExactArgs(appSpec, URL, WORKER);
-
-
       var schedReg = new SchedulerRegistry(eventBus);
 
       _.size(schedReg.$schedulers).should.equal(0);
       schedReg.getWorker_p(appSpec, URL, WORKER);
       
       // Confirm we created the scheduler in the right place and of the right type.
+      _.size(schedReg.$schedulers).should.equal(1);
+      _.keys(schedReg.$schedulers).should.eql([appSpec.getKey()]);
+      schedReg.$schedulers[appSpec.getKey()].should.include({type: "MockSimpleScheduler"});
+
+      acquireWorkerSpy.callCount.should.equal(1);
+    }),
+    it('Doesn\'t create a new scheduler for a repeat request.', function(){
+      var schedReg = new SchedulerRegistry(eventBus);
+
+      _.size(schedReg.$schedulers).should.equal(0);
+      schedReg.getWorker_p(appSpec, URL, WORKER);
+      schedReg.getWorker_p(appSpec, URL, WORKER);
+      
+      _.size(schedReg.$schedulers).should.equal(1);
+      // Confirm we created the scheduler in the right place and of the right type.
       _.keys(schedReg.$schedulers).should.includeEql(appSpec.getKey());
       schedReg.$schedulers[appSpec.getKey()].should.include({type: "MockSimpleScheduler"});
 
-      // Verify the expectations on the mock, then restore.
-      mockSimpleScheduler.verify();
-      mockSimpleScheduler.restore();
+      acquireWorkerSpy.callCount.should.equal(2);
     }),
-    it('Doesn\'t create a new scheduler for a repeat request.'),
-    it('Creates a new scheduler for a new AppSpec'),
-    it('Properly considers local app config when creating a new scheduler.')
-  });
+    it('Deletes vacant schedulers.', function(){
+      var schedReg = new SchedulerRegistry(eventBus);
 
-  // Tear down the spies
-  after(function(){
-    eventBus.on.restore();
-    eventBus.emit.restore();
-  });
+      _.size(schedReg.$schedulers).should.equal(0);
+      schedReg.getWorker_p(appSpec, URL, WORKER);
+      _.size(schedReg.$schedulers).should.equal(1);
 
+      eventBus.emit('vacantSched', appSpec.getKey());
+
+      _.size(schedReg.$schedulers).should.equal(0);
+    }),
+    it('Creates a new scheduler for a new AppSpec & creates respective workers', function(){
+      var schedReg = new SchedulerRegistry(eventBus);
+
+      var alternateAppSpec =  {
+        getKey: function(){return "alternateAppSpec"},
+        settings: {appDefaults: {sessionTimeout: 10}}
+      }; 
+
+      _.size(schedReg.$schedulers).should.equal(0);
+      schedReg.getWorker_p(appSpec, URL, WORKER);
+      schedReg.getWorker_p(alternateAppSpec, URL, WORKER);
+      
+      _.size(schedReg.$schedulers).should.equal(2);
+      // Confirm we created the scheduler in the right place and of the right type.
+      _.keys(schedReg.$schedulers).should.includeEql(appSpec.getKey());
+      schedReg.$schedulers[appSpec.getKey()].should.include({type: "MockSimpleScheduler"});
+
+      acquireWorkerSpy.callCount.should.equal(2);
+      acquireWorkerSpy.firstCall.calledWithExactly(appSpec, URL, WORKER).should.be.true;
+      acquireWorkerSpy.secondCall.calledWithExactly(alternateAppSpec, URL, WORKER).should.be.true;
+    })
+  });
 })
