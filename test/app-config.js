@@ -11,9 +11,8 @@
  *
  */
 
-var sinon = require('sinon');
-var AppConfig = require('../lib/config/app-config');
-var SimpleEventBus = require('../lib/events/simple-event-bus.js');
+var AppConfig = require('../lib/config/app-config').AppConfig;
+var SimpleEventBus = require('../lib/events/simple-event-bus');
 
 describe('AppConfig', function(){
   describe('#addLocalConfig', function(){
@@ -38,7 +37,7 @@ describe('AppConfig', function(){
       merged.should.have.keys(['appDir','runAs', 'settings']);
       merged.settings.should.have.keys(['scheduler', 'appDefaults']);
       merged.settings.appDefaults.initTimeout.should.equal(50);
-      merged.settings.scheduler.should.have.keys('simple');
+      Object.keys(merged.settings.scheduler).should.eql(['simple']);
 
     }),
     it('properly overrides data.', function(){
@@ -66,7 +65,7 @@ describe('AppConfig', function(){
       merged.should.have.keys(['appDir','runAs', 'settings']);
       merged.settings.should.have.keys(['scheduler', 'appDefaults']);
       merged.settings.appDefaults.initTimeout.should.equal(50);
-      merged.settings.scheduler.should.have.keys('simple');
+      Object.keys(merged.settings.scheduler).should.eql(['simple']);
     }),
     it('properly merges data.', function(){
       var appConfig = new AppConfig(new SimpleEventBus());
@@ -88,11 +87,14 @@ describe('AppConfig', function(){
             idleTimeout: 10
           }
         });
+
+      console.log(merged);
+
       merged.should.have.keys(['appDir','runAs', 'settings']);
       merged.settings.should.have.keys(['scheduler', 'appDefaults']);
       merged.settings.appDefaults.initTimeout.should.equal(50);
       merged.settings.appDefaults.idleTimeout.should.equal(10);
-      merged.settings.scheduler.should.have.keys('simple');
+      Object.keys(merged.settings.scheduler).should.eql(['simple']);
     }),
     it('only overrides specific fields.', function(){
       var appConfig = new AppConfig(new SimpleEventBus());
@@ -119,7 +121,7 @@ describe('AppConfig', function(){
       merged.settings.should.have.keys(['scheduler', 'appDefaults']); //not logDir
       merged.settings.appDefaults.initTimeout.should.equal(50);
       merged.settings.appDefaults.idleTimeout.should.equal(10);
-      merged.settings.scheduler.should.have.keys('simple');
+      Object.keys(merged.settings.scheduler).should.eql(['simple']);
     });
   });
 });
