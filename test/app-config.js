@@ -88,8 +88,6 @@ describe('AppConfig', function(){
           }
         });
 
-      console.log(merged);
-
       merged.should.have.keys(['appDir','runAs', 'settings']);
       merged.settings.should.have.keys(['scheduler', 'appDefaults']);
       merged.settings.appDefaults.initTimeout.should.equal(50);

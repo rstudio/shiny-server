@@ -11,38 +11,78 @@
  *
  */
 
-var Scheduler = require('../lib/scheduler/scheduler');
-var SimpleScheduler = require('../lib/scheduler/simple-scheduler');
-var SchedulerRegistry = require('../lib/scheduler/scheduler-registry');
-var AppSpec = require('../lib/worker/app-spec');
-var sinon = require('sinon');
-var Q = require('q');
 var _ = require('underscore');
 var SimpleEventBus = require('../lib/events/simple-event-bus');
+var rewire = require("rewire");
+var sinon = require('sinon');
 
-var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", 
-    {scheduler: {}, appDefaults: {}});
-var socketDir = "/var/shiny-server/sockets";
+// Rewire the module in test so we can stub its modules.
+var SchedulerRegistry = rewire('../lib/scheduler/scheduler-registry');
+
+// Stub up a SimpleScheduler
+var SimpleScheduler =  function (eventBus, appSpec, timeout) {
+  this.type = "MockSimpleScheduler";
+};
+SimpleScheduler.prototype.acquireWorker_p = function(appSpec, url, worker){
+  
+}
+SchedulerRegistry.__set__("SimpleScheduler", SimpleScheduler);
+var mockSimpleScheduler = sinon.mock(SimpleScheduler.prototype);
+
+
+// Stub an appSpec
+var appSpec = {
+  getKey: function(){},
+  settings: {appDefaults: {sessionTimeout: 10}}
+};
+sinon.stub(appSpec, "getKey", function(){return "appSpecKey"})
+
+//  Init an eventBus on which we can spy.
+var eventBus =  new SimpleEventBus();
+
+// Define some static params which will be passed in.
+var URL = "/URL";
+var WORKER = "SomeWorker";
+
 
 describe('SchedulerRegistry', function(){
+  
+  // Init the spies
+  before(function(){
+    sinon.spy(eventBus, "on");
+    sinon.spy(eventBus, "emit");
+  });
+
   describe('#getWorker_p', function(){
-    it('Creates a new scheduler on initial request.', function(done){
-      var schedReg = new SchedulerRegistry(new SimpleEventBus());
-      schedReg.setSocketDir(socketDir);
+    it('Creates a new scheduler on initial request.', function(){
+      // Define the expectations on the mock
+      mockSimpleScheduler.expects("acquireWorker_p")
+        .once()
+        .withExactArgs(appSpec, URL, WORKER);
+
+
+      var schedReg = new SchedulerRegistry(eventBus);
 
       _.size(schedReg.$schedulers).should.equal(0);
-      schedReg.getWorker_p(appSpec)
-      .then(function(wh){
-        _.keys(schedReg.$schedulers).should.includeEql(appSpec.getKey());
-        (schedReg.$schedulers[appSpec.getKey()] instanceof SimpleScheduler).should.be.true;
-        return (wh);
-      })
-      .then(function(wh){ wh.kill('SIGABRT'); return(wh.exitPromise); })
-      .then(function() {})
-      .then(done, done).done();
+      schedReg.getWorker_p(appSpec, URL, WORKER);
+      
+      // Confirm we created the scheduler in the right place and of the right type.
+      _.keys(schedReg.$schedulers).should.includeEql(appSpec.getKey());
+      schedReg.$schedulers[appSpec.getKey()].should.include({type: "MockSimpleScheduler"});
+
+      // Verify the expectations on the mock, then restore.
+      mockSimpleScheduler.verify();
+      mockSimpleScheduler.restore();
     }),
     it('Doesn\'t create a new scheduler for a repeat request.'),
     it('Creates a new scheduler for a new AppSpec'),
     it('Properly considers local app config when creating a new scheduler.')
-  })
+  });
+
+  // Tear down the spies
+  after(function(){
+    eventBus.on.restore();
+    eventBus.emit.restore();
+  });
+
 })

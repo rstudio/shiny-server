@@ -1,5 +1,4 @@
 --require should
 --require ./lib/core/log.js
 --require ./lib/core/qutil
---require sinon
 --reporter spec
