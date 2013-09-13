@@ -25,6 +25,13 @@ STRING(REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+)"
 
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}.${BUILD_NUMBER}")
 
+execute_process(COMMAND git describe --tags --dirty
+                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+                OUTPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/GIT_VERSION")
+execute_process(COMMAND echo "${CPACK_PACKAGE_VERSION}"
+                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+                OUTPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/VERSION")
+
 add_subdirectory(src)
 add_subdirectory(external/node)
 
@@ -48,6 +55,8 @@ install(FILES binding.gyp
               NEWS
               package.json
               README.md
+              "${CMAKE_CURRENT_BINARY_DIR}/VERSION"
+              "${CMAKE_CURRENT_BINARY_DIR}/GIT_VERSION"
         DESTINATION shiny-server)
 
 set(CPACK_PACKAGE_NAME "shiny-server")
