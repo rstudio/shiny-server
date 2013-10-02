@@ -5,8 +5,9 @@ var util = require('util');
 var config = require('../lib/config/config');
 var schema = require('../lib/config/schema');
 var config_router = require('../lib/router/config-router');
+var paths = require('../lib/core/paths');
 
-var schemaPath = path.join(__dirname, '../lib/router/shiny-server-rules.config');
+var schemaPath = paths.projectFile('config/shiny-server-rules.config');
 
 var configData = config.parse('\
 run_as nobody;\n\

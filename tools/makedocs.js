@@ -76,7 +76,7 @@ var packageInfo =
   JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json')));
 var version = packageInfo['version'];
 
-var rulesPath = path.join(__dirname, '../lib/router/shiny-server-rules.config');
+var rulesPath = path.join(__dirname, '../config/shiny-server-rules.config');
 var ruleConfig = config.parse(fs.readFileSync(rulesPath, 'utf-8'), rulesPath);
 
 var rules = _.map(ruleConfig.children, function(child) {
