@@ -11,147 +11,167 @@
  *
  */
 
-var SimpleScheduler = require('../lib/scheduler/simple-scheduler.js');
-var AppSpec = require('../lib/worker/app-spec.js');
-var sinon = require('sinon');
+var AppSpec = require('../lib/worker/app-spec');
 var Q = require('q');
-var OutOfCapacityError = require('../lib/core/errors').OutOfCapacity;
+var map = require('../lib/core/map');
 var _ = require('underscore');
 var SimpleEventBus = require('../lib/events/simple-event-bus');
+var rewire = require("rewire");
+var sinon = require('sinon');
+var SimpleScheduler = require('../lib/scheduler/simple-scheduler');
 
-var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {scheduler: {}})
-var scheduler = new SimpleScheduler(new SimpleEventBus(), appSpec);
-scheduler.setSocketDir("/var/shiny-server/sockets");
+// Setup a simple scheduler with a max of 4 requests.
+var MAX_REQUESTS = 4;
+var appSpec;
+var key;
 
-describe('SimpleScheduler', function(){
+// Spy on the spawnWorker_p function.
+var spawnWorkerSpy;
+
+// Scope a scheduler var here that will be reinitialized beforeEach().
+var scheduler;
+
+// Helper function to quickly add workers to a scheduler
+function addWorker(scheduler, id, sock, http, pending, isPending){
+  if (!scheduler.$workers){
+    scheduler.$workers = map.create();
+  }
+
+  scheduler.$workers[id] = map.create();
+  scheduler.$workers[id].data = map.create();
+  scheduler.$workers[id].data['sockConn'] = sock;
+  scheduler.$workers[id].data['httpConn'] = http;
+  scheduler.$workers[id].data['pendingConn'] = pending;
+  scheduler.$workers[id].promise = {isPending: function(){return isPending}};
+
+  scheduler.spawnWorker_p();
+
+  return scheduler.$workers[id];
+}
+
+describe('SimpleScheduler', function(done){
+  beforeEach(function(){
+    scheduler = new SimpleScheduler(new SimpleEventBus(), appSpec);
+
+    // Would be much better to use rewire to overwrite the prototype 
+    // definition of this function. Unfortunately, it doesn't seem to 
+    // work properly in the context of util.inherit(), and it kept calling
+    // the actual spawnWorker_p code in Scheduler. So I'm resorting to this
+    // manual override.
+    scheduler.spawnWorker_p = function(appSpec){
+      return Q({type: "mockWorker"});
+    }
+
+    // Since we can't globally inject ourselves into scheduler, redefine
+    // the spy before each test.
+    spawnWorkerSpy = sinon.spy(scheduler, "spawnWorker_p");
+
+    appSpec = {
+      getKey: function(){return "simpleAppSpecKey"},
+      settings: {appDefaults: {sessionTimeout: 10}, scheduler: 
+        {simple: {maxRequests: MAX_REQUESTS}}}
+    };
+
+    var key =  appSpec.getKey();
+
+  }),
+  afterEach(function(){
+    spawnWorkerSpy.reset();
+  }),
   describe('#acquireWorker_p()', function(){
-    it('should initially create a new worker.', function(done){
-      //check that we're starting off with no workers.
-      Object.keys(scheduler.$workers).should.be.empty;
-
+    it('should initially create a new worker.', function(){
       //request a worker
       scheduler.acquireWorker_p(appSpec)
       .then(function(wh){
-        //check that exactly one app had workers created
-        Object.keys(scheduler.$workers).should.have.length(1);
-
-        //check that exactly one worker has been created for this scheduler.
-        var relWorkers = scheduler.$workers;
-        Object.keys(relWorkers).should.have.length(1);
-
-        //check that the worker has the necessary fields created.
-        var worker = relWorkers[Object.keys(relWorkers)[0]];
-        worker.should.have.keys(['data', 'promise']);
-        Object.keys(worker.data).should.have.length(4);
-        return wh;
+        spawnWorkerSpy.callCount.should.equal(1);
       })
-      .then(function(wh){ wh.kill(); return(wh.exitPromise); })
-      .then(function(){})
       .then(done, done).done();
     }),
-    it('should not create a new worker for requests to the same app.', function(done){
-      //check that we're starting fresh.
-      Object.keys(scheduler.$workers).should.have.length(0);
+    it('should not create a new worker when one exists.', function(done){
+      var WORKER_ID = "WORKER";
+      var mockWorker = 
+        addWorker(scheduler, WORKER_ID, 0, 0, 0, false);
+      
+      // Reset after adding the initial worker.
+      spawnWorkerSpy.reset();
 
-      //request a worker for the new app
       scheduler.acquireWorker_p(appSpec)
       .then(function(wh){
-        //check that exactly one worker has been created for this scheduler.
-        var relWorkers = scheduler.$workers;
-        Object.keys(relWorkers).should.have.length(1);
+        // check that spawn() wasn't called when a
+        // worker already existed
+        spawnWorkerSpy.callCount.should.equal(0);
 
-        //check that the worker has the necessary fields created.
-        var worker = relWorkers[Object.keys(relWorkers)[0]];
-        worker.should.have.keys(['data', 'promise']);
-
-        return wh;
+        wh.should.equal(mockWorker.promise);
       })
-      .then(function(wh){ wh.kill(); return(wh.exitPromise); })
-      .then(function(){})
       .then(done, done).done();
 
     }),
     it('should not limit if there is no max', function(done){
-      //check that we're starting fresh.
-      Object.keys(scheduler.$workers).should.have.length(0);
+      var WORKER_ID = "WORKER";
+      var mockWorker = 
+        addWorker(scheduler, WORKER_ID, 10000, 0, 0, false);
+      
+      // Reset after adding the initial worker.
+      spawnWorkerSpy.reset();      
 
       appSpec.settings.scheduler = {simple: {maxRequests: 0}};
 
-      //request a worker for the new app
       scheduler.acquireWorker_p(appSpec)
       .then(function(wh){
-        //check that exactly one worker has been created for this scheduler.
-        var relWorkers = scheduler.$workers;
-        Object.keys(relWorkers).should.have.length(1);
-
-        //check that the worker has the necessary fields created.
-        var worker = relWorkers[Object.keys(relWorkers)[0]];
-        worker.should.have.keys(['data', 'promise']);
-
-        worker.data.sockConn = 10000;
-
-        return scheduler.acquireWorker_p(appSpec);
+        // ensure there's no error and that we got the right
+        // data back.
+        wh.should.equal(mockWorker.promise);
       })
-      .then(function(wh){
-        return wh;
-      })
-      .then(function(wh){ wh.kill(); return(wh.exitPromise); })
-      .then(function(){})
       .then(done, done).done();
     }),
-    it('should not surpass the MAX_REQUESTS directive.', function(done){
-      //check that we're starting fresh.
-      Object.keys(scheduler.$workers).should.have.length(0);
-
-      appSpec.settings.scheduler = {simple: {maxRequests: 10}};
-
-      var origWorker = null;
-      var worker = null;
+    it('should approach the MAX_REQUESTS directive.', function(done){
+      var WORKER_ID = "WORKER";
+      var mockWorker = 
+        addWorker(scheduler, WORKER_ID, MAX_REQUESTS - 1, 0, 0, false);
 
       //request a worker for the new app
-      scheduler.acquireWorker_p(appSpec)
+      scheduler.acquireWorker_p(appSpec, '/')
       .then(function(wh){
-        origWorker = wh;
-        //check that exactly one worker has been created for this scheduler.
-        var relWorkers = scheduler.$workers;
-        Object.keys(relWorkers).should.have.length(1);
-
-        //check that the worker has the necessary fields created.
-        worker = relWorkers[_.keys(relWorkers)[0]];
-        worker.should.have.keys(['data', 'promise']);
-
-        worker.data.pendingConn = 0;
-        worker.data.sockConn = 9;
-        worker.data.httpConn = 100; // shouldn't matter
-
-        return scheduler.acquireWorker_p(appSpec, '/');
+        // should succeed, there's room for one more.
+        wh.should.equal(mockWorker.promise);
       })
-      .then(function(wh){
-        //should have been able to create a worker, we had room for one more
-
-        var relWorkers = scheduler.$workers;
-        worker = relWorkers[_.keys(relWorkers)[0]];
-        //bump up the number of ws's by one.
-        worker.data.sockConn = 10;
-        return scheduler.acquireWorker_p(appSpec, '/test'); // don't ever 503 non-root
-      })
-      .then(function(wh){
-        return scheduler.acquireWorker_p(appSpec, '/'); // do 503 roots
-      }, done)
-      .then(function(wh){
-        // shouldn't have obtained a worker.
-        done(new Error("Should have thrown 503, but didn't"));
-      }, function(error){
-        if (!error instanceof OutOfCapacityError){
-          done(error);
-        }
-        // should have failed, return the original worker
-        return origWorker;
-      })
-      .then(function(wh){ wh.kill(); return(wh.exitPromise); })
-      .then(function(){})
       .then(done, done).done();
     }),
-    it('should 503 base URL requests ahead of MAX_REQUESTS')
+    it('should not exceed the MAX_REQUESTS directive on the base URL.', function(){
+      var WORKER_ID = "WORKER";
+      var mockWorker = 
+        addWorker(scheduler, WORKER_ID, MAX_REQUESTS, 0, 0, false);
+
+      //request a worker for the new app
+      (function(){
+        scheduler.acquireWorker_p(appSpec, '/')
+      }).should.throw();
+    }),
+    it('should not surpass the MAX_REQUESTS directive with pending requests.', function(){
+      var WORKER_ID = "WORKER";
+      var mockWorker = 
+        addWorker(scheduler, WORKER_ID, 0, 0, MAX_REQUESTS, false);
+
+      //request a worker for the new app
+      (function(){
+        scheduler.acquireWorker_p(appSpec, '/')
+      }).should.throw();
+    }),
+    it('should not 503 non-/, non-ws traffic ever', function(){
+      var WORKER_ID = "WORKER";
+      var mockWorker = 
+        addWorker(scheduler, WORKER_ID, MAX_REQUESTS*2, 0, 0, false);
+
+      appSpec.settings.scheduler = {simple: {maxRequests: 0}};
+
+      scheduler.acquireWorker_p(appSpec, 'SOMEURL')
+      .then(function(wh){
+        // ensure there's no error and that we got the right
+        // data back.
+        wh.should.equal(mockWorker.promise);
+      })
+      .then(done, done).done();
+    }),
+    it('should not assign traffic to a kill()ed worker before the process exits')
   })
 })

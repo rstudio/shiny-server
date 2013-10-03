@@ -11,22 +11,55 @@
  *
  */
 
-var Scheduler = require('../lib/scheduler/scheduler.js');
 var AppSpec = require('../lib/worker/app-spec.js');
 var sinon = require('sinon');
 var Q = require('q');
 var _ = require('underscore');
 var SimpleEventBus = require('../lib/events/simple-event-bus');
+var rewire = require("rewire");
+var sinon = require('sinon');
+
+// need the static functions
+var should = require('should');
+
+var Scheduler = rewire('../lib/scheduler/scheduler.js');
+
+var exitPromise = Q.defer();
+
+var killSpy = sinon.spy();
+Scheduler.__set__("app_worker", {launchWorker_p: function(){
+  return Q({
+    kill: killSpy,
+    getExit_p: function(){ return exitPromise.promise; },
+    isRunning: function(){ return true }
+  });
+}});
 
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
-var scheduler = new Scheduler(new SimpleEventBus(), appSpec.getKey());
-scheduler.setSocketDir("/var/shiny-server/sockets");
+var scheduler;
 
-SHINY_SERVER_VERSION = "0.3.5";
+var clock = sinon.useFakeTimers();
 
 describe('Scheduler', function(){
-  describe('#spawnWorker_p', function(){
-    it('properly stores provided data.', function(done){
+  beforeEach(function(){
+    scheduler = new Scheduler(new SimpleEventBus(), appSpec.getKey());
+    scheduler.setTransport({alloc_p: function(){
+      return Q({
+        getLogFileSuffix: function(){ return "" },
+        ToString: function(){ return "" },
+        toString: function(){ return "" },
+        connect_p: function(){ return Q(true) }
+      })
+    }});
+
+    killSpy.reset();
+    exitPromise = Q.defer();
+  });
+
+
+
+  describe('#spawnWorker_p', function(done){
+    it('properly stores provided data.', function(){
       //check that we're starting off with no workers.
       Object.keys(scheduler.$workers).should.be.empty;
 
@@ -40,125 +73,83 @@ describe('Scheduler', function(){
         var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
         worker.should.have.keys(['data', 'promise']);
         worker.data.should.have.keys(['a', 'b', 'sockConn', 'httpConn', 
-          'pendingConn', 'timer']);
-        return (wh);
-      })
-      .then(function(wh){ wh.kill('SIGABRT'); return(wh.exitPromise); })
-      .then(function() {})
+          'pendingConn', 'timer']);        
+      })      
       .then(done, done).done();
     }),
     it('properly handles acquire and release.', function(done){
-      //check that we're starting off fresh
-      Object.keys(scheduler.$workers).should.have.length(0);
+      //request a worker
+      scheduler.spawnWorker_p(appSpec, {})
+      .then(function(wh){
+        var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
 
-      //slightly modify the settings to get a new app
-      appSpec.settings = {x:1};
-
-      var workerPromise = scheduler.spawnWorker_p(appSpec);
-
-      //check that exactly one worker has been created
-      var relWorkers = scheduler.$workers;
-      Object.keys(relWorkers).should.have.length(1);
-
-      //get the created worker
-      var worker = relWorkers[Object.keys(relWorkers)[0]];
-      worker.data.httpConn.should.equal(0);
-      worker.data.sockConn.should.equal(0);
-
-      // Acquire and release functions should have been inserted into the handle before
-      // it was returned. Check.
-      workerPromise.then(function(wh){
         worker.data.httpConn.should.equal(0);
-        wh.acquire('http');
-        worker.data.httpConn.should.equal(1);
-
         worker.data.sockConn.should.equal(0);
+
+        wh.acquire('http');
+        
+        worker.data.httpConn.should.equal(1);
+        worker.data.sockConn.should.equal(0);
+
         wh.acquire('sock');
+        
+        worker.data.httpConn.should.equal(1);
+        worker.data.sockConn.should.equal(1);
+
+        wh.release('http');
+        
+        worker.data.httpConn.should.equal(0);
         worker.data.sockConn.should.equal(1);
 
         wh.release('sock');
-        worker.data.sockConn.should.equal(0);
-
-        worker.data.httpConn.should.equal(1);
-        wh.release('http');
+        
         worker.data.httpConn.should.equal(0);
-
-        return(wh)
-      })
-      .then(function(wh){ wh.kill('SIGABRT'); return(wh.exitPromise); })
-      .then(function() {})
+        worker.data.sockConn.should.equal(0);        
+      })      
       .then(done, done).done();
     }),
     it('sets timer after last connection.', function(done){
-        this.timeout(3000);
+      //request a worker
+      scheduler.spawnWorker_p(appSpec, {})
+      .then(function(wh){
+        // TODO: clean up 
+        // The old tests all have pending kill timers which the spy will
+        // capture if we just run this test now. Advance the clock to get
+        // those kills out of the way then reset the spy to get an accurate
+        // count from JUST this test.
+        clock.tick(5500);
+        killSpy.reset();
 
-        //check that we're starting off fresh.
-        Object.keys(scheduler.$workers).should.have.length(0);
-
-        //slightly modify the settings to get a new app
-        appSpec.settings = {x:2, appDefaults: { idleTimeout: 1 }}
+        //check that the worker has the necessary fields created.
+        var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
         
+        // make a connection so there should be no timer.
+        wh.acquire('sock');
 
-        var workerPromise = scheduler.spawnWorker_p(appSpec);
+        should.not.exist(worker.data.timer);
 
-        //check that exactly one worker has been created for this app's key.
-        var relWorkers = scheduler.$workers;
-        Object.keys(relWorkers).should.have.length(1);
+        // release the only connection which should trigger the timer
+        wh.release('sock');
 
-        //get the created worker
-        var worker = relWorkers[Object.keys(relWorkers)[0]];
-        worker.data.httpConn.should.equal(0);
-        worker.data.sockConn.should.equal(0);
+        should.exist(worker.data.timer);
 
-        // Acquire and release functions should have been inserted into the handle before
-        // it was returned. Check.
-        workerPromise.then(function(wh){
-          wh.acquire('http');
-          wh.acquire('http');
-          wh.acquire('sock');
-          wh.release('sock');
-          wh.release('http');
-          //should have initialized a timer initialaly when there were no conncetions.
-          Object.keys(worker.data).should.have.length(4); // just conn counts.
+        // Advance time far enough that the process
+        // should have been killed
+        clock.tick(5500);
 
-          wh.release('http');
-          //ensure timer is now active
-          Object.keys(worker.data).should.have.length(4); // added timer
-          worker.data.timer.should.exist;
+        killSpy.callCount.should.equal(1);
 
-          //create a promise that can be used to reference the outcome of this check.
-          var defer = Q.defer();
-
-          // create a timer that will check periodically to see if the worker has been
-          // killed. If it isn't destroyed by the time it should have been, then this
-          // test fails.
-          var timeout = 2500;
-          var elapsed = 0;
-          var interval = 500;
-          var intervalId = setInterval(function() {
-            elapsed += interval;
-            if (elapsed > timeout) {
-              defer.reject(new Error('The application didn\'t close in time.'));
-              wh.kill();
-              clearInterval(intervalId);
-              return;
-            }
-
-            logger.trace('Checking to see if worker has closed...');
-            if (_.size(scheduler.$workers) == 0){
-              logger.trace('Worker is closed.');
-              clearInterval(intervalId);
-              defer.resolve();
-              return;
-            }
-          }, interval);
-
-          return defer.promise;
+        // Mark the process as killed
+        exitPromise.resolve(true);
+        return exitPromise.promise.then(function(){
+          Object.keys(scheduler.$workers).should.have.length(0);
         })
-        .then(done,done).done();
-        // note that the `.then(done, done)` is imperative if you actually want to wait
-        // until the R process starts. Without this, all the background async stuff will 
-        // just drag on after the (synchronous) test assertions have long been completed.
-      })
+      })      
+      .then(done, done).done();
+    })
   })
+
+  after(function(){
+    clock.restore();
+  });
 })
