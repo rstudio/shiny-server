@@ -49,7 +49,7 @@ function addWorker(scheduler, id, sock, http, pending, isPending){
   return scheduler.$workers[id];
 }
 
-describe('SimpleScheduler', function(done){
+describe('SimpleScheduler', function(){
   beforeEach(function(){
     scheduler = new SimpleScheduler(new SimpleEventBus(), appSpec);
 
@@ -78,7 +78,7 @@ describe('SimpleScheduler', function(done){
   afterEach(function(){
     spawnWorkerSpy.reset();
   }),
-  describe('#acquireWorker_p()', function(){
+  describe('#acquireWorker_p()', function(done){
     it('should initially create a new worker.', function(){
       //request a worker
       scheduler.acquireWorker_p(appSpec)
@@ -157,7 +157,7 @@ describe('SimpleScheduler', function(done){
         scheduler.acquireWorker_p(appSpec, '/')
       }).should.throw();
     }),
-    it('should not 503 non-/, non-ws traffic ever', function(){
+    it('should not 503 non-/, non-ws traffic ever', function(done){
       var WORKER_ID = "WORKER";
       var mockWorker = 
         addWorker(scheduler, WORKER_ID, MAX_REQUESTS*2, 0, 0, false);
