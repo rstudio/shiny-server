@@ -58,8 +58,8 @@ describe('Scheduler', function(){
 
 
 
-  describe('#spawnWorker_p', function(done){
-    it('properly stores provided data.', function(){
+  describe('#spawnWorker_p', function(){
+    it('properly stores provided data.', function(done){
       //check that we're starting off with no workers.
       Object.keys(scheduler.$workers).should.be.empty;
 
