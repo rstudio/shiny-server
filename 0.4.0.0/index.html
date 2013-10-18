@@ -210,12 +210,12 @@ code > span.er { font-weight: bold; }
 </nav>
 <h1 id="getting-started"><a href="#getting-started"><span class="header-section-number">1</span> Getting Started</a></h1>
 <h2 id="introduction"><a href="#introduction"><span class="header-section-number">1.1</span> Introduction</a></h2>
-<p>Shiny Server enables users to host and manage Shiny applications on the Internet. Shiny is an R package which uses a reactive programming model use to simplify the development of R-powered web applications. Shiny Server can manage R processes running various Shiny applications over different URLs and ports. Using Shiny Server offers a variety of benefits over simply running Shiny in R directly. These features allow the administrator to:</p>
+<p>Shiny Server enables users to host and manage Shiny applications on the Internet. Shiny is an R package which uses a reactive programming model to simplify the development of R-powered web applications. Shiny Server can manage R processes running various Shiny applications over different URLs and ports. Using Shiny Server offers a variety of benefits over simply running Shiny in R directly. These features allow the administrator to:</p>
 <ul>
 <li>Host multiple applications simultaneously, each at its own URL.</li>
 <li>Support web browsers which don't support WebSocket, including Internet Explorer 8 &amp; 9.</li>
 <li>Enable system users to develop and manage their own Shiny applications.</li>
-<li>Automatically have R processes that crash or are terminated are automatically restart for the next user requesting the application.</li>
+<li>Automatically have R processes that crash or are terminated restart for the next user requesting the application.</li>
 </ul>
 <h2 id="system-requirements"><a href="#system-requirements"><span class="header-section-number">1.2</span> System Requirements</a></h2>
 <p>Shiny Server is currently only supported on the Linux operating system. We officially support the following distributions:</p>
@@ -573,7 +573,7 @@ code > span.er { font-weight: bold; }
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
@@ -835,7 +835,7 @@ code > span.er { font-weight: bold; }
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
@@ -1003,7 +1003,7 @@ code > span.er { font-weight: bold; }
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
@@ -1041,7 +1041,7 @@ code > span.er { font-weight: bold; }
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
@@ -1079,7 +1079,7 @@ code > span.er { font-weight: bold; }
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
@@ -1157,7 +1157,7 @@ code > span.er { font-weight: bold; }
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#application">application</a></code><br/>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#application">application</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
@@ -1195,7 +1195,7 @@ code > span.er { font-weight: bold; }
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#application">application</a></code><br/>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#application">application</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
@@ -1233,7 +1233,7 @@ code > span.er { font-weight: bold; }
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#application">application</a></code><br/>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#application">application</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
