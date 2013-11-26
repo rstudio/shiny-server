@@ -58,6 +58,6 @@ mkdir -p build
 cd build
 "$CMAKE" -DCMAKE_INSTALL_PREFIX=/opt -DPYTHON="$PYTHON" ../..
 make
-(cd ../.. && bin/npm --python="$PYTHON" install)
+(cd ../.. && bin/npm --python="$PYTHON" rebuild)
 "$CPACK" -G "$GENERATOR"
 

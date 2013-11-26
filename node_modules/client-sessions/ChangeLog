@@ -1,0 +1,3 @@
+0.1.0 -
+	* node 0.10.x support
+	* fix bug in .reset() - session would load from an existing cookie - thanks @khmelichek
