@@ -54,11 +54,13 @@ fi
 DIR=`dirname $0`
 cd "$DIR"
 DIR=`pwd`
+# Add node, etc. to the path
+PATH=$PATH:$DIR/bin/
 mkdir -p build
 cd build
 "$CMAKE" -DCMAKE_INSTALL_PREFIX=/opt -DPYTHON="$PYTHON" ../..
 make
 (cd ../.. && bin/npm --python="$PYTHON" rebuild)
 # Need to rebuild ourselves since 'npm install' won't run gyp for us.
-(cd ../.. && ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js rebuild)
+(cd ../.. && ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild)
 "$CPACK" -G "$GENERATOR"
