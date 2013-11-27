@@ -55,7 +55,7 @@ DIR=`dirname $0`
 cd "$DIR"
 DIR=`pwd`
 # Add node, etc. to the path
-PATH=$PATH:$DIR/bin/
+PATH=$PATH:$DIR/../bin/
 mkdir -p build
 cd build
 "$CMAKE" -DCMAKE_INSTALL_PREFIX=/opt -DPYTHON="$PYTHON" ../..
