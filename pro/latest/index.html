@@ -275,7 +275,7 @@ code > span.er { font-weight: bold; }
 <li><a href="#appendix"><span class="toc-section-number">7</span> Appendix</a><ul>
 <li><a href="#configuration-settings"><span class="toc-section-number">7.1</span> Configuration Settings</a></li>
 <li><a href="#migrating-updating"><span class="toc-section-number">7.2</span> Migrating &amp; Updating</a><ul>
-<li><a href="#upgrading-from-shiny-server-0.3.5"><span class="toc-section-number">7.2.1</span> Upgrading from Shiny Server 0.3.5</a></li>
+<li><a href="#upgrading-from-shiny-server-0.3.x"><span class="toc-section-number">7.2.1</span> Upgrading from Shiny Server 0.3.x</a></li>
 </ul></li>
 <li><a href="#frequently-asked-questions"><span class="toc-section-number">7.3</span> Frequently Asked Questions</a><ul>
 <li><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="toc-section-number">7.3.1</span> What are the hardware requirements for running Shiny Server?</a></li>
@@ -325,7 +325,7 @@ code > span.er { font-weight: bold; }
 </div>
 <h2 id="installation"><a href="#installation"><span class="header-section-number">1.3</span> Installation</a></h2>
 <p>The Shiny Server installer does not come with R, nor does it provide the Shiny R package. Below are the steps for installing each of them separately.</p>
-<p>If you had previously installed Shiny Server 0.3.5 from <code>npm</code>, please see the section on <a href="#upgrading-from-shiny-server-0.3.5">Upgrading from Shiny Server 0.3.5</a> before proceeding with the installation.</p>
+<p>If you had previously installed Shiny Server 0.3.5 from <code>npm</code>, please see the section on [Upgrading from Shiny Server 0.3.5] before proceeding with the installation.</p>
 <h3 id="ubuntu-12.04"><a href="#ubuntu-12.04"><span class="header-section-number">1.3.1</span> Ubuntu (12.04+)</a></h3>
 <p><strong>Installing R</strong></p>
 <p>Shiny Server requires an installation of R version 2.15.1 or higher. To install the latest version of R you should first add the CRAN repository to your system as described here:</p>
@@ -2449,8 +2449,8 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
       
     </ul>
 <h2 id="migrating-updating"><a href="#migrating-updating"><span class="header-section-number">7.2</span> Migrating &amp; Updating</a></h2>
-<h3 id="upgrading-from-shiny-server-0.3.5"><a href="#upgrading-from-shiny-server-0.3.5"><span class="header-section-number">7.2.1</span> Upgrading from Shiny Server 0.3.5</a></h3>
-<p>Shiny Server 0.4 includes many major changes to the architecture of Shiny Server. There are a few things to be aware of when upgrading from Shiny Server 0.3.5.</p>
+<h3 id="upgrading-from-shiny-server-0.3.x"><a href="#upgrading-from-shiny-server-0.3.x"><span class="header-section-number">7.2.1</span> Upgrading from Shiny Server 0.3.x</a></h3>
+<p>Shiny Server 0.4 includes many major changes to the architecture of Shiny Server. There are a few things to be aware of when upgrading from Shiny Server 0.3.x.</p>
 <p>First, Shiny Server is now distributed via <code>deb</code> and <code>rpm</code> installers, rather than using <code>npm</code>. Thus, you'll first want to uninstall the old version of Shiny Server which was installed from <code>npm</code>.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> npm uninstall -g shiny-server</code></pre>
 <p>Shiny Server no longer requires node.js to be installed on the system either. If you have no other need for node.js, you can uninstall it at this time, as well.</p>
