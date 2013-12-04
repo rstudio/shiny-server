@@ -4,12 +4,42 @@
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Shiny Server v0.4.0.0 Configuration Reference</title>
+  <title>Shiny Server v0.4.1 Configuration Reference</title>
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
   <style type="text/css">
+  .pro:after { 
+    content: " - Pro Only!";
+    color: #B22;
+  }
+  ul li a code.pro:after {
+    content:"" !important; /* Bug in Pandoc adds classes on only these headers in TOC. */
+  }
+
+  .pro-chunk, .pro-section{
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 30px;
+    padding-left: 15px;
+    border-left: 3px solid #c77;  
+  }
+
+  .pro-tag {
+    float: left; 
+    position: relative;
+    -moz-transform: rotate(270deg);  /* FF3.5+ */        
+    -o-transform: rotate(270deg);  /* Opera 10.5 */   
+    -webkit-transform: rotate(270deg);  /* Saf3.1+, Chrome */              
+    filter:  progid:DXImageTransform.Microsoft.BasicImage(rotation=3);  /* IE6,IE7 */          
+    -ms-filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3); /* IE8 */
+    color: #c77;
+  }
+
+  .warn{
+    color: red;
+  }
   a {
-    color: #44A;
+    color: #26A;
     text-decoration: none;
   }
   label {
@@ -146,7 +176,7 @@ code > span.er { font-weight: bold; }
 </head>
 <body>
 <header>
-<h1 class="title">Shiny Server v0.4.0.0 Administrator's Guide</h1>
+<h1 class="title">Shiny Server Open Source v0.4.1 Administrator's Guide</h1>
 </header>
 <nav id="TOC">
 <ul>
@@ -181,6 +211,10 @@ code > span.er { font-weight: bold; }
 <li><a href="#virtual-hosts"><span class="toc-section-number">2.7</span> Virtual Hosts</a></li>
 <li><a href="#logging"><span class="toc-section-number">2.8</span> Logging</a><ul>
 <li><a href="#access-logs"><span class="toc-section-number">2.8.1</span> Access Logs</a></li>
+</ul></li>
+<li><a href="#environment-variable-settings"><span class="toc-section-number">2.9</span> Environment Variable Settings</a><ul>
+<li><a href="#shiny_log_level"><span class="toc-section-number">2.9.1</span> <code>SHINY_LOG_LEVEL</code></a></li>
+<li><a href="#r"><span class="toc-section-number">2.9.2</span> <code>R</code></a></li>
 </ul></li>
 </ul></li>
 <li><a href="#deploying-applications"><span class="toc-section-number">3</span> Deploying Applications</a><ul>
@@ -242,7 +276,7 @@ code > span.er { font-weight: bold; }
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny is installed, you can begin the installation of Shiny Server. You should have been provided with a <code>.deb</code> installer for Shiny Server. If you only have a link to this file, you can use <code>wget</code> to download the file to the current directory. You will need to first install the <code>gdebi-core</code> package to install Shiny Server and its dependencies. Once the <code>.deb</code> file is available locally, run the following commands to complete the installation of Shiny Server.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> apt-get install gdebi-core
-<span class="kw">sudo</span> gdebi shiny-server-0.4.0.deb</code></pre>
+<span class="kw">sudo</span> gdebi shiny-server-0.4.1.deb</code></pre>
 <h3 id="redhatcentos-5.4"><a href="#redhatcentos-5.4"><span class="header-section-number">1.3.2</span> RedHat/CentOS (5.4+)</a></h3>
 <p><strong>Prerequisites</strong></p>
 <p>Shiny Server has several dependencies on packages (including R itself) found in the Extra Packages for Enterprise Linux (EPEL) repository. If you don't already have this repository available you should add it to your system using the instructions found here: <a href="https://fedoraproject.org/wiki/EPEL">https://fedoraproject.org/wiki/EPEL</a></p>
@@ -250,7 +284,7 @@ code > span.er { font-weight: bold; }
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install R  </code></pre>
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny has been installed, you can begin the installation of Shiny Server. You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). You can install this rpm file using <code>yum</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-0.4.0.rpm</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-0.4.1.rpm</code></pre>
 <p>This completes the installation of Shiny Server.</p>
 <h3 id="install-shiny"><a href="#install-shiny"><span class="header-section-number">1.3.3</span> Install Shiny</a></h3>
 <p>Before Shiny Server can be installed, the Shiny package must be installed in the system library; you typically need <code>sudo</code> privileges to install to this library. Shiny Server currently requires Shiny version 0.7.0 or later. The following command will download and install the <code>shiny</code> package from CRAN in the system library.</p>
@@ -422,14 +456,14 @@ code > span.er { font-weight: bold; }
 <h3 id="host-per-user-application-directories"><a href="#host-per-user-application-directories"><span class="header-section-number">2.5.3</span> Host Per-User Application Directories</a></h3>
 <p>A location configured to use <code>user_apps</code> will allow users on the system to create and manage their own Shiny applications available in their home directories. This directive will host any application stored in an eligible user's <code>~/ShinyApps</code> directory publicly at a URL prefaced by their username.</p>
 <p>This privilege can be restricted only to users of particular groups using the <code>members_of</code> restriction. For instance, the following configuration:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define the location &#39;/userApps&#39;</span>
-<span class="kw">location</span> /userApps {
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define the root location</span>
+<span class="kw">location</span> / {
   <span class="kw">user_apps;</span>
   
   <span class="co"># Only allow members of the &#39;shinyUsers&#39; group to host personal applications.</span>
   <span class="kw">members_of</span> shinyUsers<span class="kw">;</span>
 }</code></pre>
-<p>will -- for any user who is a member of the <code>shinyUsers</code> group -- publicly host any Shiny application available in the user's <code>~/ShinyApps</code> directory. For instance, if <code>tina</code> is a user on this system and is also a member of the <code>shinyUsers</code> group, any application stored in <code>/home/tina/ShinyApps/</code> would be available on this server at a URL like <code>http://server.com/tina/shinyApp1</code>, assuming <code>/home/tina</code> was <code>tina</code>'s home directory.</p>
+<p>will -- for any user who is a member of the <code>shinyUsers</code> group -- publicly host any Shiny application available in the user's <code>~/ShinyApps</code> directory. For instance, if <code>tina</code> is a user on this system and is also a member of the <code>shinyUsers</code> group, any application stored in <code>/home/tina/ShinyApps/</code>, such as the <code>shinyApp1</code> application, would be available on this server at a URL like <code>http://server.com/tina/shinyApp1</code>, assuming <code>/home/tina</code> was <code>tina</code>'s home directory.</p>
 <h2 id="redirecting"><a href="#redirecting"><span class="header-section-number">2.6</span> Redirecting</a></h2>
 <p>The final mode in which a location can operate is to redirect to another URL. Such locations will immediately send a response to the client informing them of the URL to which they should redirect and the status code that should be used when informing the client of the redirection. Typically, a redirect will use the <code>301</code> status code for a permanent redirect, or a <code>302</code> status code for a temporary redirect. The final option when configuring a location for redirection is whether or not it should use exact matching. If a redirecting location is configured to use exact matching, only requests for that exact URL will be redirected. If not, any requests for that URL path or any subpath of that URL will be redirected. For example,</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define a location at the base URL of this &#39;server&#39;</span>
@@ -488,6 +522,15 @@ code > span.er { font-weight: bold; }
 
 <span class="kw">server</span> {
   <span class="kw">...</span></code></pre>
+<h2 id="environment-variable-settings"><a href="#environment-variable-settings"><span class="header-section-number">2.9</span> Environment Variable Settings</a></h2>
+<p>We strive to expose most settings through the configuration file described previously. However, there are some settings that we don't include in the configuration file which some users may still wish to change. Where possible, we'll allow users to configure these settings using environment variables. Some of these environment variables will later be promoted to configuration directives, but will be documented here until that time.</p>
+<p>Typically, it is best to define these environment variables in the startup script used to run Shiny Server (often either <code>/etc/init.d/shiny-server</code> or <code>/etc/init/shiny-server.conf</code>, depending on whether or not you're using Upstart).</p>
+<h3 id="shiny_log_level"><a href="#shiny_log_level"><span class="header-section-number">2.9.1</span> <code>SHINY_LOG_LEVEL</code></a></h3>
+<p>Defines the verbosity of logging which will be used by Shiny Server. Valid options -- in level of increasing verbosity -- are <code>TRACE</code>, <code>DEBUG</code>, <code>INFO</code>, <code>WARN</code>, and <code>ERROR</code>. More verbose levels of logging (such as <code>TRACE</code>) may be helpful when debugging an issue or trying to understand exactly what Shiny Server is doing, but will likely be far too much information for a system with even moderate load.</p>
+<p>The default if this environment variable is not found is to use <code>INFO</code>.</p>
+<h3 id="r"><a href="#r"><span class="header-section-number">2.9.2</span> <code>R</code></a></h3>
+<p>Defines the path to the R executable which should be used when running Shiny. Systems which have multiple versions of R installed, or don't wish to place R on the path before starting Shiny Server can override this setting to point to a particular version of R.</p>
+<p>If no environment variable is found, Shiny Server will expect an executable named <code>R</code> to be on the path.</p>
 <h1 id="deploying-applications"><a href="#deploying-applications"><span class="header-section-number">3</span> Deploying Applications</a></h1>
 <h2 id="schedulers-application-restarts"><a href="#schedulers-application-restarts"><span class="header-section-number">3.1</span> Schedulers &amp; Application Restarts</a></h2>
 <p>A scheduler is responsible for fulfilling incoming requests to a particular application. Each version of an application (see below) will have its own associated scheduler. Each scheduler can have different properties to control things like how many concurrent connections it should accept.</p>
@@ -1280,13 +1323,13 @@ code > span.er { font-weight: bold; }
     </ul>
 <h2 id="migrating-updating"><a href="#migrating-updating"><span class="header-section-number">4.2</span> Migrating &amp; Updating</a></h2>
 <h3 id="upgrading-from-shiny-server-0.3.5"><a href="#upgrading-from-shiny-server-0.3.5"><span class="header-section-number">4.2.1</span> Upgrading from Shiny Server 0.3.5</a></h3>
-<p>Shiny Server 0.4.0 includes many major changes to the architecture of Shiny Server. There are a few things to be aware of when upgrading from Shiny Server 0.3.5.</p>
+<p>Shiny Server 0.4 includes many major changes to the architecture of Shiny Server. There are a few things to be aware of when upgrading from Shiny Server 0.3.5.</p>
 <p>First, Shiny Server is now distributed via <code>deb</code> and <code>rpm</code> installers, rather than using <code>npm</code>. Thus, you'll first want to uninstall the old version of Shiny Server which was installed from <code>npm</code>.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> npm uninstall -g shiny-server</code></pre>
 <p>Shiny Server no longer requires node.js to be installed on the system either. If you have no other need for node.js, you can uninstall it at this time, as well.</p>
-<p>Running the Shiny Server 0.4.0 installer will replace the scripts at <code>/etc/init/shiny-server.conf</code> or <code>/etc/init.d/shiny-server</code>. If you have made any modifications to these startup scripts that you wish to keep, please save a copy of these files before running the installer.</p>
-<p>The default directories for logging and Shiny application hosting have also moved in this release. The default logging directory used to be <code>/var/shiny-server/log</code>, it is now <code>/var/log/shiny-server</code>. The default hosting directory was previously <code>/var/shiny-server/www</code> and is now <code>/srv/shiny-server/</code>. If you have not explicitly overridden these directories in the <code>/etc/shiny-server/shiny-server.conf</code> file, the new location will be created and used in Shiny Server 0.4.0.</p>
-<p>Finally, Shiny Server 0.4.0 now requires the Shiny package to be at least versoin 0.7.0. You can check the system-wide version of Shiny you have installed using the following command on the command line.</p>
+<p>Running the Shiny Server 0.4 installer will replace the scripts at <code>/etc/init/shiny-server.conf</code> or <code>/etc/init.d/shiny-server</code>. If you have made any modifications to these startup scripts that you wish to keep, please save a copy of these files before running the installer.</p>
+<p>The default directories for logging and Shiny application hosting have also moved in this release. The default logging directory used to be <code>/var/shiny-server/log</code>, it is now <code>/var/log/shiny-server</code>. The default hosting directory was previously <code>/var/shiny-server/www</code> and is now <code>/srv/shiny-server/</code>. If you have not explicitly overridden these directories in the <code>/etc/shiny-server/shiny-server.conf</code> file, the new location will be created and used in Shiny Server 0.4.</p>
+<p>Finally, Shiny Server 0.4 now requires the Shiny package to be at least version 0.7.0. You can check the system-wide version of Shiny you have installed using the following command on the command line.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - -c <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">packageVersion(&#39;shiny&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></code></pre>
 <p>(Running this command using the <code>sudo su - -c</code> preface will allow you to see the system-wide version of Shiny. Individual users could have installed more recent versions of Shiny in their own R libraries.) If the installed version of Shiny predates 0.7.0, you should follow the instructions in <a href="#install-shiny">Install Shiny</a> to update to the most recent version.</p>
 <p>At this point, you can proceed with the <a href="#installation">Installation</a> instructions associated with your Operating System.</p>
