@@ -16,6 +16,12 @@ fi
 sudo mkdir -p /var/log/shiny-server
 sudo mkdir -p /srv/shiny-server
 
+# Place the logrotate script, if applicable
+if test -d /etc/logrotate.d
+then
+   sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/logrotate /etc/logrotate.d/shiny-server
+fi
+
 # Log dir must be writable by "shiny" user
 sudo chown shiny:shiny /var/log/shiny-server
 

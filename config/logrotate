@@ -1,0 +1,7 @@
+/var/log/shiny-server.log {
+       rotate 12
+       copytruncate
+       compress
+       missingok
+       size 1M
+}
