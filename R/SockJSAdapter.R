@@ -39,9 +39,17 @@ local({
         Sys.getenv('MIN_R_VERSION'), "'."), sep="")
   }
   if (compareVersion(Sys.getenv('MIN_SHINY_VERSION'),shinyVer)>0){
-    # Shiny is out of date
-    stop(paste("Shiny version '", shinyVer, "' found. Shiny Server requires at least '",
-        Sys.getenv('MIN_SHINY_VERSION'), "'."), sep="")
+    if (shinyVer == "0.0.0"){
+      # Shiny not found
+      stop(paste("The Shiny package was not found in the library. Ensure that ",
+        "Shiny is installed and is available in the Library of the ",
+        "user you're running this application as.", sep="\n"))
+    } else{
+      # Shiny is out of date
+      stop(paste("Shiny version '", shinyVer, "' found. Shiny Server requires at least '",
+          Sys.getenv('MIN_SHINY_VERSION'), "'."), sep="")      
+    }
+    
   }
 
   library(shiny)
