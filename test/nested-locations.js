@@ -53,7 +53,9 @@ describe('Nested locations', function() {
       var locD = locs[2];
       var locA = locs[3];
       locB.$appSpec.prefix.should.equal('/a/b/');
+      locB.$appSpec.settings.appDefaults.idleTimeout.should.equal(5);
       locC.$appSpec.prefix.should.equal('/a/c/');
+      locC.$appSpec.settings.appDefaults.idleTimeout.should.equal(30);
       locD.$router.$dirIndex.should.equal(false);
       locD.$router.$root.should.equal('/srv/shiny-server');
       locA.$dirIndex.should.equal(true);
