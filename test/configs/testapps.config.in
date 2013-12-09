@@ -1,0 +1,11 @@
+run_as $USER;
+
+server {
+  listen 3838;
+
+  location / {
+    site_dir $ROOT/test/apps;
+    log_dir /tmp/shiny-server-test;
+    directory_index on;
+  }
+}
