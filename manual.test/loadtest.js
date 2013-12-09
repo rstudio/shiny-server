@@ -73,13 +73,12 @@ function WebSocketLoader(url, initMsg) {
       options.socketPath = SOCKET_PATH;
     var ws = new WebSocket.Client(this._url, undefined, options);
     function onOpen() {
-      var initMsg = JSON.stringify(initMsg);
+      var initMsg = JSON.stringify(self._initMsg);
       
       // This line is only needed for shiny-server, since SockJS expects
       // this framing of messages
       if (SHINY_SERVER)
         initMsg = JSON.stringify([initMsg]);
-      
       ws.send(initMsg);
     }
     ws.on('open', function(event) {
@@ -252,7 +251,9 @@ var appLoader = new AppLoader(url, {
     ".clientdata_url_pathname":"/",
     ".clientdata_url_search":"",
     ".clientdata_url_hash_initial":"",
-    ".clientdata_allowDataUriScheme":true
+    ".clientdata_singletons":"d9824d41b9a6aefe883ba073d83925ecd8434247",
+    ".clientdata_allowDataUriScheme":true,
+
   }
 });
 
