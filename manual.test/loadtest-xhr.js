@@ -6,6 +6,10 @@ http.globalAgent.maxSockets = 750;
 
 var appUrl = "http://localhost:3838/01_hello/";
 
+process.on('uncaughtException', function (err) {
+  console.log('Caught exception: ' + err);
+});
+
 function startSession(appUrl, callback) {
   require('crypto').randomBytes(12, function(ex, buf) {
     if (ex) {
