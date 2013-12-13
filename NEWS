@@ -5,10 +5,16 @@ shiny-server 0.4.2
 * BREAKING CHANGE: Deprecatedd `application` setting in favor of nested 
   ``location` blocks.
 
+* Allow client to configure which network techniques should be used to connect
+  to the server using the keyboard shortcut 'ctrl+shift+A'.
+
 * Properly set working directory of spawned Shiny Processes to the associated
   application's directory to honor local .Renviron and family.
 
-* Provide a logrotate configuration for /var/log/shiny-server.log where logrotate is available.
+* Provide a logrotate configuration for /var/log/shiny-server.log where 
+  logrotate is available.
+
+* Various memory leak and stability improvements.
 
 shiny-server 0.4.0
 --------------------------------------------------------------------------------
