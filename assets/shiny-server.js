@@ -22,7 +22,7 @@
         if (supports_html5_storage()){
           store = window.localStorage;
           whitelistStr = store["shiny.whitelist"];
-          if (whitelistStr === ""){
+          if (!whitelistStr || whitelistStr === ""){
             whitelist = [];
           } else{
             whitelist = JSON.parse(whitelistStr);
