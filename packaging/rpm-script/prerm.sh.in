@@ -3,7 +3,15 @@
 # errors shouldn't cause script to exit
 set +e
 
-sudo initctl stop shiny-server 2>/dev/null
+if [ -f /etc/init/shiny-server.conf ]
+then
+  sudo initctl stop shiny-server 2>/dev/null
+fi
+
+if [ -f /etc/init.d/shiny-server ]
+then
+  sudo service shiny-server stop 2>/dev/null
+fi
 
 # clear error termination state
 set -e
