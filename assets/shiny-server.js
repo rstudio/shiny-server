@@ -66,7 +66,6 @@
 
 
         $(document).keydown(function(event){
-          console.log(event);
           if (event.shiftKey && event.ctrlKey && event.altKey && event.keyCode == 65){
             ShinyServer.toggleNetworkSelector();
           }
