@@ -31,7 +31,7 @@
     "send"              :  "0.1.x",
     "connect"           :  "2.7.x",
     "webkit-devtools-agent" :  "*",
-    "client-sessions"   :  "0.2.x",
+    "client-sessions"   :  "0.4.x",
     "should"         	:  "1.2.x",
     "sinon"          	:  "1.7.x",
     "qs"		:  "0.6.x",
