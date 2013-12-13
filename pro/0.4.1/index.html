@@ -209,7 +209,7 @@ code > span.er { font-weight: bold; }
 </ul></li>
 <li><a href="#redirecting"><span class="toc-section-number">2.6</span> Redirecting</a></li>
 <li><a href="#virtual-hosts"><span class="toc-section-number">2.7</span> Virtual Hosts</a></li>
-<li><a href="#logging"><span class="toc-section-number">2.8</span> Logging</a><ul>
+<li><a href="#server-log"><span class="toc-section-number">2.8</span> Server Log</a><ul>
 <li><a href="#access-logs"><span class="toc-section-number">2.8.1</span> Access Logs</a></li>
 </ul></li>
 <li><a href="#health-check-endpoint"><span class="toc-section-number">2.9</span> Health Check Endpoint</a></li>
@@ -340,6 +340,7 @@ code > span.er { font-weight: bold; }
 <p>Once Shiny is installed, you can begin the installation of Shiny Server. You should have been provided with a <code>.deb</code> installer for Shiny Server. If you only have a link to this file, you can use <code>wget</code> to download the file to the current directory. You will need to first install the <code>gdebi-core</code> package to install Shiny Server and its dependencies. Once the <code>.deb</code> file is available locally, run the following commands to complete the installation of Shiny Server.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> apt-get install gdebi-core
 <span class="kw">sudo</span> gdebi shiny-server-0.4.1.deb</code></pre>
+<p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code>.</p>
 <h3 id="redhatcentos-5.4"><a href="#redhatcentos-5.4"><span class="header-section-number">1.3.2</span> RedHat/CentOS (5.4+)</a></h3>
 <p><strong>Prerequisites</strong></p>
 <p>Shiny Server has several dependencies on packages (including R itself) found in the Extra Packages for Enterprise Linux (EPEL) repository. If you don't already have this repository available you should add it to your system using the instructions found here: <a href="https://fedoraproject.org/wiki/EPEL">https://fedoraproject.org/wiki/EPEL</a></p>
@@ -348,7 +349,7 @@ code > span.er { font-weight: bold; }
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny has been installed, you can begin the installation of Shiny Server. You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). You can install this rpm file using <code>yum</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-0.4.1.rpm</code></pre>
-<p>This completes the installation of Shiny Server.</p>
+<p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code>.</p>
 <h3 id="install-shiny"><a href="#install-shiny"><span class="header-section-number">1.3.3</span> Install Shiny</a></h3>
 <p>Before Shiny Server can be installed, the Shiny package must be installed in the system library; you typically need <code>sudo</code> privileges to install to this library. Shiny Server currently requires Shiny version 0.7.0 or later. The following command will download and install the <code>shiny</code> package from CRAN in the system library.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - \
@@ -451,22 +452,32 @@ and then enter and verify the password you wish to use for this user.
   }
 <span class="kw">...</span>
 }</code></pre>
-<p>would define two locations, one which serves (potentially) a multitude of applications at the URL <code>/otherApps/</code>, and another which serves a single application at the URL <code>/specialApp/</code>.</p>
-<p>The various hosting models which can be applied to a location are described in the section on <a href="#hosting-model">Hosting Model</a>s.</p>
+<p>would define two locations, one which serves (potentially) a multitude of applications at the URL <code>/otherApps/</code>, and another which serves a single application at the URL <code>/specialApp/</code>. The various hosting models which can be applied to a location are described in the section on <a href="#hosting-model">Hosting Model</a>s.</p>
+<p><code>location</code> directives can also be nested to provide more granular settings for a particular sub-<code>location</code>. For instance, if you used Google Analytics but the Finance department wanted to use its own Google Analytics ID for their <code>finance</code> directory, you could accomplish that with a configuration like:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">server</span> {
+  <span class="kw">...</span>
+  <span class="co"># Define the &#39;/depts&#39; location</span>
+  <span class="kw">location</span> /depts {
+    <span class="co"># Host a directory of applications</span>
+    <span class="kw">site_dir</span> /srv/departmentApps<span class="kw">;</span>
+    
+    <span class="co"># Provide a default/global GAID</span>
+    <span class="kw">google_analytics_id</span> <span class="st">&quot;UA-12345-1&quot;</span><span class="kw">;</span>
+
+    <span class="co"># Define the &#39;/finance&#39; location.</span>
+    <span class="co"># Corresponds to the URL &#39;/depts/finance&#39;, and the filesystem path </span>
+    <span class="co"># &#39;/srv/departmentApps/finance&#39; as defined by the parent location.</span>
+    <span class="kw">location</span> /finance {
+      <span class="co"># Provide a custom GAID for only this sub-location</span>
+      <span class="kw">google_analytics_id</span> <span class="st">&quot;UA-54321-9&quot;</span><span class="kw">;</span>
+    }
+  }
+<span class="kw">...</span></code></pre>
+<p>Note that the nested <code>location</code>'s path is relative to the parent <code>location</code>'s. Any directive that can be used for a <code>location</code> can be used in a nested <code>location</code> and will override the value specified in the parent, if any. If not overridden, the settings will be inherited by sub-<code>location</code>s from their parent <code>location</code>s.</p>
 <h3 id="application"><a href="#application"><span class="header-section-number">2.2.3</span> Application</a></h3>
 <blockquote>
-<p> The <code>application</code> setting has been deprecated and will be removed in subsequent versions of Shiny Server.</p>
+<p> The <code>application</code> setting has been deprecated and removed from Shiny Server as of version 0.4.2.</p>
 </blockquote>
-<p>The <code>application</code> block is specified within a <code>location</code> and defines the settings related to a particular application. The application is referenced by the directory in which it is stored. For example, the following configuration could be used to modify the application housed at <code>/srv/shiny-server/app1</code>.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">...</span>
-<span class="kw">location</span> / {
-  <span class="co"># Define rules to apply to one application, stored at &#39;/srv/shiny-server/app1&#39;</span>
-  <span class="kw">application</span> /srv/shiny-server/app1 {
-    <span class="kw">simple_scheduler;</span>
-  }
-}
-<span class="kw">...</span></code></pre>
-<p>This block would specify that, within this <code>location</code>, the referenced application should use the Simple Scheduler. This setting would have no effect on the other applications hosted in this <code>location</code> block.</p>
 <h2 id="run_as"><a href="#run_as"><span class="header-section-number">2.3</span> <code>run_as</code></a></h2>
 <p>Understanding which user will execute the R Shiny processes is important for a variety of reasons. For one, the paths in which R will look for packages (<code>.libPaths()</code>) are often user-dependent. In order to ensure that the libraries required to run a Shiny application are installed, you must first understand which user will be running the application. Additionally, directories will likely have restrictions regarding which users are able to read or write in them. The server should be configured in such a way that the user running the Shiny applications has the minimal privileges to do the work required by those applications.</p>
 <p><code>location</code>s configured with <code>user_apps</code> will be executed as the user in whose home directory the application was found. For locations configured with <code>site_dir</code> and <code>app_dir</code>, the <code>run_as</code> setting will be used to determine which user should spawn the R Shiny processes. This setting can be configured globally, or for a particular <code>server</code> or <code>location</code>. For example, the following configuration:</p>
@@ -589,8 +600,10 @@ For Shiny Server Professional, however, the monitoring and metrics processes cur
 }</code></pre>
 <p>This example presupposes that, on this network, the domains <code>server1.com</code> and <code>server2.com</code> both resolve to the same IP address. In the configuration above, we first create a server that listens on port <code>80</code> and will only accept traffic whose hostname matches <code>server1.com</code>. We then configure a server which will also listen on port <code>80</code> and require that it only accept traffic whose hostname equals <code>server2.com</code>.</p>
 <p>This configuration would allow an application stored in <code>/srv/shiny-server1/shinyApp</code> to be accessible at <code>http://server1.com/shinyApp</code> and an application stored in <code>/srv/shiny-server2/shinyApp</code> to be accessible at <code>http://server2.com/shinyApp</code>.</p>
-<h2 id="logging"><a href="#logging"><span class="header-section-number">2.8</span> Logging</a></h2>
+<h2 id="server-log"><a href="#server-log"><span class="header-section-number">2.8</span> Server Log</a></h2>
 <p>All information related to Shiny Server, rather than a particular Shiny application, is logged in the global system log stored in <code>/var/log/shiny-server.log</code>. This log should be checked often to ensure Shiny Server is performing as expected. Any errors and warnings which Shiny Server needs to communicate will be written here.</p>
+<p>If <code>logrotate</code> is available when Shiny Server is installed, a <code>logrotate</code> configuration will be installed. The default configuration is to rotate the logfile when it exceeds 1MB. The old log file will be compressed and stored alongside the original log file with a <code>.1.gz</code> extension (then <code>.2.gz</code>, etc.). Up to twelve archived log files will be maintained; upon the 13th log rotation the oldest log file will be deleted.</p>
+<p>For logs related to individual Shiny Applications, see the section on <a href="#logging-and-analytics">Logging and Analytics</a>.</p>
 <h3 id="access-logs"><a href="#access-logs"><span class="header-section-number">2.8.1</span> Access Logs</a></h3>
 <p>An access log can be configured globally using the <code>acces_log</code> parameter. This log is not enabled by default. This setting controls the location of the access log as well as the format used. The access log can be useful to audit the security and activity taking place on your Shiny Server installation. These logs can be audited manually or automatically to inspect how often various resources are being accessed, or by whom they are being accessed (using the originating IP address). Currently, one access log is created for the entire Shiny Server process; all Shiny applications share this access log.</p>
 <p>The access logs will be written using the Connect logging libraries, so additional details can be found in <a href="http://www.senchalabs.org/connect/logger.html">their documentation</a> in the &quot;Formats&quot; section. In brief, there are four pre-defined logging formats for access logs specified in the documentation referenced above:</p>
@@ -675,6 +688,7 @@ For Shiny Server Professional, however, the monitoring and metrics processes cur
 <p>The log files will be created in the following format:</p>
 <pre><code>&lt;application directory name&gt;-YYYMMDD-HHmmss-&lt;port number or socket ID&gt;.log</code></pre>
 <p>Log files will be created for each R process when it is started. However, if a process closes successfully, the error log associated with that process will be automatically deleted. The only error log files that will remain on disk are those associated with R processes that did not exit as expected.</p>
+<p>If you're looking for log messages related to Shiny Server itself -- rather than individual Shiny applications -- see the section on the <a href="#server-log">Server Log</a>.</p>
 <h3 id="google-analytics"><a href="#google-analytics"><span class="header-section-number">3.4.2</span> Google Analytics</a></h3>
 <p>Shiny Server is capable of automatically inserting the necessary JavaScript code to enable Google Analytics tracking globally or for a particular <code>server</code> or <code>location</code>. This is managed by the <code>google_analytics_id</code> setting which can be used as follows:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
