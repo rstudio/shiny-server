@@ -23,7 +23,7 @@
           store = window.localStorage;
           whitelistStr = store["shiny.whitelist"];
           if (!whitelistStr || whitelistStr === ""){
-            whitelist = [];
+            whitelist = availableOptions;
           } else{
             whitelist = JSON.parse(whitelistStr);
           }
@@ -66,7 +66,8 @@
 
 
         $(document).keydown(function(event){
-          if (event.shiftKey && event.ctrlKey && event.keyCode == 65){
+          console.log(event);
+          if (event.shiftKey && event.ctrlKey && event.altKey && event.keyCode == 65){
             ShinyServer.toggleNetworkSelector();
           }
         });
