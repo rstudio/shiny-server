@@ -120,6 +120,29 @@ describe('AppConfig', function(){
       merged.settings.appDefaults.initTimeout.should.equal(50);
       merged.settings.appDefaults.idleTimeout.should.equal(10);
       Object.keys(merged.settings.scheduler).should.eql(['simple']);
+    }),
+    it('passes app settings through when replacing sched.', function(){
+      var appConfig = new AppConfig(new SimpleEventBus());
+      var merged = appConfig.addLocalConfig({
+          appDir: '/dir',
+          runAs: 'user',
+          settings: {
+            appDefaults: {
+              initTimeout: 60,
+              idleTimeout: 20
+            },
+            scheduler: {simple: {maxRequests: 100}},
+            restart: 1232132
+          }
+        },
+        {
+          scheduler: {
+            simple: {maxRequests: 3}
+          },
+          appDefaults: { },
+          logDir: '/abc'
+        });
+      Object.keys(merged.settings.appDefaults).length.should.equal(2);
     });
   });
 });
