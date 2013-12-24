@@ -187,6 +187,7 @@ code > span.er { font-weight: bold; }
 <li><a href="#ubuntu-12.04"><span class="toc-section-number">1.3.1</span> Ubuntu (12.04+)</a></li>
 <li><a href="#redhatcentos-5.4"><span class="toc-section-number">1.3.2</span> RedHat/CentOS (5.4+)</a></li>
 <li><a href="#install-shiny"><span class="toc-section-number">1.3.3</span> Install Shiny</a></li>
+<li><a href="#r-installation-location"><span class="toc-section-number">1.3.4</span> R Installation Location</a></li>
 </ul></li>
 <li><a href="#stopping-and-starting"><span class="toc-section-number">1.4</span> Stopping and Starting</a><ul>
 <li><a href="#upstart"><span class="toc-section-number">1.4.1</span> Upstart</a></li>
@@ -273,15 +274,19 @@ code > span.er { font-weight: bold; }
 </ul></li>
 </ul></li>
 <li><a href="#appendix"><span class="toc-section-number">7</span> Appendix</a><ul>
-<li><a href="#configuration-settings"><span class="toc-section-number">7.1</span> Configuration Settings</a></li>
-<li><a href="#migrating-updating"><span class="toc-section-number">7.2</span> Migrating &amp; Updating</a><ul>
-<li><a href="#upgrading-from-shiny-server-0.3.x"><span class="toc-section-number">7.2.1</span> Upgrading from Shiny Server 0.3.x</a></li>
+<li><a href="#quick-start"><span class="toc-section-number">7.1</span> Quick Start</a><ul>
+<li><a href="#install-an-example-application"><span class="toc-section-number">7.1.1</span> Install an Example Application</a></li>
+<li><a href="#adjust-the-configuration"><span class="toc-section-number">7.1.2</span> Adjust the Configuration</a></li>
 </ul></li>
-<li><a href="#frequently-asked-questions"><span class="toc-section-number">7.3</span> Frequently Asked Questions</a><ul>
-<li><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="toc-section-number">7.3.1</span> What are the hardware requirements for running Shiny Server?</a></li>
-<li><a href="#does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><span class="toc-section-number">7.3.2</span> Does Shiny Server work on Amazon Elastic Compute Cloud (EC2)?</a></li>
-<li><a href="#can-i-deploy-shiny-server-on-an-isolated-network"><span class="toc-section-number">7.3.3</span> Can I Deploy Shiny Server on an Isolated Network?</a></li>
-<li><a href="#can-i-bulk-import-in-flat-file-authentication"><span class="toc-section-number">7.3.4</span> Can I Bulk-Import in Flat-File Authentication?</a></li>
+<li><a href="#configuration-settings"><span class="toc-section-number">7.2</span> Configuration Settings</a></li>
+<li><a href="#migrating-updating"><span class="toc-section-number">7.3</span> Migrating &amp; Updating</a><ul>
+<li><a href="#upgrading-from-shiny-server-0.3.x"><span class="toc-section-number">7.3.1</span> Upgrading from Shiny Server 0.3.x</a></li>
+</ul></li>
+<li><a href="#frequently-asked-questions"><span class="toc-section-number">7.4</span> Frequently Asked Questions</a><ul>
+<li><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="toc-section-number">7.4.1</span> What are the hardware requirements for running Shiny Server?</a></li>
+<li><a href="#does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><span class="toc-section-number">7.4.2</span> Does Shiny Server work on Amazon Elastic Compute Cloud (EC2)?</a></li>
+<li><a href="#can-i-deploy-shiny-server-on-an-isolated-network"><span class="toc-section-number">7.4.3</span> Can I Deploy Shiny Server on an Isolated Network?</a></li>
+<li><a href="#can-i-bulk-import-in-flat-file-authentication"><span class="toc-section-number">7.4.4</span> Can I Bulk-Import in Flat-File Authentication?</a></li>
 </ul></li>
 </ul></li>
 </ul>
@@ -340,7 +345,7 @@ code > span.er { font-weight: bold; }
 <p>Once Shiny is installed, you can begin the installation of Shiny Server. You should have been provided with a <code>.deb</code> installer for Shiny Server. If you only have a link to this file, you can use <code>wget</code> to download the file to the current directory. You will need to first install the <code>gdebi-core</code> package to install Shiny Server and its dependencies. Once the <code>.deb</code> file is available locally, run the following commands to complete the installation of Shiny Server.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> apt-get install gdebi-core
 <span class="kw">sudo</span> gdebi shiny-server-0.4.2.deb</code></pre>
-<p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code>.</p>
+<p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code>. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="redhatcentos-5.4"><a href="#redhatcentos-5.4"><span class="header-section-number">1.3.2</span> RedHat/CentOS (5.4+)</a></h3>
 <p><strong>Prerequisites</strong></p>
 <p>Shiny Server has several dependencies on packages (including R itself) found in the Extra Packages for Enterprise Linux (EPEL) repository. If you don't already have this repository available you should add it to your system using the instructions found here: <a href="https://fedoraproject.org/wiki/EPEL">https://fedoraproject.org/wiki/EPEL</a></p>
@@ -349,12 +354,17 @@ code > span.er { font-weight: bold; }
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny has been installed, you can begin the installation of Shiny Server. You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). You can install this rpm file using <code>yum</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-0.4.2.rpm</code></pre>
-<p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code>.</p>
+<p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code>. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="install-shiny"><a href="#install-shiny"><span class="header-section-number">1.3.3</span> Install Shiny</a></h3>
 <p>Before Shiny Server can be installed, the Shiny package must be installed in the system library; you typically need <code>sudo</code> privileges to install to this library. Shiny Server currently requires Shiny version 0.7.0 or later. The following command will download and install the <code>shiny</code> package from CRAN in the system library.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - \
   <span class="kw">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;shiny&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></code></pre>
 <p>Once this command completes, you can continue with the installation of Shiny Server.</p>
+<h3 id="r-installation-location"><a href="#r-installation-location"><span class="header-section-number">1.3.4</span> R Installation Location</a></h3>
+<p>Shiny Server expects that R is available as an executable named <code>R</code> and is in the <code>PATH</code> of the user which you run <code>shiny-server</code> as. Note that on some CentOS systems, the <code>PATH</code> will be overridden by the startup script to <code>/sbin:/usr/sbin:/bin:/usr/bin</code>. On such systems, if <code>R</code> is not available in one of these locations (regardless of the user's <code>PATH</code>), you'll need to adjust the startup script.</p>
+<p>To allow Shiny Server to search for <code>R</code> in additional locations, you'll alter the file in <code>/etc/init.d/shiny-server</code> or <code>/etc/init/shiny-server.conf</code> depending on which startup system you're using (as discussed in <a href="#stopping-and-starting">Stopping and Starting</a>. You can either adjust the <code>PATH</code> variable to include the directory where <code>R</code> will be found, or you can set an environment variable named <code>R</code> to tell Shiny Server exactly where it should look for the executable.</p>
+<p>If you choose to adjust the <code>PATH</code>, you can add the directory in which the executable named <code>R</code> is found to the line that defines the <code>PATH</code> environment variable (<code>PATH=/sbin:/usr/sbin:/bin:/usr/bin</code>).</p>
+<p>If instead you choose to tell Shiny Server the exact executable to run (which is necessary if the executable is not named <code>R</code> on your system), you'll need to define a new environment variable named <code>R</code>. You can do this by adding a line that looks something like <code>R=/usr/local/bin/R-3-0-1</code>.</p>
 <h2 id="stopping-and-starting"><a href="#stopping-and-starting"><span class="header-section-number">1.4</span> Stopping and Starting</a></h2>
 <p>The installer will automatically deploy the necessary scripts to ensure that Shiny Server is started automatically on boot. When possible, we use the Upstart system to manage the <code>shiny-server</code> service. If Upstart is not available, we will deploy an <code>init.d</code> script to automatically start and stop the service.</p>
 <h3 id="upstart"><a href="#upstart"><span class="header-section-number">1.4.1</span> Upstart</a></h3>
@@ -923,7 +933,27 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <p>You can also perform an offline check of your current license status using the following command:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager status-offline</code></pre>
 <h1 id="appendix"><a href="#appendix"><span class="header-section-number">7</span> Appendix</a></h1>
-<h2 id="configuration-settings"><a href="#configuration-settings"><span class="header-section-number">7.1</span> Configuration Settings</a></h2>
+<h2 id="quick-start"><a href="#quick-start"><span class="header-section-number">7.1</span> Quick Start</a></h2>
+<p>We recommend reading through the relevant sections of this guide to gain a complete understanding of how to operate Shiny Server. If you're just looking to get running quickly, you can follow the steps below to install a simple application and configure it to run on a non-default port.</p>
+<h3 id="install-an-example-application"><a href="#install-an-example-application"><span class="header-section-number">7.1.1</span> Install an Example Application</a></h3>
+<p>When you install Shiny Server, we'll automatically start the server process for you. When it comes time to start/stop/restart the server on your own, however, you can check out the <a href="#stopping-and-starting">Stopping and Starting</a> section. By default, we'll provide an initial configuration for the server to use. This configuration expects your Shiny applications to be hosted in <code>/srv/shiny-server/</code>. Let's start by copying one of the example applications from the Shiny package to this directory.</p>
+<p>We'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
+<pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
+<p>which will return something like:</p>
+<pre><code>[1] &quot;/usr/local/lib/R/site-library/shiny/examples/01_hello&quot;</code></pre>
+<p>You can copy that entire directory into <code>/srv/shiny-server</code> using the following command (using the directory that was returned in the previous command, if it's different):</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello /srv/shiny-server/</code></pre>
+<p>If that command succeeds, you've installed your first Shiny application into Shiny Server!</p>
+<p>By default, Shiny Server listens on port 3838, so your new application will be available at <code>http://myserver.com:3838/01_hello</code> where <code>myserver</code> is the hostname or IP address of the Shiny Server.</p>
+<h3 id="adjust-the-configuration"><a href="#adjust-the-configuration"><span class="header-section-number">7.1.2</span> Adjust the Configuration</a></h3>
+<p>If you wanted to change the port or the directory Shiny Server uses, you would adjust the configuration file. Shiny Server will look for a custom configuration file in <code>/etc/shiny-server/shiny-server.conf</code>. If none is found, it will use its default configuration. To begin customizing your server, copy the default configuration there then begin modifying. To copy the file, run the following command:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/default.config /etc/shiny-server/shiny-server.conf</code></pre>
+<p>Then open <code>/etc/shiny-server/shiny-server.conf</code> in your preferred text editor and modify the line which says <code>listen 3838</code>. This is the line that instructs your server to listen to port 3838 -- change it to another port such as <code>12345</code> and save the file. You'll need to reload Shiny Server to make it aware of the new configuration file. Alternatively, you can just restart the server altogether. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions including Ubuntu 12 and later, and CentOS 6):</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> reload shiny-server</code></pre>
+<p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server reload</code></pre>
+<p>You should now find that Shiny Server is no longer running on port 3838, but is on whichever new port you selected.</p>
+<h2 id="configuration-settings"><a href="#configuration-settings"><span class="header-section-number">7.2</span> Configuration Settings</a></h2>
 <p></p>
     <p>Listed below are all the directives that are supported in Shiny Server config files.</p>
     <p><strong>Applies to</strong> indicates the kind of parent scope that this directive normally appears inside.</p>
@@ -2463,8 +2493,8 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
         </li>
       
     </ul>
-<h2 id="migrating-updating"><a href="#migrating-updating"><span class="header-section-number">7.2</span> Migrating &amp; Updating</a></h2>
-<h3 id="upgrading-from-shiny-server-0.3.x"><a href="#upgrading-from-shiny-server-0.3.x"><span class="header-section-number">7.2.1</span> Upgrading from Shiny Server 0.3.x</a></h3>
+<h2 id="migrating-updating"><a href="#migrating-updating"><span class="header-section-number">7.3</span> Migrating &amp; Updating</a></h2>
+<h3 id="upgrading-from-shiny-server-0.3.x"><a href="#upgrading-from-shiny-server-0.3.x"><span class="header-section-number">7.3.1</span> Upgrading from Shiny Server 0.3.x</a></h3>
 <p>Shiny Server 0.4 includes many major changes to the architecture of Shiny Server. There are a few things to be aware of when upgrading from Shiny Server 0.3.x.</p>
 <p>First, Shiny Server is now distributed via <code>deb</code> and <code>rpm</code> installers, rather than using <code>npm</code>. Thus, you'll first want to uninstall the old version of Shiny Server which was installed from <code>npm</code>.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> npm uninstall -g shiny-server</code></pre>
@@ -2475,16 +2505,16 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - -c <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">packageVersion(&#39;shiny&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></code></pre>
 <p>(Running this command using the <code>sudo su - -c</code> preface will allow you to see the system-wide version of Shiny. Individual users could have installed more recent versions of Shiny in their own R libraries.) If the installed version of Shiny predates 0.7.0, you should follow the instructions in <a href="#install-shiny">Install Shiny</a> to update to the most recent version.</p>
 <p>At this point, you can proceed with the <a href="#installation">Installation</a> instructions associated with your Operating System.</p>
-<h2 id="frequently-asked-questions"><a href="#frequently-asked-questions"><span class="header-section-number">7.3</span> Frequently Asked Questions</a></h2>
-<h3 id="what-are-the-hardware-requirements-for-running-shiny-server"><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="header-section-number">7.3.1</span> What are the hardware requirements for running Shiny Server?</a></h3>
+<h2 id="frequently-asked-questions"><a href="#frequently-asked-questions"><span class="header-section-number">7.4</span> Frequently Asked Questions</a></h2>
+<h3 id="what-are-the-hardware-requirements-for-running-shiny-server"><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="header-section-number">7.4.1</span> What are the hardware requirements for running Shiny Server?</a></h3>
 <p>The performance footprint of a Shiny application is almost entirely dependent upon the Shiny application code. There are two factors to consider when selecting the hardware platform for Shiny Server.</p>
 <p><strong>RAM</strong></p>
 <p>The memory requirements of a Shiny application depend heavily on the data loaded when running the application. Often users find that a Shiny R process requires a minimum of 50MB of RAM -- beyond this, the amount of memory consumed by an application is determined by the data loaded or generated by that application. The <a href="http://rstudio.github.io/shiny/tutorial/#scoping">Scoping Section</a> of the Shiny Tutorial describes in detail how to take advantage of Shiny's scoping rules to share data across multiple Shiny sessions. This enables application developers to load only one copy of data into memory but still share this data with multiple shiny sessions.</p>
 <p><strong>CPU</strong></p>
 <p>R is fundamentally a single-threaded application. Unless parallel packages and tools are specifically selected when designing a Shiny application, the average R process (and the associated Shiny application) will be run serially on a single processing core. Thus, the typical Shiny application may saturate the processing core to which it's assigned, but will be unable to leverage other cores on the server which may be idle at that time.</p>
-<h3 id="does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><a href="#does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><span class="header-section-number">7.3.2</span> Does Shiny Server work on Amazon Elastic Compute Cloud (EC2)?</a></h3>
+<h3 id="does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><a href="#does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><span class="header-section-number">7.4.2</span> Does Shiny Server work on Amazon Elastic Compute Cloud (EC2)?</a></h3>
 <p>Absolutely. Many customers deploy Shiny Server and Shiny Server Professional on the Amazon Web Services (AWS) framework.</p>
-<h3 id="can-i-deploy-shiny-server-on-an-isolated-network"><a href="#can-i-deploy-shiny-server-on-an-isolated-network"><span class="header-section-number">7.3.3</span> Can I Deploy Shiny Server on an Isolated Network?</a></h3>
+<h3 id="can-i-deploy-shiny-server-on-an-isolated-network"><a href="#can-i-deploy-shiny-server-on-an-isolated-network"><span class="header-section-number">7.4.3</span> Can I Deploy Shiny Server on an Isolated Network?</a></h3>
 <p>Of course. Shiny Server does not require a connection to the Internet in order to work properly, so you are free to deploy it in whatever sort of network configuration you would like. Offline activation is also available for Shiny Server Professional customers.</p>
 <!--
 TODO:
@@ -2495,7 +2525,7 @@ TODO:
 -->
 
 
-<h3 id="can-i-bulk-import-in-flat-file-authentication" class="pro"><a href="#can-i-bulk-import-in-flat-file-authentication"><span class="header-section-number">7.3.4</span> Can I Bulk-Import in Flat-File Authentication?</a></h3>
+<h3 id="can-i-bulk-import-in-flat-file-authentication" class="pro"><a href="#can-i-bulk-import-in-flat-file-authentication"><span class="header-section-number">7.4.4</span> Can I Bulk-Import in Flat-File Authentication?</a></h3>
 <p>Some users may have an existing table of usernames and passwords they wish to import into a flat-file authentication system using the <code>sspasswd</code> tool. The shell script below can be used as a model for scripting such a solution, but be aware of the security concern mentioned below.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="co">#!/bin/bash</span>
  
