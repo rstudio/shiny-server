@@ -286,6 +286,7 @@ code > span.er { font-weight: bold; }
 <li><a href="#configuration-settings"><span class="toc-section-number">7.2</span> Configuration Settings</a></li>
 <li><a href="#migrating-updating"><span class="toc-section-number">7.3</span> Migrating &amp; Updating</a><ul>
 <li><a href="#upgrading-from-shiny-server-0.3.x"><span class="toc-section-number">7.3.1</span> Upgrading from Shiny Server 0.3.x</a></li>
+<li><a href="#upgrading-from-0.4.x"><span class="toc-section-number">7.3.2</span> Upgrading from 0.4.x</a></li>
 </ul></li>
 <li><a href="#frequently-asked-questions"><span class="toc-section-number">7.4</span> Frequently Asked Questions</a><ul>
 <li><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="toc-section-number">7.4.1</span> What are the hardware requirements for running Shiny Server?</a></li>
@@ -438,7 +439,7 @@ code > span.er { font-weight: bold; }
 <span class="pro-tag">PRO</span>
 <div class="pro-chunk">
 <p>This configuration will also create an administrative dashboard running on port 4151. The admin interface requires that a user authenticate themselves, as discussed further in the chapter on <a href="#authentication-security">Authentication &amp; Security</a>. The configuration will attempt to use a flat-file authentication system stored at <code>/etc/shiny-server/passwd</code>; an empty database is created for you here during installation. To create a new user named <code>admin</code> in this file to allow you to login to the dashboard, execute the following command</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">/opt/shiny-server/bin/sspasswd</span> /etc/shiny-server/passwd admin</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/sspasswd /etc/shiny-server/passwd admin</code></pre>
 and then enter and verify the password you wish to use for this user.
 </div>
 <h2 id="server-hierarchy"><a href="#server-hierarchy"><span class="header-section-number">2.2</span> Server Hierarchy</a></h2>
@@ -505,14 +506,13 @@ and then enter and verify the password you wish to use for this user.
 <p>Aside from spawning R Shiny processes as particular users, the <code>shiny-server</code> process itself can be configured to run as different users to control its privileges. There are three scenarios in which Shiny Server would need to be run as root:</p>
 <ol type="1">
 <li>If <code>user_apps</code> is enabled for any location. In order to host applications as various users, Shiny Server must have root privileges.</li>
-<li>If your configuration uses <code>run_as</code> to spawn applications as multiple different users, or a user other than the <code>shiny</code> user. (See the section on the [<code>SHINY_USER</code>] environment variable for details on how to use a different user.)</li>
+<li>If your configuration uses <code>run_as</code> to spawn applications as multiple different users, or a user other than the user specified in the [SHINY_USER] environment variable (The <code>shiny</code> user, by default. See the section on the [SHINY_USER] environment variable for details on how to specify a different user.)</li>
 <li>If you're running any server on a privileged port (a port in the range of 1-1024).</li>
 </ol>
-<p>By default, the <code>shiny-server</code> process will be started as the <code>root</code> user, then will spawn R processes according to the corresponding <code>run_as</code> setting. You can, however, run the <code>shiny-server</code> process as a non-privileged user such as the <code>shiny</code> user if none of the three limitations above are violated.</p>
-<span class="pro-tag">PRO</span>
+By default, the <code>shiny-server</code> process will be started as the <code>root</code> user, then will spawn R processes according to the corresponding <code>run_as</code> setting. You can, however, run the <code>shiny-server</code> process as a non-privileged user such as the <code>shiny</code> user if none of the three limitations above are violated. <span class="pro-tag">PRO</span>
 <div class="pro-chunk">
 <p>For Shiny Server Pro, if it detects that it is running as root but has no need to (i.e. none of the three criteria above were met), then it will drop its privileges and run as the <code>shiny</code> user; note that, for security reasons, that change is irreversible. This means that once Shiny Server drops its privileges, it wouldn't be able to regain them should a new configuration be loaded that requires such privileges. In this case, you would need to restart <code>shiny-server</code>, rather than merely <code>reload</code>ing it so it could retain its <code>root</code> privileges at initialization.</p>
-By default, if <code>shiny-server</code> detects that it doesn't need to run with <code>root</code> privileges, it will attempt to run as the <code>shiny</code> user. To customize this behavior, set the [<code>SHINY_USER</code>] environment variable before starting the process.
+By default, if <code>shiny-server</code> detects that it doesn't need to run with <code>root</code> privileges, it will attempt to run as the <code>shiny</code> user. To customize this behavior, set the [<code>SHINY_USER</code>] environment variable before starting the process. While the process will run as the <code>shiny</code> user, it may not behave in exactly the same way as interactively logging in as that user. In particular, no startup scripts (such as <code>.bashrc</code> files) will be executed, and supplemental groups in which the user is a member will not be set.
 </div>
 <h2 id="local-app-configurations"><a href="#local-app-configurations"><span class="header-section-number">2.4</span> Local App Configurations</a></h2>
 <p>In the global configuration file, the <code>allow_app_override</code> setting can be specified to enable local app configurations. If present, this setting enables owners of Shiny applications to customize the properties of their own applications using a file named <code>.shiny_app.conf</code>. This file can be placed within an application directory (alongside the <code>server.R</code> and <code>ui.R</code> files) and can contain settings which configure how Shiny Server should manage the application.</p>
@@ -587,7 +587,7 @@ By default, if <code>shiny-server</code> detects that it doesn't need to run wit
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define a location at the base URL of this &#39;server&#39;</span>
 <span class="kw">location</span> / {
   <span class="co"># Redirect traffic from &#39;/shinyApp1/&#39; to &#39;http://server.com&#39; temporarily.</span>
-  <span class="kw">redirect</span> /shinyApp1 {
+  <span class="kw">location</span> /shinyApp1 {
     <span class="kw">redirect</span> <span class="st">&quot;http://server.com&quot;</span> 302 true<span class="kw">;</span>
   }
 }</code></pre>
@@ -670,6 +670,7 @@ By default, if <code>shiny-server</code> detects that it doesn't need to run wit
 <li><code>/opt/shiny-server/</code></li>
 <li><code>/etc/shiny-server/</code> (Note that you should enable <strong>only</strong> read access on this directory, as you likely don't want to allow your Shiny applications (which also run as <code>shiny</code>) to be able to write to your configuration or password file.)</li>
 </ul>
+<p>Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all files within it) should be owned by the user you specify.</p>
 <h1 id="deploying-applications"><a href="#deploying-applications"><span class="header-section-number">3</span> Deploying Applications</a></h1>
 <h2 id="schedulers-application-restarts"><a href="#schedulers-application-restarts"><span class="header-section-number">3.1</span> Schedulers &amp; Application Restarts</a></h2>
 <p>A scheduler is responsible for fulfilling incoming requests to a particular application. Each version of an application (see below) will have its own associated scheduler. Each scheduler can have different properties to control things like how many concurrent connections it should accept.</p>
@@ -784,7 +785,7 @@ By default, if <code>shiny-server</code> detects that it doesn't need to run wit
 <p>You'll want to think carefully before adjusting the permissions on this file. For instance, if you were to enable the <code>shiny</code> user to write to your password database, any Shiny application running as <code>shiny</code> (the default) would now be able to modify your password database. Because the passwords are securely hashed, granting <code>shiny</code> read access to this file is not problematic and, in fact, is enabled by default.</p>
 <h3 id="sspasswd" class="pro"><a href="#sspasswd"><span class="header-section-number">4.3.1</span> sspasswd</a></h3>
 <p>The <code>sspasswd</code> utility comes with Shiny Server Professional and can be used to manage the username/password file. By default, it is not made available on the <code>PATH</code> but you can find it in <code>opt/shiny-server/bin/</code>. The general pattern for the utility is to provide the file to use for storage followed by a username, as in:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">/opt/shiny-server/bin/sspasswd</span> /etc/shiny-server/sspasswd.txt tina</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/sspasswd /etc/shiny-server/sspasswd.txt tina</code></pre>
 <p>To create a (or overwrite an existing) password file, use the <code>-c</code> switch. The default behavior will be to add the username specified (<code>tina</code>, in the example above) to the file after prompting the user for a password (or reading it from <code>stdin</code>). To instead delete a user from the file, use the <code>-D</code> switch. User/password combinations can be verified using the <code>-v</code> switch. Finally, the <code>-C</code> switch will set the maximum amount of time (in seconds) for encryption. The larger this value is, the more secure the password hash will be.</p>
 <p>Currently, the '<code>:</code>', '<code>$</code>' and newline ('<code>\r</code>' or '<code>\n</code>') characters are prohibited in usernames.</p>
 <h2 id="ldap-and-active-directory" class="pro"><a href="#ldap-and-active-directory"><span class="header-section-number">4.4</span> LDAP and Active Directory</a></h2>
@@ -999,9 +1000,9 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <p>You should now find that Shiny Server is no longer running on port 3838, but is on whichever new port you selected.</p>
 <h3 id="setup-authentication-login-to-admin" class="pro"><a href="#setup-authentication-login-to-admin"><span class="header-section-number">7.1.3</span> Setup Authentication &amp; Login to Admin</a></h3>
 <p>Shiny Server Pro comes with multiple different methods of authenticating users (as described in the chapter on <a href="#authentication-security">Authentication &amp; Security</a>). Out of the box, it's configured to use a <a href="#flat-file-authentication">Flat-File Authentication</a> database stored in <code>/etc/shiny-server/passwd</code>. This database is initially empty; to create a user named <code>admin</code>, execute the following command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">/opt/shiny-server/bin/sspasswd</span> /etc/shiny-server/passwd admin</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/sspasswd /etc/shiny-server/passwd admin</code></pre>
 <p>then enter the new password for the <code>admin</code> user when prompted. Once completed, you'll have a single user defined in your database named <code>admin</code>.</p>
-<p>You should now be able to login to your administrative dashboard at a URL like <code>http://myserver.com:4151/</code> (after replacing <code>myserver.com</code> with you server's IP or hostname) using the username <code>admin</code> with the password you just created. See the chapter entitled <a href="#admin">Admin</a> for more details on how to take advantage of this interface.</p>
+<p>You should now be able to login to your administrative dashboard at a URL like <code>http://myserver.com:4151/</code> (after replacing <code>myserver.com</code> with your server's IP or hostname) using the username <code>admin</code> with the password you just created. See the chapter entitled <a href="#admin">Admin</a> for more details on how to take advantage of this interface.</p>
 <p>If you look at the configuration file you edited a moment ago at <code>/etc/shiny-server/shiny-server.conf</code>, you'll noticed that the default configuration is to expose the Administrative Interface only to the user named <code>admin</code>. Of course, you can change this to require a different user, or add new users to the list of approved users. You'll also notice that the port number <code>4151</code> is user-configurable and can be updated here. As usual, you will need to reload <code>shiny-server</code> in order for any changes to the configuration file to take effect.</p>
 <h2 id="configuration-settings"><a href="#configuration-settings"><span class="header-section-number">7.2</span> Configuration Settings</a></h2>
 <p></p>
@@ -2555,6 +2556,9 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - -c <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">packageVersion(&#39;shiny&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></code></pre>
 <p>(Running this command using the <code>sudo su - -c</code> preface will allow you to see the system-wide version of Shiny. Individual users could have installed more recent versions of Shiny in their own R libraries.) If the installed version of Shiny predates 0.7.0, you should follow the instructions in <a href="#install-shiny">Install Shiny</a> to update to the most recent version.</p>
 <p>At this point, you can proceed with the <a href="#installation">Installation</a> instructions associated with your Operating System.</p>
+<h3 id="upgrading-from-0.4.x"><a href="#upgrading-from-0.4.x"><span class="header-section-number">7.3.2</span> Upgrading from 0.4.x</a></h3>
+<p>The releases in Shiny Server 0.4.x included a bug that, upon update or uninstallation, would erase any custom configuration file in <code>/etc/shiny-server/shiny-server.conf</code>. So any user currently using a version of Shiny Server in the 0.4.x line using a custom configuration file should backup their <code>/etc/shiny-server/shiny-server.conf</code> file <strong>before</strong> updating or uninstalling.</p>
+<p>Additionally, there are problems on some systems with updating from 0.4.x versions to a more recent version. Thus, any user updating from the 0.4.x line should uninstall the package before installing the new one. In all versions 0.5.x and later, updating can simply be done by installing the newer version over the old one without explicitly removing the old package.</p>
 <h2 id="frequently-asked-questions"><a href="#frequently-asked-questions"><span class="header-section-number">7.4</span> Frequently Asked Questions</a></h2>
 <h3 id="what-are-the-hardware-requirements-for-running-shiny-server"><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="header-section-number">7.4.1</span> What are the hardware requirements for running Shiny Server?</a></h3>
 <p>The performance footprint of a Shiny application is almost entirely dependent upon the Shiny application code. There are two factors to consider when selecting the hardware platform for Shiny Server.</p>
