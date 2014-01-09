@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Shiny Server v0.4.2 Configuration Reference</title>
+  <title>Shiny Server v0.5.0 Configuration Reference</title>
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
   <style type="text/css">
@@ -176,7 +176,7 @@ code > span.er { font-weight: bold; }
 </head>
 <body>
 <header>
-<h1 class="title">Shiny Server Professional v0.4.2 Administrator's Guide</h1>
+<h1 class="title">Shiny Server Professional v0.5.0 Administrator's Guide</h1>
 </header>
 <nav id="TOC">
 <ul>
@@ -285,7 +285,7 @@ code > span.er { font-weight: bold; }
 <li><a href="#configuration-settings"><span class="toc-section-number">7.2</span> Configuration Settings</a></li>
 <li><a href="#migrating-updating"><span class="toc-section-number">7.3</span> Migrating &amp; Updating</a><ul>
 <li><a href="#upgrading-from-shiny-server-0.3.x"><span class="toc-section-number">7.3.1</span> Upgrading from Shiny Server 0.3.x</a></li>
-<li><a href="#upgrading-from-0.4.x"><span class="toc-section-number">7.3.2</span> Upgrading from 0.4.x</a></li>
+<li><a href="#upgrading-from-shiny-server-0.4.x"><span class="toc-section-number">7.3.2</span> Upgrading from Shiny Server 0.4.x</a></li>
 </ul></li>
 <li><a href="#frequently-asked-questions"><span class="toc-section-number">7.4</span> Frequently Asked Questions</a><ul>
 <li><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="toc-section-number">7.4.1</span> What are the hardware requirements for running Shiny Server?</a></li>
@@ -335,7 +335,11 @@ code > span.er { font-weight: bold; }
 </div>
 <h2 id="installation"><a href="#installation"><span class="header-section-number">1.3</span> Installation</a></h2>
 <p>The Shiny Server installer does not come with R, nor does it provide the Shiny R package. Below are the steps for installing each of them separately.</p>
-<p>If you had previously installed Shiny Server 0.3.5 from <code>npm</code>, please see the section on [Upgrading from Shiny Server 0.3.5] before proceeding with the installation.</p>
+<p>If you had previously installed Shiny Server 0.3.x or 0.4.x, please see the relevant section before proceeding to ensure a seamless upgrade:</p>
+<ul>
+<li>[Upgrading from Shiny Server 0.3.5]</li>
+<li><a href="#upgrading-from-shiny-server-0.4.x">Upgrading from Shiny Server 0.4.x</a></li>
+</ul>
 <h3 id="ubuntu-12.04"><a href="#ubuntu-12.04"><span class="header-section-number">1.3.1</span> Ubuntu (12.04+)</a></h3>
 <p><strong>Installing R</strong></p>
 <p>Shiny Server requires an installation of R version 2.15.1 or higher. To install the latest version of R you should first add the CRAN repository to your system as described here:</p>
@@ -349,7 +353,7 @@ code > span.er { font-weight: bold; }
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny is installed, you can begin the installation of Shiny Server. You should have been provided with a <code>.deb</code> installer for Shiny Server. If you only have a link to this file, you can use <code>wget</code> to download the file to the current directory. You will need to first install the <code>gdebi-core</code> package to install Shiny Server and its dependencies. Once the <code>.deb</code> file is available locally, run the following commands to complete the installation of Shiny Server.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> apt-get install gdebi-core
-<span class="kw">sudo</span> gdebi shiny-server-0.4.2.deb</code></pre>
+<span class="kw">sudo</span> gdebi shiny-server-0.5.0.deb</code></pre>
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="redhatcentos-5.4"><a href="#redhatcentos-5.4"><span class="header-section-number">1.3.2</span> RedHat/CentOS (5.4+)</a></h3>
 <p><strong>Prerequisites</strong></p>
@@ -358,7 +362,7 @@ code > span.er { font-weight: bold; }
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install R  </code></pre>
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny has been installed, you can begin the installation of Shiny Server. You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). You can install this rpm file using <code>yum</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-0.4.2.rpm</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-0.5.0.rpm</code></pre>
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="install-shiny"><a href="#install-shiny"><span class="header-section-number">1.3.3</span> Install Shiny</a></h3>
 <p>Before Shiny Server can be installed, the Shiny package must be installed in the system library; you typically need <code>sudo</code> privileges to install to this library. Shiny Server currently requires Shiny version 0.7.0 or later. The following command will download and install the <code>shiny</code> package from CRAN in the system library.</p>
@@ -2552,7 +2556,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - -c <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">packageVersion(&#39;shiny&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></code></pre>
 <p>(Running this command using the <code>sudo su - -c</code> preface will allow you to see the system-wide version of Shiny. Individual users could have installed more recent versions of Shiny in their own R libraries.) If the installed version of Shiny predates 0.7.0, you should follow the instructions in <a href="#install-shiny">Install Shiny</a> to update to the most recent version.</p>
 <p>At this point, you can proceed with the <a href="#installation">Installation</a> instructions associated with your Operating System.</p>
-<h3 id="upgrading-from-0.4.x"><a href="#upgrading-from-0.4.x"><span class="header-section-number">7.3.2</span> Upgrading from 0.4.x</a></h3>
+<h3 id="upgrading-from-shiny-server-0.4.x"><a href="#upgrading-from-shiny-server-0.4.x"><span class="header-section-number">7.3.2</span> Upgrading from Shiny Server 0.4.x</a></h3>
 <p>There are problems on some systems with updating from 0.4.x versions to a more recent version. Thus, any user updating from the 0.4.x line should uninstall the package before installing the new one. In all versions 0.5.x and later, updating can simply be done by installing the newer version over the old one without explicitly removing the old package.</p>
 <h2 id="frequently-asked-questions"><a href="#frequently-asked-questions"><span class="header-section-number">7.4</span> Frequently Asked Questions</a></h2>
 <h3 id="what-are-the-hardware-requirements-for-running-shiny-server"><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="header-section-number">7.4.1</span> What are the hardware requirements for running Shiny Server?</a></h3>
