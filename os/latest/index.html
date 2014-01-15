@@ -247,6 +247,7 @@ code > span.er { font-weight: bold; }
 <li><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="toc-section-number">4.4.1</span> What are the hardware requirements for running Shiny Server?</a></li>
 <li><a href="#does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><span class="toc-section-number">4.4.2</span> Does Shiny Server work on Amazon Elastic Compute Cloud (EC2)?</a></li>
 <li><a href="#can-i-deploy-shiny-server-on-an-isolated-network"><span class="toc-section-number">4.4.3</span> Can I Deploy Shiny Server on an Isolated Network?</a></li>
+<li><a href="#how-do-i-translate-my-application-settings-to-nested-locations"><span class="toc-section-number">4.4.4</span> How Do I Translate My 'application' Settings to Nested 'location's?</a></li>
 </ul></li>
 </ul></li>
 </ul>
@@ -278,7 +279,7 @@ code > span.er { font-weight: bold; }
 </ul>
 <h3 id="ubuntu-12.04"><a href="#ubuntu-12.04"><span class="header-section-number">1.3.1</span> Ubuntu (12.04+)</a></h3>
 <p><strong>Installing R</strong></p>
-<p>Shiny Server requires an installation of R version 2.15.1 or higher. To install the latest version of R you should first add the CRAN repository to your system as described here:</p>
+<p>Shiny Server recommends an installation of R version 3.0 or higher. To install the latest version of R you should first add the CRAN repository to your system as described here:</p>
 <ul>
 <li>Debian: <a href="http://cran.rstudio.com/bin/linux/debian/README.html">http://cran.rstudio.com/bin/linux/debian/README.html</a></li>
 <li>Ubuntu: <a href="http://cran.rstudio.com/bin/linux/ubuntu/README.html">http://cran.rstudio.com/bin/linux/ubuntu/README.html</a></li>
@@ -293,7 +294,7 @@ code > span.er { font-weight: bold; }
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="redhatcentos-5.4"><a href="#redhatcentos-5.4"><span class="header-section-number">1.3.2</span> RedHat/CentOS (5.4+)</a></h3>
 <p><strong>Prerequisites</strong></p>
-<p>Shiny Server has several dependencies on packages (including R itself) found in the Extra Packages for Enterprise Linux (EPEL) repository. If you don't already have this repository available you should add it to your system using the instructions found here: <a href="https://fedoraproject.org/wiki/EPEL">https://fedoraproject.org/wiki/EPEL</a></p>
+<p>Shiny Server recommends an installation of R version 3.0 or higher. Shiny Server has several dependencies on packages (including R itself) found in the Extra Packages for Enterprise Linux (EPEL) repository. If you don't already have this repository available you should add it to your system using the instructions found here: <a href="https://fedoraproject.org/wiki/EPEL">https://fedoraproject.org/wiki/EPEL</a></p>
 <p>After enabling EPEL you should then ensure that you have installed the version of R available from EPEL. You can do this using the following command:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install R  </code></pre>
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
@@ -418,6 +419,7 @@ code > span.er { font-weight: bold; }
 <blockquote>
 <p> The <code>application</code> setting has been deprecated and removed from Shiny Server as of version 0.4.2.</p>
 </blockquote>
+<p>See <a href="#how-do-i-translate-my-application-settings-to-nested-locations">How Do I Translate My 'application' Settings to Nested 'location's?</a> for help migrating.</p>
 <h2 id="run_as"><a href="#run_as"><span class="header-section-number">2.3</span> <code>run_as</code></a></h2>
 <p>Understanding which user will execute the R Shiny processes is important for a variety of reasons. For one, the paths in which R will look for packages (<code>.libPaths()</code>) are often user-dependent. In order to ensure that the libraries required to run a Shiny application are installed, you must first understand which user will be running the application. Additionally, directories will likely have restrictions regarding which users are able to read or write in them. The server should be configured in such a way that the user running the Shiny applications has the minimal privileges to do the work required by those applications.</p>
 <p><code>location</code>s configured with <code>user_apps</code> will be executed as the user in whose home directory the application was found. For locations configured with <code>site_dir</code> and <code>app_dir</code>, the <code>run_as</code> setting will be used to determine which user should spawn the R Shiny processes. This setting can be configured globally, or for a particular <code>server</code> or <code>location</code>. For example, the following configuration:</p>
@@ -647,7 +649,7 @@ code > span.er { font-weight: bold; }
 <h3 id="adjust-the-configuration"><a href="#adjust-the-configuration"><span class="header-section-number">4.1.2</span> Adjust the Configuration</a></h3>
 <p>If you wanted to change the port or the directory Shiny Server uses, you would adjust the configuration file. Shiny Server will look for a custom configuration file in <code>/etc/shiny-server/shiny-server.conf</code>. If none is found, it will use its default configuration. To begin customizing your server, copy the default configuration there then begin modifying. To copy the file, run the following command:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/default.config /etc/shiny-server/shiny-server.conf</code></pre>
-<p>Then open <code>/etc/shiny-server/shiny-server.conf</code> in your preferred text editor and modify the line which says <code>listen 3838</code>. This is the line that instructs your server to listen to port 3838 -- change it to another port such as <code>12345</code> and save the file. You'll need to restart Shiny Server to make it aware of the new configuration file. Alternatively, you can just restart the server altogether. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions including Ubuntu 12 and later, and CentOS 6):</p>
+<p>Then open <code>/etc/shiny-server/shiny-server.conf</code> in your preferred text editor and modify the line which says <code>listen 3838</code>. This is the line that instructs your server to listen to port 3838 -- change it to another port such as <code>12345</code> and save the file. You'll need to restart Shiny Server to make it aware of the new configuration file. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions including Ubuntu 12 and later, and CentOS 6):</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> restart shiny-server</code></pre>
 <p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
@@ -660,9 +662,9 @@ code > span.er { font-weight: bold; }
 <p>First, Shiny Server is now distributed via <code>deb</code> and <code>rpm</code> installers, rather than using <code>npm</code>. Thus, you'll first want to uninstall the old version of Shiny Server which was installed from <code>npm</code>.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> npm uninstall -g shiny-server</code></pre>
 <p>Shiny Server no longer requires node.js to be installed on the system either. If you have no other need for node.js, you can uninstall it at this time, as well.</p>
-<p>Running the Shiny Server 0.4 installer will replace the scripts at <code>/etc/init/shiny-server.conf</code> or <code>/etc/init.d/shiny-server</code>. If you have made any modifications to these startup scripts that you wish to keep, please save a copy of these files before running the installer.</p>
-<p>The default directories for logging and Shiny application hosting have also moved in this release. The default logging directory used to be <code>/var/shiny-server/log</code>, it is now <code>/var/log/shiny-server</code>. The default hosting directory was previously <code>/var/shiny-server/www</code> and is now <code>/srv/shiny-server/</code>. If you have not explicitly overridden these directories in the <code>/etc/shiny-server/shiny-server.conf</code> file, the new location will be created and used in Shiny Server 0.4.</p>
-<p>Finally, Shiny Server 0.4 now requires the Shiny package to be at least version 0.7.0. You can check the system-wide version of Shiny you have installed using the following command on the command line.</p>
+<p>Running the latest Shiny Server installer will replace the scripts at <code>/etc/init/shiny-server.conf</code> or <code>/etc/init.d/shiny-server</code>. If you have made any modifications to these startup scripts that you wish to keep, please save a copy of these files before running the installer.</p>
+<p>The default directories for logging and Shiny application hosting have also moved in this release. The default logging directory used to be <code>/var/shiny-server/log</code>, it is now <code>/var/log/shiny-server</code>. The default hosting directory was previously <code>/var/shiny-server/www</code> and is now <code>/srv/shiny-server/</code>. If you have not explicitly overridden these directories in the <code>/etc/shiny-server/shiny-server.conf</code> file, the new location will be created and used in the latest Shiny Server.</p>
+<p>Finally, Shiny Server 0.4 and later require the Shiny package to be at least version 0.7.0. You can check the system-wide version of Shiny you have installed using the following command on the command line.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - -c <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">packageVersion(&#39;shiny&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></code></pre>
 <p>(Running this command using the <code>sudo su - -c</code> preface will allow you to see the system-wide version of Shiny. Individual users could have installed more recent versions of Shiny in their own R libraries.) If the installed version of Shiny predates 0.7.0, you should follow the instructions in <a href="#install-shiny">Install Shiny</a> to update to the most recent version.</p>
 <p>At this point, you can proceed with the <a href="#installation">Installation</a> instructions associated with your Operating System.</p>
@@ -679,6 +681,51 @@ code > span.er { font-weight: bold; }
 <p>Absolutely. Many customers deploy Shiny Server and Shiny Server Professional on the Amazon Web Services (AWS) framework.</p>
 <h3 id="can-i-deploy-shiny-server-on-an-isolated-network"><a href="#can-i-deploy-shiny-server-on-an-isolated-network"><span class="header-section-number">4.4.3</span> Can I Deploy Shiny Server on an Isolated Network?</a></h3>
 <p>Of course. Shiny Server does not require a connection to the Internet in order to work properly, so you are free to deploy it in whatever sort of network configuration you would like. Offline activation is also available for Shiny Server Professional customers.</p>
+<h3 id="how-do-i-translate-my-application-settings-to-nested-locations"><a href="#how-do-i-translate-my-application-settings-to-nested-locations"><span class="header-section-number">4.4.4</span> How Do I Translate My 'application' Settings to Nested 'location's?</a></h3>
+<p>Shiny Server 0.4.2 introduced a new model for managing applications at a more granular level by supporting nested <code>location</code> directives. Any existing <code>application</code> directives in your configuration file will need to be migrated to this nested location format in order to be supported by any version of Shiny Server after 0.4.2.</p>
+<p><code>application</code> directives were addressed by their full path on disk. Nested <code>location</code>s, on the other hand, are indexed by their relative path within their parent location. For instance, the following exemplifies how you could redirect a particular application in the old model:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
+  <span class="kw">site_dir</span> /srv/shiny-server<span class="kw">;</span>
+  
+  <span class="co"># Define rules to apply to one application, stored at &#39;/srv/shiny-server/app1&#39;</span>
+  <span class="kw">application</span> /srv/shiny-server/app1 {
+    <span class="kw">redirect</span> <span class="st">&quot;http://rstudio.com&quot;</span> 302 true<span class="kw">;</span>
+  }
+}</code></pre>
+<p>In the new &quot;nested locations&quot; model, the equivalent would be:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
+  <span class="kw">site_dir</span> /srv/shiny-server<span class="kw">;</span>
+
+  <span class="co"># Define rules to apply to one application, stored at &#39;/srv/shiny-server/app1&#39;</span>
+  <span class="kw">location</span> /app1 {
+    <span class="kw">redirect</span> <span class="st">&quot;http://rstudio.com&quot;</span> 302 true<span class="kw">;</span>
+  }
+}</code></pre>
+<p>This structure is much more powerful than simple <code>application</code> settings. The following configuration defines a parent location (<code>depts</code>) with some settings, then overrides those settings for a particular directory (<code>finance</code>) within that location.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">server</span> {
+  <span class="kw">...</span>
+  <span class="co"># Define the &#39;/depts&#39; location</span>
+  <span class="kw">location</span> /depts {
+    <span class="co"># Host a directory of applications</span>
+    <span class="kw">site_dir</span> /srv/departmentApps<span class="kw">;</span>
+    
+    <span class="co"># Provide a default/global GAID</span>
+    <span class="kw">google_analytics_id</span> <span class="st">&quot;UA-12345-1&quot;</span><span class="kw">;</span>
+
+    <span class="co"># Define the &#39;/finance&#39; location.</span>
+    <span class="co"># Corresponds to the URL &#39;/depts/finance&#39;, and the filesystem path </span>
+    <span class="co"># &#39;/srv/departmentApps/finance&#39; as defined by the parent location.</span>
+    <span class="kw">location</span> /finance {
+      <span class="co"># Provide a custom GAID for only this sub-location</span>
+      <span class="kw">google_analytics_id</span> <span class="st">&quot;UA-54321-9&quot;</span><span class="kw">;</span>
+
+      <span class="kw">location</span> /fall2014/app1 {
+        <span class="kw">redirect</span> <span class="st">&quot;http://rstudio.com&quot;</span> 302 true<span class="kw">;</span>
+      }
+    }
+  }
+<span class="kw">...</span></code></pre>
+<p>In this case, all applications stored in the <code>depts/finance/</code> directory would have a different Google Analytics ID than the rest of the applications on this server. Additionally, the application at <code>depts/finance/fall2014/app1</code> would be redirected to <code>http://rstudio.com</code>.</p>
 <!--
 TODO:
 // Cookbook for integrating Shiny Server into existing apps
