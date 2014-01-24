@@ -278,9 +278,11 @@ code > span.er { font-weight: bold; }
 </ul></li>
 <li><a href="#appendix"><span class="toc-section-number">7</span> Appendix</a><ul>
 <li><a href="#quick-start"><span class="toc-section-number">7.1</span> Quick Start</a><ul>
-<li><a href="#install-an-example-application"><span class="toc-section-number">7.1.1</span> Install an Example Application</a></li>
-<li><a href="#adjust-the-configuration"><span class="toc-section-number">7.1.2</span> Adjust the Configuration</a></li>
-<li><a href="#setup-authentication-login-to-admin"><span class="toc-section-number">7.1.3</span> Setup Authentication &amp; Login to Admin</a></li>
+<li><a href="#host-a-directory-of-applications-1"><span class="toc-section-number">7.1.1</span> Host a directory of applications</a></li>
+<li><a href="#let-users-manage-their-own-applications"><span class="toc-section-number">7.1.2</span> Let users manage their own applications</a></li>
+<li><a href="#run-shiny-server-on-multiple-ports"><span class="toc-section-number">7.1.3</span> Run Shiny Server on multiple ports</a></li>
+<li><a href="#require-user-authentication-on-an-application"><span class="toc-section-number">7.1.4</span> Require user authentication on an application</a></li>
+<li><a href="#host-a-secure-shiny-server"><span class="toc-section-number">7.1.5</span> Host a secure Shiny Server</a></li>
 </ul></li>
 <li><a href="#configuration-settings"><span class="toc-section-number">7.2</span> Configuration Settings</a></li>
 <li><a href="#migrating-updating"><span class="toc-section-number">7.3</span> Migrating &amp; Updating</a><ul>
@@ -362,7 +364,7 @@ code > span.er { font-weight: bold; }
 <p>After enabling EPEL you should then ensure that you have installed the version of R available from EPEL. You can do this using the following command:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install R  </code></pre>
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
-<p>Once Shiny has been installed, you can begin the installation of Shiny Server. You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). You can install this rpm file using <code>yum</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory.</p>
+<p>Once Shiny has been installed, you can begin the installation of Shiny Server. You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). You can install this rpm file using <code>yum</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory. You can install this RPM file using <code>yum</code>.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-0.5.0.rpm</code></pre>
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="install-shiny"><a href="#install-shiny"><span class="header-section-number">1.3.3</span> Install Shiny</a></h3>
@@ -405,7 +407,7 @@ code > span.er { font-weight: bold; }
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">/sbin/service</span> shiny-server status</code></pre>
 <h1 id="server-management"><a href="#server-management"><span class="header-section-number">2</span> Server Management</a></h1>
 <h2 id="default-configuration"><a href="#default-configuration"><span class="header-section-number">2.1</span> Default Configuration</a></h2>
-<p>Initially, Shiny Server uses the following configuration file. Some users will find that this configuration meets their needs; others may find it useful to create a custom configuration. Details about each available setting and parameter are available in the <a href="#appendix">Appendix</a>. As a brief introduction, however, the following configuration file is the default used if no other configuration file is provided:</p>
+<p>Initially, Shiny Server uses the following configuration file. Some users will find that this configuration meets their needs; others may find it useful to create a custom configuration. Details about each available setting and parameter are available in the <a href="#appendix">Appendix</a>. As a brief introduction, however, the following configuration file (available at <code>/opt/shiny-server/config/default.config</code>) is the default used if no other configuration file is provided:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define the user we should use when spawning R Shiny processes</span>
 <span class="kw">run_as</span> shiny<span class="kw">;</span>
 
@@ -981,9 +983,24 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager status-offline</code></pre>
 <h1 id="appendix"><a href="#appendix"><span class="header-section-number">7</span> Appendix</a></h1>
 <h2 id="quick-start"><a href="#quick-start"><span class="header-section-number">7.1</span> Quick Start</a></h2>
-<p>We recommend reading through the relevant sections of this guide to gain a complete understanding of how to operate Shiny Server. If you're just looking to get running quickly, you can follow the steps below to install a simple application and configure it to run on a non-default port.</p>
-<h3 id="install-an-example-application"><a href="#install-an-example-application"><span class="header-section-number">7.1.1</span> Install an Example Application</a></h3>
-<p>When you install Shiny Server, we'll automatically start the server process for you. When it comes time to start/stop/restart the server on your own, however, you can check out the <a href="#stopping-and-starting">Stopping and Starting</a> section. By default, we'll provide an initial configuration for the server to use. This configuration expects your Shiny applications to be hosted in <code>/srv/shiny-server/</code>. Let's start by copying one of the example applications from the Shiny package to this directory.</p>
+<p>We recommend reading through the relevant sections of this guide to gain a complete understanding of how to operate Shiny Server. If you're just looking to get running quickly, you can follow one of the guides below.</p>
+<p>All of the guides will help you customize your Shiny Server configuration file which will be stored at <code>/etc/shiny-server/shiny-server.conf</code>. By altering this file, you can control exactly how Shiny Server runs.</p>
+<p>The following guides are available:</p>
+<ul>
+<li><a href="#host-a-directory-of-applications-1">Host a directory of applications</a> - This is the default configuration that Shiny Server will use until you provide a custom configuration in <code>/etc/shiny-server/shiny-server.conf</code>. This guide will show you how to serve multiple applications from a single directory on disk -- <code>/srv/shiny-server/</code>. If you're not sure where to start, we recommend this guide.</li>
+<li><a href="#let-users-manage-their-own-applications">Let users manage their own applications</a> - This guide will serve Shiny applications created by your users and stored in their home directories.</li>
+<li><a href="#run-shiny-server-on-multiple-ports">Run Shiny Server on multiple ports</a> - This guide will introduce a multi-server configuration which demonstrates how to run two distinct services on different ports on your server. It also configures one server with multiple locations.</li>
+</ul>
+<span class="pro-tag">PRO</span>
+<div class="pro-chunk">
+<p>And for Pro features:</p>
+<ul>
+<li><a href="#require-user-authentication-on-an-application">Require user authentication on an application</a> - This example will help you setup a local username/password database and use it to secure your applications.</li>
+<li><a href="#host-a-secure-shiny-server">Host a secure Shiny Server</a> - If you're looking to setup a secure instance of Shiny Server which is encrypted with HTTPS (SSL/TLS), this guide will show you how.</li>
+</ul>
+</div>
+<h3 id="host-a-directory-of-applications-1"><a href="#host-a-directory-of-applications-1"><span class="header-section-number">7.1.1</span> Host a directory of applications</a></h3>
+<p>Until a custom configuration is specified, Shiny Server will use the configuration stored at <code>/opt/shiny-server/config/default.config</code>. This configuration expects your Shiny applications to be hosted in <code>/srv/shiny-server/</code>. Let's start by copying one of the example applications from the Shiny package to this directory.</p>
 <p>We'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
 <pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
 <p>which will return something like:</p>
@@ -992,20 +1009,120 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello /srv/shiny-server/</code></pre>
 <p>If that command succeeds, you've installed your first Shiny application into Shiny Server!</p>
 <p>By default, Shiny Server listens on port 3838, so your new application will be available at <code>http://myserver.com:3838/01_hello</code> where <code>myserver</code> is the hostname or IP address of the Shiny Server.</p>
-<h3 id="adjust-the-configuration"><a href="#adjust-the-configuration"><span class="header-section-number">7.1.2</span> Adjust the Configuration</a></h3>
 <p>If you wanted to change the port or the directory Shiny Server uses, you would adjust the configuration file. Shiny Server will look for a custom configuration file in <code>/etc/shiny-server/shiny-server.conf</code>. If none is found, it will use its default configuration. To begin customizing your server, copy the default configuration there then begin modifying. To copy the file, run the following command:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/default.config /etc/shiny-server/shiny-server.conf</code></pre>
-<p>Then open <code>/etc/shiny-server/shiny-server.conf</code> in your preferred text editor and modify the line which says <code>listen 3838</code>. This is the line that instructs your server to listen to port 3838 -- change it to another port such as <code>12345</code> and save the file. You'll need to restart Shiny Server to make it aware of the new configuration file. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions including Ubuntu 12 and later, and CentOS 6):</p>
+<p>Then open <code>/etc/shiny-server/shiny-server.conf</code> in your preferred text editor and modify the line which says <code>listen 3838</code>. This is the line that instructs your server to listen to port 3838 -- change it to another port such as <code>12345</code> and save the file. You'll need to restart Shiny Server to make it aware of the new configuration file. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions, including Ubuntu 12 and later and CentOS 6):</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> restart shiny-server</code></pre>
 <p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
 <p>You should now find that Shiny Server is no longer running on port 3838, but is on whichever new port you selected.</p>
-<h3 id="setup-authentication-login-to-admin" class="pro"><a href="#setup-authentication-login-to-admin"><span class="header-section-number">7.1.3</span> Setup Authentication &amp; Login to Admin</a></h3>
+<h3 id="let-users-manage-their-own-applications"><a href="#let-users-manage-their-own-applications"><span class="header-section-number">7.1.2</span> Let users manage their own applications</a></h3>
+<p>Some administrators of Shiny Server would prefer to give users -- or some trusted subgroup of users -- the ability to manage and host their own Shiny applications. This allows users to work directly with their applications rather than requiring an administrator to deploy and update applications on their behalf. This guide will document how to create such an environment using the <code>user_apps</code> directive documented in the section named <a href="#host-per-user-application-directories">Host Per-User Application Directories</a>.</p>
+<p>We provide a configuration file in <code>/opt/shiny-server/config/user-apps.config</code> that enables this functionality. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/user-apps.config /etc/shiny-server/shiny-server.conf</code></pre>
+<p>This configuration enables all users on the system to host their own apps by creating a <code>ShinyApps</code> directory in their home directory; you can always alter this file later to tailor it to meet your needs. You can deploy an application under your username by copying one of the examples that comes with Shiny into your own <code>ShinyApps</code> directory. To do this, we'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
+<pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
+<p>which will return something like:</p>
+<pre><code>[1] &quot;/usr/local/lib/R/site-library/shiny/examples/01_hello&quot;</code></pre>
+<p>You can copy that entire directory into <code>~/ShinyApps</code> using the following command (using the directory that was returned in the previous command, if it's different):</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">mkdir</span> ~/ShinyApps
+<span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello ~/ShinyApps/</code></pre>
+<p>If that command succeeds, you've successfully installed a <code>user_apps</code> Shiny application! However, you'll need to restart Shiny Server to make it aware of the changes you made to the configuration file. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions, including Ubuntu 12 and later and CentOS 6):</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> restart shiny-server</code></pre>
+<p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
+<p>By default, Shiny Server listens on port 3838, so your new application will be available at <code>http://myserver.com:3838/&lt;your_username&gt;/01_hello</code> where <code>myserver</code> is the hostname or IP address of the Shiny Server and <code>&lt;your_username&gt;</code> is your Linux username.</p>
+<p>If you wanted to restrict the privilege of running Shiny applications to a particular set of users on your system, you can uncomment the <code>members_of</code> line in the configuration file. You can then specify the Linux group name of which a user must be a member before he or she would be allowed to host Shiny applications.</p>
+<h3 id="run-shiny-server-on-multiple-ports"><a href="#run-shiny-server-on-multiple-ports"><span class="header-section-number">7.1.3</span> Run Shiny Server on multiple ports</a></h3>
+<p>This guide will show how to run Shiny Server on multiple ports simultaneously and will also show how to run a single server with multiple locations.</p>
+<p>We provide a configuration file in <code>/opt/shiny-server/config/multi-server.config</code> that enables this functionality. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/multi-server.config /etc/shiny-server/shiny-server.conf</code></pre>
+<p>This configuration will run two servers: one on port 3838, and one on port 4949. As you can see in the configuration file, a variety of different <code>location</code>s are defined with different hosting models.</p>
+<p>The server running on port 3838 defines two locations. The first for the URL <code>/users</code> which makes user applications available as documented in the section entitled <a href="#host-per-user-application-directories">Host Per-User Application Directories</a>. The second location is at the URL <code>/example1</code> and hosts a single application which should be stored in <code>/srv/shiny-server/01_hello/</code>.</p>
+<p>You can copy this example application from the Shiny package to the relevant directories. To do this, we'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
+<pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
+<p>which will return something like:</p>
+<pre><code>[1] &quot;/usr/local/lib/R/site-library/shiny/examples/01_hello&quot;</code></pre>
+<p>You can copy that entire directory into the necessary locations using the following commands (using the directory that was returned in the previous command in both <code>cp</code> commands, if it's different):</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Copy to your home directory&#39;s &#39;ShinyApps&#39; folder</span>
+<span class="kw">mkdir</span> ~/ShinyApps
+<span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello ~/ShinyApps/
+
+<span class="co"># Copy to /srv/shiny-server</span>
+<span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello /srv/shiny-server/</code></pre>
+<p>You'll need to restart Shiny Server to make it aware of the changes you made to the configuration file. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions, including Ubuntu 12 and later and CentOS 6):</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> restart shiny-server</code></pre>
+<p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
+<p>You should now be able to access applications in a variety of ways:</p>
+<ul>
+<li>On the server running on port 3838, you should have a <code>user_apps</code> location at <code>/users</code> hosting your personal applications. You can access the one deployed earlier at a URL like <code>http://myserver.com:3838/users/&lt;your_username&gt;/01_hello</code> where <code>myserver</code> is the hostname or IP address of the Shiny Server and <code>&lt;your_username&gt;</code> is your Linux username.</li>
+<li>Also on the server running on port 3838, you have a single application available at the <code>/example1</code> location. So the URL like <code>http://myserver.com:3838/example1</code> (where <code>myserver</code> is the hostname or IP address of the Shiny Server) should point you to the example you previously copied to <code>/srv/shiny-server/01_hello</code>.</li>
+<li>Finally, the server on port 4949 will host any application defined in <code>/srv/shiny-server</code>. You can access the one we just copied at a URL like <code>http://myserver.com:4949/01_hello</code> (where <code>myserver</code> is the hostname or IP address of the Shiny Server) which, coincidentally, should point you to the same application you just loaded a moment ago.</li>
+</ul>
+<h3 id="require-user-authentication-on-an-application" class="pro"><a href="#require-user-authentication-on-an-application"><span class="header-section-number">7.1.4</span> Require user authentication on an application</a></h3>
 <p>Shiny Server Pro comes with multiple different methods of authenticating users (as described in the chapter on <a href="#authentication-security">Authentication &amp; Security</a>). Out of the box, it's configured to use a <a href="#flat-file-authentication">Flat-File Authentication</a> database stored in <code>/etc/shiny-server/passwd</code>. This database is initially empty; to create a user named <code>admin</code>, execute the following command:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/sspasswd /etc/shiny-server/passwd admin</code></pre>
 <p>then enter the new password for the <code>admin</code> user when prompted. Once completed, you'll have a single user defined in your database named <code>admin</code>.</p>
 <p>You should now be able to login to your administrative dashboard at a URL like <code>http://myserver.com:4151/</code> (after replacing <code>myserver.com</code> with your server's IP or hostname) using the username <code>admin</code> with the password you just created. See the chapter entitled <a href="#admin">Admin</a> for more details on how to take advantage of this interface.</p>
-<p>If you look at the configuration file you edited a moment ago at <code>/etc/shiny-server/shiny-server.conf</code>, you'll noticed that the default configuration is to expose the Administrative Interface only to the user named <code>admin</code>. Of course, you can change this to require a different user, or add new users to the list of approved users. You'll also notice that the port number <code>4151</code> is user-configurable and can be updated here. As usual, you will need to reload <code>shiny-server</code> in order for any changes to the configuration file to take effect.</p>
+<p>After defining usernames and passwords in this password database, you can also restrict access to <code>server</code>s and <code>location</code>s using the <code>required_user</code> directive. We provide an example of such a configuration at <code>/opt/shiny-server/auth.config</code>. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/auth.config /etc/shiny-server/shiny-server.conf</code></pre>
+<p>You'll need to restart Shiny Server to make it aware of the changes you made to the configuration file. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions, including Ubuntu 12 and later and CentOS 6):</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> restart shiny-server</code></pre>
+<p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
+<p>If you haven't already, let's start by copying one of the example applications from the Shiny package to <code>/srv/shiny-server/</code>, which is the directory in which this configuration expects applications to be stored.</p>
+<p>We'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
+<pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
+<p>which will return something like:</p>
+<pre><code>[1] &quot;/usr/local/lib/R/site-library/shiny/examples/01_hello&quot;</code></pre>
+<p>You can copy that entire directory into <code>/srv/shiny-server</code> using the following command (using the directory that was returned in the previous command, if it's different):</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello /srv/shiny-server/</code></pre>
+<p>Because of the specifications provided in our current configuration file (in <code>/etc/shiny-server/shiny-server.conf</code>), the application we just copied requires authentication -- you must be logged in as the user named &quot;admin&quot; to access it. If you already visited the Administrative Dashboard on port 4151 mentioned earlier, then you may already be logged in. But you can test your configuration by either logging out or using another browser/computer to confirm that you're unable to access the application you just copied hosted at a URL like <code>http://myserver.com:3838/01_hello</code> without logging in, where <code>myserver</code> is the hostname or IP address of the Shiny Server. However, once you login as the user named &quot;admin&quot; using the password you defined above, you will be granted access to this application.</p>
+<p>Note that, because the configuration in use is structured like so:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">server</span> {
+  <span class="kw">listen</span> 3838<span class="kw">;</span>
+  
+  <span class="kw">location</span> / {
+
+    <span class="kw">...</span>
+
+    <span class="kw">location</span> /01_hello {
+      <span class="kw">required_user</span> admin<span class="kw">;</span>
+    }
+  }
+}</code></pre>
+<p><em>only</em> the <code>01_hello</code> location requires authentication; all other applications are freely available. If you were to move the <code>required_user</code> directive to the parent location, however, all applications defined in that location would require being authenticated as the user named &quot;admin&quot;.</p>
+<h3 id="host-a-secure-shiny-server" class="pro"><a href="#host-a-secure-shiny-server"><span class="header-section-number">7.1.5</span> Host a secure Shiny Server</a></h3>
+<p>Shiny Server is able to serve Shiny applications using SSL/TLS -- an encrypted channel between your server and your clients. A configuration exemplifying this setup is available in <code>/opt/shiny-server/ssl.config</code>. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/ssl.config /etc/shiny-server/shiny-server.conf</code></pre>
+<p>This configuration expects your SSL key and certificate to be available in <code>/etc/shiny-server/server.key</code> and <code>/etc/shiny-server/server.cert</code>, respectively. If you have an existing SSL certificate stored elsewhere, you can update the configuration file at <code>/etc/shiny-server/shiny-server.conf</code> to point to the appropriate files. If you don't have an SSL certificate available, you can setup a &quot;self-signed&quot; certificate. This certificate will allow you to encrypt traffic between your clients and server but will not be &quot;trusted&quot; by most browsers. Thus, when a user visits a page secured via a self-signed certificate, the user will get a warning advising them not to proceed. Nonetheless, we can demonstrate how to create a self-signed certificate and integrate it into Shiny Server. The details of creating and signing SSL certificates is outside the scope of this guide, but the commands are given below for your convenience.</p>
+<p>In order to create a certificate, you'll need to have the <code>openssl</code> library installed on your server. You can then create an SSL key using the following command.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> openssl genrsa -out /etc/shiny-server/server.key 1024</code></pre>
+<p>You'll then generate a certificate signing request (CSR) using the following command:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> openssl req -new -key /etc/shiny-server/server.key \
+  <span class="kw">-out</span> /etc/shiny-server/server.csr</code></pre>
+<p>(Where a command includes a <code>\</code> you can either enter that literally as it appears in this document or you can omit it and enter the whole command on a single line.) This command will ask you a variety of information about your organization which you can provide or omit, if you just plan to sign this certificate yourself.</p>
+<p>You can then sign that request yourself using this command:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> openssl x509 -req -days 3650 \
+  <span class="kw">-in</span> /etc/shiny-server/server.csr \
+  <span class="kw">-signkey</span> /etc/shiny-server/server.key \
+  <span class="kw">-out</span> /etc/shiny-server/server.cert</code></pre>
+<p>At this point, you can restart the server to make it recognize its new configuration. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions, including Ubuntu 12 and later and CentOS 6):</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> restart shiny-server</code></pre>
+<p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
+<p>It is a good idea to inspect the log file at this point to ensure that there were no problems using your SSL key and certificate. The server log file is stored in <code>/var/log/shiny-server.log</code>. You can preview the last 20 lines of this file using the following command.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> tail -n 20 /var/log/shiny-server.log</code></pre>
+<p>You can ensure here that there were no errors in using your SSL configuration.</p>
+<p>Finally, if you haven't already, you'll need to copy an example application into <code>/srv/shiny-server/</code> which is the directory this configuration expects your applications to be hosted in. Let's start by copying one of the example applications from the Shiny package to this directory.</p>
+<p>We'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
+<pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
+<p>which will return something like:</p>
+<pre><code>[1] &quot;/usr/local/lib/R/site-library/shiny/examples/01_hello&quot;</code></pre>
+<p>You can copy that entire directory into <code>/srv/shiny-server</code> using the following command (using the directory that was returned in the previous command, if it's different):</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello /srv/shiny-server/</code></pre>
+<p>Once you've copied this application in, you should be able to connect to your server from a browser by visiting a URL like <code>https://myserver.com:3939/01_hello</code> (after replacing <code>myserver.com</code> with your server's IP or hostname). Note that this guide uses the port 3939, unlike the other guides and that you <em>must</em> specify the <code>https://</code> protocol when visiting the page. If you signed the certificate yourself, your browser will likely prompt you about the untrusted certificate. If you instruct your browser to accept the certificate regardless, you'll be taken to your application which now is secured via SSL/TLS encryption.</p>
 <h2 id="configuration-settings"><a href="#configuration-settings"><span class="header-section-number">7.2</span> Configuration Settings</a></h2>
 <p></p>
     <p>Listed below are all the directives that are supported in Shiny Server config files.</p>
@@ -2548,7 +2665,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
     </ul>
 <h2 id="migrating-updating"><a href="#migrating-updating"><span class="header-section-number">7.3</span> Migrating &amp; Updating</a></h2>
 <h3 id="upgrading-from-shiny-server-0.3.x"><a href="#upgrading-from-shiny-server-0.3.x"><span class="header-section-number">7.3.1</span> Upgrading from Shiny Server 0.3.x</a></h3>
-<p>Shiny Server 0.4 includes many major changes to the architecture of Shiny Server. There are a few things to be aware of when upgrading from Shiny Server 0.3.x.</p>
+<p>Shiny Server 0.4 and later include many major changes to the architecture of Shiny Server. There are a few things to be aware of when upgrading from Shiny Server 0.3.x.</p>
 <p>First, Shiny Server is now distributed via <code>deb</code> and <code>rpm</code> installers, rather than using <code>npm</code>. Thus, you'll first want to uninstall the old version of Shiny Server which was installed from <code>npm</code>.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> npm uninstall -g shiny-server</code></pre>
 <p>Shiny Server no longer requires node.js to be installed on the system either. If you have no other need for node.js, you can uninstall it at this time, as well.</p>
