@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Shiny Server v0.5.0 Configuration Reference</title>
+  <title>Shiny Server v1.0.0 Configuration Reference</title>
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
   <style type="text/css">
@@ -176,7 +176,7 @@ code > span.er { font-weight: bold; }
 </head>
 <body>
 <header>
-<h1 class="title">Shiny Server Professional v0.5.0 Administrator's Guide</h1>
+<h1 class="title">Shiny Server Professional v1.0.0 Administrator's Guide</h1>
 </header>
 <nav id="TOC">
 <ul>
@@ -356,7 +356,7 @@ code > span.er { font-weight: bold; }
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny is installed, you can begin the installation of Shiny Server. You should have been provided with a <code>.deb</code> installer for Shiny Server. If you only have a link to this file, you can use <code>wget</code> to download the file to the current directory. You will need to first install the <code>gdebi-core</code> package to install Shiny Server and its dependencies. Once the <code>.deb</code> file is available locally, run the following commands to complete the installation of Shiny Server.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> apt-get install gdebi-core
-<span class="kw">sudo</span> gdebi shiny-server-0.5.0.deb</code></pre>
+<span class="kw">sudo</span> gdebi shiny-server-1.0.0.deb</code></pre>
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="redhatcentos-5.4"><a href="#redhatcentos-5.4"><span class="header-section-number">1.3.2</span> RedHat/CentOS (5.4+)</a></h3>
 <p><strong>Prerequisites</strong></p>
@@ -365,7 +365,7 @@ code > span.er { font-weight: bold; }
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install R  </code></pre>
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny has been installed, you can begin the installation of Shiny Server. You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). You can install this rpm file using <code>yum</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory. You can install this RPM file using <code>yum</code>.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-0.5.0.rpm</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-1.0.0.rpm</code></pre>
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="install-shiny"><a href="#install-shiny"><span class="header-section-number">1.3.3</span> Install Shiny</a></h3>
 <p>Before Shiny Server can be installed, the Shiny package must be installed in the system library; you typically need <code>sudo</code> privileges to install to this library. Shiny Server currently requires Shiny version 0.7.0 or later. The following command will download and install the <code>shiny</code> package from CRAN in the system library.</p>
@@ -385,11 +385,12 @@ code > span.er { font-weight: bold; }
 <p>To start or stop the server, run the following commands, respectively.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> start shiny-server</code></pre>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> stop shiny-server</code></pre>
-<p>To restart the server, you can run:</p>
+<p>To restart the server you can run:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> restart shiny-server</code></pre>
+<p>This command will shutdown all running Shiny processes, disconnecting all open connections and will re-initialize the server. Note that <code>restart</code> <em>will not</em> reread the Upstart definition at <code>/etc/init/shiny-server.conf</code>. So if you have changed, for instance, some environment variables in that file. You will need to <code>stop</code> and <code>start</code> to have those changes take effect.</p>
 <p>If you wish to keep the server and all Shiny processes running without interruption, but reload the configuration, you can use the <code>reload</code> command as in:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> reload shiny-server</code></pre>
-<p>This will cause the server to re-read the configuration file but will not interrupt the current processes and outstanding connections to the server.</p>
+<p>This will cause the server to re-initialize but will not interrupt the current processes or any of the open connections to the server.</p>
 <p><strong>Known Bug:</strong> Due to a bug in the version of Upstart which comes with Ubuntu 13.04, <code>reload</code> will not behave as expected on that platform and should not be used.</p>
 <p>To check the status or retrieve the Process ID associated with <code>shiny-server</code>, run the following:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">status</span> shiny-server</code></pre>
@@ -673,7 +674,8 @@ Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all fi
 <p>Defines the path to the R executable which should be used when running Shiny. Systems which have multiple versions of R installed, or don't wish to place R on the path before starting Shiny Server can override this setting to point to a particular version of R.</p>
 <p>If no environment variable is found, Shiny Server will expect an executable named <code>R</code> to be on the path.</p>
 <h3 id="shiny_data_dir"><a href="#shiny_data_dir"><span class="header-section-number">2.10.3</span> <code class="pro">SHINY_DATA_DIR</code></a></h3>
-<p>The historical databases of Shiny applications used in the Admin dashboard can consume multiple Gigabytes of disk space on a system hosting many applications. This environment variable allows you to define the directory in which Shiny Server should persist data to disk. To estimate the amount of disk space required, we recommend reserving 10MB in this directory for every Shiny application you plan to host on a server.</p>
+<p>The historical databases of Shiny applications used in the Admin dashboard can consume multiple Gigabytes of disk space on a system hosting many applications. This environment variable allows you to define the directory in which Shiny Server should persist data to disk. To estimate the amount of disk space required, we recommend reserving 10MB in this directory for every Shiny application you plan to host on a server. Additionally, ensure that this directory is writable by the <code>shiny</code> user, or whichever user you're running Shiny Server as (as is discussed in detail in the <a href="#run_as"><code>run_as</code></a> section).</p>
+<p>Note that Shiny Server expects a directory named <code>monitor/rrd/</code> to already exist inside <code>SHINY_DATA_DIR</code> when it starts.</p>
 <p>By default, Shiny Server will create and store data in <code>/var/lib/shiny-server/</code>.</p>
 <h1 id="deploying-applications"><a href="#deploying-applications"><span class="header-section-number">3</span> Deploying Applications</a></h1>
 <h2 id="schedulers-application-restarts"><a href="#schedulers-application-restarts"><span class="header-section-number">3.1</span> Schedulers &amp; Application Restarts</a></h2>
@@ -703,13 +705,13 @@ Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all fi
 <li><code>maxProc</code> -- The maximum number of processes which should exist concurrently associated with this Shiny application. Note that this does not include restarted versions of the same application in its count.</li>
 </ul>
 <p>As an example:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">application</span> /srv/shiny-server/shinyApp1 {
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> /shinyApp1 {
   <span class="co"># Define the scheduler to use for this application</span>
   <span class="kw">utilization_scheduler</span> 5 0.5 3<span class="kw">;</span>
   
   <span class="kw">...</span>
 }</code></pre>
-<p>The above configuration would create a Utilization Scheduler for the application hosted at <code>/srv/shiny-server/shinyApp1</code> which would support a maximum of 3 processes, a maximum of 5 connections per process, and a load factor of 0.5. Initially, only one process would be created to facilitate the first and second concurrent connection to this application. The third connection, however, would surpass the load factor (3/5 &gt; 0.5) which would spawn a new R process. The next request would then be routed to this new process. This would continue until the load factor was again surpassed, at which point the third process would be spawned. With a maximum of 3 processes, no more would be created after the third. So the 16th concurrent connection would be turned away with a 503 error.</p>
+<p>The above configuration would create a Utilization Scheduler for this application which would support a maximum of 3 processes, a maximum of 5 connections per process, and a load factor of 0.5. Initially, only one process would be created to facilitate the first and second concurrent connection to this application. The third connection, however, would surpass the load factor (3/5 &gt; 0.5) which would spawn a new R process. The next request would then be routed to this new process. This would continue until the load factor was again surpassed, at which point the third process would be spawned. With a maximum of 3 processes, no more would be created after the third. So the 16th concurrent connection would be turned away with a 503 error.</p>
 <p>Be aware that, upon the restart of an application using a Utilization Scheduler, the resources allotted to this application will effectively double for a time. For instance, if an application is configured to use 4 <code>maxProc</code> and has sufficient load to create and maintain that many R processes, a restart of the application will motivate Shiny Server to create an R process for a &quot;new&quot; Shiny application which also is eligible to run up to 4 Shiny processes in parallel. Thus, with one restart and sufficient traffic to this application, it is possible that it could be running 8 Shiny processes. This behavior is likely to change in future versions of Shiny Server.</p>
 <h2 id="application-timeouts"><a href="#application-timeouts"><span class="header-section-number">3.2</span> Application Timeouts</a></h2>
 <p>Each Shiny Application has two timeouts associated with it:</p>
@@ -724,7 +726,7 @@ Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all fi
 <p>Session timeouts are configurable on a per-server or per-application basis. Controlling the session timeout can be important in helping the administrator manage the resource allocation for a given application and in freeing up resources from idle connections which will then be available to newly created sessions.</p>
 <h2 id="logging-and-analytics"><a href="#logging-and-analytics"><span class="header-section-number">3.4</span> Logging and Analytics</a></h2>
 <h3 id="application-error-logs"><a href="#application-error-logs"><span class="header-section-number">3.4.1</span> Application Error Logs</a></h3>
-<p>Error logs are created for each R Shiny process separately. For locations configured to use <code>user_apps</code>, these logs are created in each user's <code>~/ShinyApps/log/</code> directory. For <code>location</code>s configured with <code>app_dir</code> or <code>site_dir</code>, the directory in which these logs are created is managed by the <code>log_dir</code> setting, which can be specified globally, for a particular <code>server</code>, or for a particular <code>location</code>. For these <code>location</code>s, the <code>log_dir</code> can be specified in the following way:</p>
+<p>Error logs are created for each R Shiny process separately. For <code>location</code>s configured to use <code>user_apps</code>, these logs are created in each user's <code>~/ShinyApps/log/</code> directory. For <code>location</code>s configured with <code>app_dir</code> or <code>site_dir</code>, the directory in which these logs are created is managed by the <code>log_dir</code> setting, which can be specified globally, for a particular <code>server</code>, or for a particular <code>location</code>. By default, these logs will be located at <code>/var/log/shiny-server/</code>. To change these <code>location</code>s, the <code>log_dir</code> can be specified in the following way:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
   <span class="kw">log_dir</span> /var/log/shiny-server/<span class="kw">;</span>
 }</code></pre>
@@ -883,10 +885,10 @@ Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all fi
 <h2 id="required-users-groups" class="pro"><a href="#required-users-groups"><span class="header-section-number">4.5</span> Required Users &amp; Groups</a></h2>
 <h3 id="user-authentication" class="pro"><a href="#user-authentication"><span class="header-section-number">4.5.1</span> User Authentication</a></h3>
 <p>The <code>required_user</code> setting controls which users should be able to access a particular <code>server</code>, <code>location</code>, or <code>admin</code>, as in:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">application</span> /srv/shiny-server/app1 {
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> /app1 {
   <span class="kw">required_user</span> kim tom<span class="kw">;</span>
 }</code></pre>
-<p>This directive would enable authentication on the specified <code>application</code>, which would present any new, un-authenticated visitor to the application with a login page. If the visitor entered valid credentials against your configured authentication mechanism, then he or she would be checked against the list of allowed users for this application. If found (i.e. if the user name was either <code>kim</code> or <code>tom</code>), the visitor would be granted access to the application. Otherwise, he or she would be unable to access the application.</p>
+<p>This directive would enable authentication on the specified <code>location</code>, which would present any new, un-authenticated visitor to the application with a login page. If the visitor entered valid credentials against your configured authentication mechanism, then he or she would be checked against the list of allowed users for this application. If found (i.e. if the user name was either <code>kim</code> or <code>tom</code>), the visitor would be granted access to the application. Otherwise, he or she would be unable to access the application.</p>
 <p>It is encouraged that any <code>server</code> accepting user credentials be secured via <a href="#ssl">SSL</a>.</p>
 <h3 id="group-authentication" class="pro"><a href="#group-authentication"><span class="header-section-number">4.5.2</span> Group Authentication</a></h3>
 <p>The <code>required_group</code> setting allows the administrator to control access based on the groups of which users are a member. In this way, entire sets of users can be granted access to a particular location in one line in the configuration file.</p>
@@ -926,7 +928,8 @@ Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all fi
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">admin</span> 3957 {
   <span class="kw">required_user</span> tom sarah<span class="kw">;</span>
 }</code></pre>
-<p>The above would enable the admin interface on port 3957. This interface would then be available from any modern web browser on that port. First-time visitors would be presented with a login page. If the visitor were able to authenticate themselves as either <code>tom</code> or <code>sarah</code>, they would be granted access to the admin dashboard.</p>
+<p>The above would enable the admin interface on port 3957. This interface would then be available from any modern web browser on that port. First-time visitors would be presented with a login page. If the visitor were able to authenticate themselves to the Shiny Server application as either <code>tom</code> or <code>sarah</code>, they would be granted access to the admin dashboard.</p>
+<p>The required user must be one connected to Shiny Server as described in <a href="#authentication-security">Authentication &amp; Security</a>.</p>
 <p>You can also leverage <a href="#ssl">SSL</a> to secure the usernames and passwords accepted on the admin login screen.</p>
 <h2 id="organization" class="pro"><a href="#organization"><span class="header-section-number">5.2</span> Organization</a></h2>
 <p>The admin interface offers a real-time view into the current state of your Shiny Server. There is no need to refresh the page periodically, as the information is updated as it happens. The interface is divided into four main sections.</p>
