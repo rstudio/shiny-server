@@ -1,5 +1,5 @@
 
-shiny-server 1.0.1
+shiny-server 1.1.0
 --------------------------------------------------------------------------------
 
 * Added support for custom page templates -- exposing the ability to customize
