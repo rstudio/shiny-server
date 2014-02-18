@@ -39,8 +39,8 @@
           '<div id="networkOptions"></div>' + 
           '<div id="network-prot-warning" style="color: #44B">'+(supports_html5_storage()?'':"These network settings can only be configured in browsers that support HTML5 Storage. Please update your browser.")+'</div>' +
           '<div style="float: right;">' +
-            '<button onclick="ShinyServer.enableAll()">Reset</button>' +
-            '<button onclick="ShinyServer.toggleNetworkSelector();" style="margin-left: 1em;" id="netOptOK">OK</button>' +
+            '<input type="button" value="Reset" onclick="ShinyServer.enableAll()"></input>' +
+            '<input type="button" value="OK" onclick="ShinyServer.toggleNetworkSelector();" style="margin-left: 1em;" id="netOptOK"></input>' +
           '</div>' +
           '</div></div>');
         $('body').append(networkSelector); 
