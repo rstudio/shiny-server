@@ -245,22 +245,27 @@ code > span.er { font-weight: bold; }
 <li><a href="#flat-file-authentication"><span class="toc-section-number">4.3</span> Flat-File Authentication</a><ul>
 <li><a href="#sspasswd"><span class="toc-section-number">4.3.1</span> sspasswd</a></li>
 </ul></li>
-<li><a href="#ldap-and-active-directory"><span class="toc-section-number">4.4</span> LDAP and Active Directory</a><ul>
-<li><a href="#user_bind_template"><span class="toc-section-number">4.4.1</span> <code class="pro">user_bind_template</code></a></li>
-<li><a href="#group_search_base"><span class="toc-section-number">4.4.2</span> <code class="pro">group_search_base</code></a></li>
-<li><a href="#group_filter"><span class="toc-section-number">4.4.3</span> <code class="pro">group_filter</code></a></li>
-<li><a href="#group_name_attribute"><span class="toc-section-number">4.4.4</span> <code class="pro">group_name_attribute</code></a></li>
-<li><a href="#trusted_ca"><span class="toc-section-number">4.4.5</span> <code class="pro">trusted_ca</code></a></li>
-<li><a href="#check_ssl_ca"><span class="toc-section-number">4.4.6</span> <code class="pro">check_ssl_ca</code></a></li>
-<li><a href="#user_filter"><span class="toc-section-number">4.4.7</span> <code class="pro">user_filter</code></a></li>
-<li><a href="#user_search_base"><span class="toc-section-number">4.4.8</span> <code class="pro">user_search_base</code></a></li>
+<li><a href="#google-authentication"><span class="toc-section-number">4.4</span> Google Authentication</a><ul>
+<li><a href="#create-a-google-application"><span class="toc-section-number">4.4.1</span> Create a Google Application</a></li>
+<li><a href="#configure-shiny-server"><span class="toc-section-number">4.4.2</span> Configure Shiny Server</a></li>
+<li><a href="#email-address-restrictions"><span class="toc-section-number">4.4.3</span> Email Address Restrictions</a></li>
 </ul></li>
-<li><a href="#required-users-groups"><span class="toc-section-number">4.5</span> Required Users &amp; Groups</a><ul>
-<li><a href="#user-authentication"><span class="toc-section-number">4.5.1</span> User Authentication</a></li>
-<li><a href="#group-authentication"><span class="toc-section-number">4.5.2</span> Group Authentication</a></li>
+<li><a href="#ldap-and-active-directory"><span class="toc-section-number">4.5</span> LDAP and Active Directory</a><ul>
+<li><a href="#user_bind_template"><span class="toc-section-number">4.5.1</span> <code class="pro">user_bind_template</code></a></li>
+<li><a href="#group_search_base"><span class="toc-section-number">4.5.2</span> <code class="pro">group_search_base</code></a></li>
+<li><a href="#group_filter"><span class="toc-section-number">4.5.3</span> <code class="pro">group_filter</code></a></li>
+<li><a href="#group_name_attribute"><span class="toc-section-number">4.5.4</span> <code class="pro">group_name_attribute</code></a></li>
+<li><a href="#trusted_ca"><span class="toc-section-number">4.5.5</span> <code class="pro">trusted_ca</code></a></li>
+<li><a href="#check_ssl_ca"><span class="toc-section-number">4.5.6</span> <code class="pro">check_ssl_ca</code></a></li>
+<li><a href="#user_filter"><span class="toc-section-number">4.5.7</span> <code class="pro">user_filter</code></a></li>
+<li><a href="#user_search_base"><span class="toc-section-number">4.5.8</span> <code class="pro">user_search_base</code></a></li>
 </ul></li>
-<li><a href="#proxied-headers"><span class="toc-section-number">4.6</span> Proxied Headers</a></li>
+<li><a href="#required-users-groups"><span class="toc-section-number">4.6</span> Required Users &amp; Groups</a><ul>
+<li><a href="#user-authentication"><span class="toc-section-number">4.6.1</span> User Authentication</a></li>
+<li><a href="#group-authentication"><span class="toc-section-number">4.6.2</span> Group Authentication</a></li>
+</ul></li>
 <li><a href="#ssl"><span class="toc-section-number">4.7</span> SSL</a></li>
+<li><a href="#proxied-headers"><span class="toc-section-number">4.8</span> Proxied Headers</a></li>
 </ul></li>
 <li><a href="#admin"><span class="toc-section-number">5</span> Admin</a><ul>
 <li><a href="#configuration"><span class="toc-section-number">5.1</span> Configuration</a></li>
@@ -421,6 +426,13 @@ code > span.er { font-weight: bold; }
 
   <span class="co"># Define the location available at the base URL</span>
   <span class="kw">location</span> / {
+    <span class="co">#### PRO ONLY ####</span>
+    <span class="co"># Only up tp 20 connections per Shiny process and at most 3 Shiny processes</span>
+    <span class="co"># per application. Proactively spawn a new process when our processes reach </span>
+    <span class="co"># 90% capacity.</span>
+    <span class="kw">utilization_scheduler</span> 20 .9 3<span class="kw">;</span>
+    <span class="co">#### END PRO ONLY ####</span>
+
     <span class="co"># Run this location in &#39;site_dir&#39; mode, which hosts the entire directory</span>
     <span class="co"># tree at &#39;/srv/shiny-server&#39;</span>
     <span class="kw">site_dir</span> /srv/shiny-server<span class="kw">;</span>
@@ -821,7 +833,7 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <h1 id="authentication-security" class="pro"><a href="#authentication-security"><span class="header-section-number">4</span> Authentication &amp; Security</a></h1>
 <h2 id="authentication-overview" class="pro"><a href="#authentication-overview"><span class="header-section-number">4.1</span> Authentication Overview</a></h2>
 <p>Shiny Server Professional offers the ability to authenticate individual users. By specifying authentication requirements on particular <code>server</code>s or <code>location</code>s, the administrator can control the set of applications particular users are allowed to access.</p>
-<p>Authentication can be implemented by integrating into an existing LDAP or Active Directory database, or by using a &quot;flat-file&quot; authentication system which is simply contained in a local file. To ensure that your users' passwords are being protected, it is <strong>strongly encouraged</strong> that any Shiny application requiring authentication use <a href="#ssl">SSL</a> to encrypt the usernames and passwords being transmitted.</p>
+<p>Authentication can be implemented by integrating into an existing LDAP or Active Directory database, relying on Google accounts, or by using a &quot;flat-file&quot; authentication system which is simply contained in a local file. To ensure that your users' passwords are being protected, it is <strong>strongly encouraged</strong> that any Shiny application requiring authentication use <a href="#ssl">SSL</a> to encrypt the usernames and passwords being transmitted.</p>
 <p>The current user's username and groups (where applicable) will be available in Shiny (version 0.8 and later) in the <code>session</code> parameter of the <code>shinyServer</code> function. For instance:</p>
 <pre><code>shinyServer(function(input, output, session) {
   output$username &lt;- reactive({
@@ -835,7 +847,7 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <h2 id="auth-duration" class="pro"><a href="#auth-duration"><span class="header-section-number">4.2</span> Auth Duration</a></h2>
 <p>Regardless of which authentication mechanism is used, the duration of authentication can be configured using the <code>auth_duration</code> setting. This setting controls the amount of time (in minutes) for which a user should remain logged in after the finish using their last application. This setting should be set to 10 minutes or greater.</p>
 <h2 id="flat-file-authentication" class="pro"><a href="#flat-file-authentication"><span class="header-section-number">4.3</span> Flat-File Authentication</a></h2>
-<p>Shiny Server offers flat-file authentication as a simple and easy-to-configure authentication mechanism. This method is self-contained and not integrated into either the system's user/password database, nor any Enterprise authentication mechanism. Thus, usernames and passwords must be created explicitly for each user that should exist in Shiny Server.</p>
+<p>Shiny Server Pro offers flat-file authentication as a simple and easy-to-configure authentication mechanism. This method is self-contained and not integrated into either the system's user/password database, nor any Enterprise authentication mechanism. Thus, usernames and passwords must be created explicitly for each user that should exist in Shiny Server.</p>
 <p>The storage of usernames and passwords is handled by a single file which can be specified using the <code>auth_passwd_file</code> setting as follows:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">run_as</span> shiny<span class="kw">;</span>
 
@@ -851,7 +863,50 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/sspasswd /etc/shiny-server/passwd tina</code></pre>
 <p>To create a (or overwrite an existing) password file, use the <code>-c</code> switch. The default behavior will be to add the username specified (<code>tina</code>, in the example above) to the file after prompting the user for a password (or reading it from <code>stdin</code>). To instead delete a user from the file, use the <code>-D</code> switch. User/password combinations can be verified using the <code>-v</code> switch. Finally, the <code>-C</code> switch will set the maximum amount of time (in seconds) for encryption. The larger this value is, the more secure the password hash will be.</p>
 <p>Currently, the '<code>:</code>', '<code>$</code>' and newline ('<code>\r</code>' or '<code>\n</code>') characters are prohibited in usernames.</p>
-<h2 id="ldap-and-active-directory" class="pro"><a href="#ldap-and-active-directory"><span class="header-section-number">4.4</span> LDAP and Active Directory</a></h2>
+<h2 id="google-authentication" class="pro"><a href="#google-authentication"><span class="header-section-number">4.4</span> Google Authentication</a></h2>
+<p>Shiny Server Pro supports the ability to rely on Google for the management of your users using the <code>auth_google</code> setting. In this environment, users attempting to login to your Shiny Server would be presented with a button asking them to login via Google. If they grant access to your application, they would be returned to your Shiny Server presenting the email address associated with their Google account. At that point, this email address can be used to grant or restrict access to individual <code>application</code>s and <code>location</code>s. This section will show you how to setup this type of Google Authentication for Shiny Server.</p>
+<h3 id="create-a-google-application" class="pro"><a href="#create-a-google-application"><span class="header-section-number">4.4.1</span> Create a Google Application</a></h3>
+<p>Before you can use Google Authentication on your server, you must register an &quot;application&quot; with Google. This is the application that your users will be asked to &quot;connect&quot; to when logging in to your Shiny Server. To do this, you can visit Google's Developer's Console which, at the time of writing, is available at <a href="https://console.developers.google.com/">https://console.developers.google.com/</a>.</p>
+<p>You'll initially create a project then give it a name and ID. Under &quot;APIs &amp; auth&quot; you'll find the &quot;Credentials&quot; section. There you have the ability to &quot;Create new Client ID&quot;; do that now. The type of application is a &quot;Web application&quot;. For the &quot;Authorized JavaScript Origins&quot;, you'll need to explicitly list any name a user might use to access your server including the domain name, port, and protocol. For instance, if you offer both HTTPS and HTTP access to your Shiny Server, you'll need to include both; if you have multiple domain names pointing to your server, you should include all of those domains; if you have servers running on multiple ports, you'll need to include them all explicitly here.</p>
+<p>In the &quot;Authorized redirect URI&quot; field, you'll again need to provide all possible ways a user may be accessing your server, but append the string <code>__login__/callback</code> (note the <strong>double</strong> underscores on either side of &quot;login&quot;) to each URI.</p>
+<p>For instance, if you have a server available at both <code>example.org</code> and <code>example.net</code>, supporting both HTTP and HTTPS, offering web services with our without a <code>www.</code> subdomain prefix, and using the standard ports (80 and 443, respectively), you would use the following origins:</p>
+<ul>
+<li><code>http://example.org</code></li>
+<li><code>http://www.example.org</code></li>
+<li><code>https://example.org</code></li>
+<li><code>https://www.example.org</code></li>
+<li><code>http://example.net</code></li>
+<li><code>http://www.example.net</code></li>
+<li><code>https://example.net</code></li>
+<li><code>https://www.example.net</code></li>
+</ul>
+<p>And the Authorized redirect URIs would include:</p>
+<ul>
+<li><code>http://example.org/__login__/callback</code></li>
+<li><code>http://www.example.org/__login__/callback</code></li>
+<li><code>https://example.org/__login__/callback</code></li>
+<li><code>https://www.example.org/__login__/callback</code></li>
+<li><code>http://example.net/__login__/callback</code></li>
+<li><code>http://www.example.net/__login__/callback</code></li>
+<li><code>https://example.net/__login__/callback</code></li>
+<li><code>https://www.example.net/__login__/callback</code></li>
+</ul>
+<p>You can then &quot;Create&quot; your Client ID.</p>
+<p>You should see your new &quot;Client ID for web application&quot; listed once you have created your new Client ID. You can inspect to confirm that the Redirect URIs and Javascript Origins look correct (if not, you can click &quot;Edit settings&quot;). If they look correct, you should note the &quot;Client ID&quot; and &quot;Client secret&quot;; you'll enter these settings into your Shiny Server configuration file later.</p>
+<p>At this point, you've created a Google application you'll be able to use to allow your users to login via Google on your Shiny Server. You can always add more details to your Google application here including an icon and more textual details.</p>
+<h3 id="configure-shiny-server" class="pro"><a href="#configure-shiny-server"><span class="header-section-number">4.4.2</span> Configure Shiny Server</a></h3>
+<p>Now that you have a Google application created, you can customize your Shiny Server configuration to instruct it to a.) Use Google for its authentication, and b.) provide your Google application's settings.</p>
+<p>You can edit your configuration file stored at <code>/etc/shiny-server/shiny-server.conf</code> to replace any existing authentication system (if you have one) with the <code>auth_google</code> directive. This setting first takes the Client ID, then the Client Secret you created in Google earlier. At this point, you can restart your Shiny Server (see <a href="#stopping-and-starting">Stopping and Starting</a> if you're unsure how). When you try to access a protected resource such as the Admin page or a location secured with a <code>required_user</code> setting, you should be prompted with a login screen asking you to login with Google. Click that link, then decide whether or not you'd like to grant access to your new application. if you do grant access and your email is included in the <code>required_user</code> field associated with the resource you're trying to access, you'll be let in. Otherwise, you'll still be logged in as that user, but won't be granted access to that resource.</p>
+<h3 id="email-address-restrictions" class="pro"><a href="#email-address-restrictions"><span class="header-section-number">4.4.3</span> Email Address Restrictions</a></h3>
+<p>By default, the Google auth strategy will allow any user with a Google account to login to your system. Of course, the <code>required_user</code> settings would continue to secure your resources and only provide access to resources the user is authorized to see.</p>
+<p>Though you can always use <code>required_user</code> to restrict access to a resource, some organizations wish to only allow particular users to login at all. For instance, if you were not concerned about which individual users could access which applications, but wanted to ensure that only users within your organization can access <em>any</em> application, you may want a more broad restriction on the users you authorize.</p>
+<p>For such needs, we provide the ability to globally filter which email addresses will be authorized into your Shiny Server at all -- regardless of what the individual application's <code>required_user</code> settings are. To use this, you can add filters onto the <code>auth_google</code> setting in your configuration file. In the simplest form, you could add one filter to require that the email address the user is using with Google be of a particular form, such as <code>&quot;*@myorganization.org&quot;</code>. This would allow any user who logged into Google with the email address that ended in <code>@myorganization.org</code> to log on to the server. Once logged on, the <code>required_user</code> filters would be applied as usual to control access to individual applications.</p>
+<p>Additionally, you can provide as many filters as you'd like on the <code>auth_google</code> directive and indicate whether email address matching that filter should be admitted (<code>+</code>) or rejected (<code>-</code>). They will be applied one-at-a-time until the given email address matches one of your filters. The filters can be prefixed with a <code>+</code> or <code>-</code> sign to indicate whether the filter is &quot;positive&quot; (in which case any user matching the filter should be admitted) or &quot;negative&quot; (in which case any user matching the filter should be rejected). If no sign is provided, it's assumed that the filter is &quot;positive&quot;. A few examples may be helpful:</p>
+<p>The filter <code>&quot;*&quot;</code> will be interpreted as a positive filter, meaning any email address matching that filter (every possible email address) will be admitted. This is what is applied if you don't provide any filter yourself in the configuration file.</p>
+<p>The filter <code>&quot;*@myorganization.org&quot;</code> will admit any user whose email address ends in <code>@myorganization.org</code> and reject any email address that does not.</p>
+<p>We can examine the filters <code>&quot;-jim@example.org&quot; &quot;*@example.org&quot;</code>. If the user <code>kelly@example.org</code> were attempting to the system, the first filter would be checked and it would be found that <code>kelly@example.org</code> does not match the filter <code>&quot;jim@example.org&quot;</code>, so it would continue on to the next filter. There it would be found that <code>kelly@example.org</code> <em>does</em> match the filter <code>*@example.org</code>, and because this filter is a positive filter (you could have prefixed it with a <code>+</code>, if you wished), this user would be granted access to the system. However, a user <code>john@gmail.com</code> would not match the first filter or the second filter, so he would be denied access to the system, as he did not match any positive filter. Finally, the user <code>jim@example.org</code> would match the first filter, and because that filter is a negative filter, this user would be denied access to the system.</p>
+<p>Formally, we support the <a href="http://en.wikipedia.org/wiki/Glob_(programming)">glob</a> pattern matching syntax. Specifically, you can use the <code>*</code> character to match any string of length 0 or more, the <code>?</code> character will match any <em>one</em> character, and square brackets can be used to match against a set of characters.</p>
+<h2 id="ldap-and-active-directory" class="pro"><a href="#ldap-and-active-directory"><span class="header-section-number">4.5</span> LDAP and Active Directory</a></h2>
 <p>Lightweight Directory Access Protocol (LDAP) is a popular protocol for storing and validating user information in an enterprise. LDAP can store information about users and their group memberships which Shiny Server Pro is able to query using user's username and password. Fundamentally, the LDAP protocol simply describes a framework for storing hierarchical data and can be configured in a multitude of ways. Active Directory is one popular directory service which implements LDAP and encourages a certain model for storing data, while other vendors of LDAP systems often have their own distinct default configurations. A holistic overview of LDAP is outside of the scope of this document, so if you lack a solid background in LDAP you might benefit from consulting with an LDAP administrator in your organization to configure these settings.</p>
 <p>An LDAP configuration in Shiny Server Pro might look like this:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">auth_ldap</span> ldap://ldap.example.org/dc=example,dc=org {
@@ -877,7 +932,7 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <p>It begins with the protocol to be used when contacting the LDAP server -- either <code>ldap://</code> (for unencrypted LDAP) or <code>ldaps://</code> (LDAP over an encrypted SSL tunnel). We do not currently support StartTLS. If your LDAP server supports <code>ldaps://</code>, this option is more secure and ensures the username and passwords aren't being transmitted between Shiny Server and your LDAP server in plain text. Next, the hostname or IP of the LDAP server should follow the protocol. Bear in mind that the given hostname or IP <em>must</em> match the hostname associated with the SSL certificate if using <code>ldaps://</code>. If using a non-standard port (anything other than 389 for <code>ldap://</code> or 636 for <code>ldaps://</code>), you can follow the hostname with a colon and the port number which should be used. Following the hostname/port should be a forward slash then the root DIT of the directory to use.</p>
 <p>There are a variety of settings which will be used to guide Shiny Server Pro's interaction with your LDAP server. These will all be defined inside of an <code>auth_ldap</code> or <code>auth_active_dir</code> setting and are described below. Be aware that the primary difference between <code>auth_ldap</code> and <code>auth_active_dir</code> is the default values assigned to these settings. If any of these settings are not specified, the default values will be used.</p>
 <p>Some of the settings may include dynamic values which will be listed under the &quot;Variables Available&quot; section in each. These variables are enclosed in curly braces (&quot;{&quot; and &quot;}&quot;) and will be replaced with their value before being used.</p>
-<h3 id="user_bind_template"><a href="#user_bind_template"><span class="header-section-number">4.4.1</span> <code class="pro">user_bind_template</code></a></h3>
+<h3 id="user_bind_template"><a href="#user_bind_template"><span class="header-section-number">4.5.1</span> <code class="pro">user_bind_template</code></a></h3>
 <p>Shiny Server Pro will transform the username entered at the login screen before attempting to &quot;bind&quot; (authenticate) to the LDAP server using this template. In general (notable exception being Active Directory), this pattern should map the given username to the user's DN in the LDAP database. In systems where that may not be possible (such as Active Directory), you can use the [<code>user_filter</code>] setting to lookup the user's DN given their username. In either case, this setting should manipulate the given username into the username used to perform the LDAP <code>bind</code> operation.</p>
 <p><strong>Variables Available</strong></p>
 <ul>
@@ -889,14 +944,14 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <li>For <code>auth_ldap</code> -- <code>uid={username},ou=People,{root}</code></li>
 <li>For <code>auth_active_dir</code> -- <code>{username}@example.org</code> (where &quot;example.org&quot; is the domain name you provided as the second argument to <code>auth_active_dir</code>).</li>
 </ul>
-<h3 id="group_search_base"><a href="#group_search_base"><span class="header-section-number">4.4.2</span> <code class="pro">group_search_base</code></a></h3>
+<h3 id="group_search_base"><a href="#group_search_base"><span class="header-section-number">4.5.2</span> <code class="pro">group_search_base</code></a></h3>
 <p>Defines the subtree in which groups are stored. This will be used as the root of all LDAP queries which attempt to find the groups of which a user is a member. The given value will be followed by a comma and the root DIT given in the <code>auth_ldap</code> or <code>auth_active_dir</code> parent setting. If configured to use an empty string as the base, then the unmodified root DIT will be used as the group search base.</p>
 <p><strong>Default Value</strong></p>
 <ul>
 <li>For <code>auth_ldap</code> -- <code>ou=Groups</code></li>
 <li>For <code>auth_active_dir</code> -- <code>cn=Users</code></li>
 </ul>
-<h3 id="group_filter"><a href="#group_filter"><span class="header-section-number">4.4.3</span> <code class="pro">group_filter</code></a></h3>
+<h3 id="group_filter"><a href="#group_filter"><span class="header-section-number">4.5.3</span> <code class="pro">group_filter</code></a></h3>
 <p>The LDAP query to use in determining a user's group membership. The query should return all groups of which the given user is a member</p>
 <p>The default for <code>auth_ldap</code> checks the <code>uniqueMember</code> field -- a setting from the <code>groupOfUniqueMembers</code> LDAP class. If you're using the <code>posixGroup</code> LDAP class to store your group memberships, you should likely set this value to <code>memberUid={username}</code>.</p>
 <p><strong>Variables Available</strong></p>
@@ -910,21 +965,21 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <li>For <code>auth_ldap</code> -- <code>uniqueMember={username}</code></li>
 <li>For <code>auth_active_dir</code> -- <code>member:1.2.840.113556.1.4.1941:={userDN}</code></li>
 </ul>
-<h3 id="group_name_attribute"><a href="#group_name_attribute"><span class="header-section-number">4.4.4</span> <code class="pro">group_name_attribute</code></a></h3>
+<h3 id="group_name_attribute"><a href="#group_name_attribute"><span class="header-section-number">4.5.4</span> <code class="pro">group_name_attribute</code></a></h3>
 <p>The attribute of the LDAP group object in which the group name is stored. This field will be compared to the entries in the <code>required_group</code> setting to determine whether or not a user should be granted access to a Shiny application.</p>
 <p><strong>Default Value</strong></p>
 <p><code>cn</code></p>
-<h3 id="trusted_ca"><a href="#trusted_ca"><span class="header-section-number">4.4.5</span> <code class="pro">trusted_ca</code></a></h3>
+<h3 id="trusted_ca"><a href="#trusted_ca"><span class="header-section-number">4.5.5</span> <code class="pro">trusted_ca</code></a></h3>
 <p>By default, Shiny Server Pro trusts many standard SSL Certificate Authorities (CAs) (such as Verisign). If your organization uses a non-trusted Certificate Authority to sign its SSL certificates, you will need to explicitly tell Shiny Server Pro to trust this CA's certificate. You can do this by placing the CA's certificate (in PEM format) in a file on your machine and pointing this setting to that file.</p>
 <p>If this value is provided, the standard list of trusted CAs will be overridden with the provided certificate.</p>
 <p><strong>Default Value</strong></p>
 <p>None.</p>
-<h3 id="check_ssl_ca"><a href="#check_ssl_ca"><span class="header-section-number">4.4.6</span> <code class="pro">check_ssl_ca</code></a></h3>
+<h3 id="check_ssl_ca"><a href="#check_ssl_ca"><span class="header-section-number">4.5.6</span> <code class="pro">check_ssl_ca</code></a></h3>
 <p>When using LDAP over SSL (<code>ldaps://</code>), Shiny Server Pro will check that the SSL certificate was signed by a recognized Certificate Authority (CA) (though this can be modified using the <code>trusted_ca</code> setting). <code>check_ssl_ca</code> can be used to disable the checking of CAs entirely. By default, this option will be 'true' to enable SSL CA validation.</p>
 <p>Disabling these checks is necessary if your LDAP server uses a self-signed certificate, for instance. Otherwise, this setting should typically be left enabled as disabling it will largely defeat the security gained by using SSL.</p>
 <p><strong>Default Value</strong></p>
 <p><code>true</code></p>
-<h3 id="user_filter"><a href="#user_filter"><span class="header-section-number">4.4.7</span> <code class="pro">user_filter</code></a></h3>
+<h3 id="user_filter"><a href="#user_filter"><span class="header-section-number">4.5.7</span> <code class="pro">user_filter</code></a></h3>
 <p>Some systems (notably many Active Directory implementations) do not use the username as a part of the user's DN. In such systems, It may be necessary to perform an extra LDAP query after binding to determine the user's DN based on their username before group membership can be determined. This setting stores the LDAP filter used to find the user object which matches the entered username.</p>
 <p>Using the default provided for <code>auth_active_dir</code> (<code>userPrincipalName={userBind}</code>), as an example. Shiny Server Pro will attempt to bind to the LDAP server using the given username (after being manipulated as defined in <code>user_bind_template</code>) and password. If successful, it will then search for an object whose attribute <code>userPrincipalName</code> matches the username manipulated by <code>user_bind_template</code>. If found, the returned object's DN will be made available to the <code>group_filter</code> as the <code>{userDN}</code> variable.</p>
 <p><strong>Default Value</strong></p>
@@ -932,29 +987,40 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <li>For <code>auth_ldap</code> -- N/A</li>
 <li>For <code>auth_active_dir</code> -- <code>userPrincipalName={userBind}</code></li>
 </ul>
-<h3 id="user_search_base"><a href="#user_search_base"><span class="header-section-number">4.4.8</span> <code class="pro">user_search_base</code></a></h3>
+<h3 id="user_search_base"><a href="#user_search_base"><span class="header-section-number">4.5.8</span> <code class="pro">user_search_base</code></a></h3>
 <p>Defines the subtree in which users are stored. This will only be used if <code>user_filter</code> is not empty, as that is the only time that Shiny Server Pro would need to search for a user. If provided, this will be used as the root of the LDAP queries used to lookup a user by his or her username. The given value will be followed by a comma and the root DIT given in the <code>auth_ldap</code> or <code>auth_active_dir</code> parent setting. If configured to use an empty string as the base, then the unmodified root DIT will be used as the user search base.</p>
 <p><strong>Default Value</strong></p>
 <ul>
 <li>For <code>auth_ldap</code> -- <code>ou=People</code></li>
 <li>For <code>auth_active_dir</code> -- <code>cn=Users</code></li>
 </ul>
-<h2 id="required-users-groups" class="pro"><a href="#required-users-groups"><span class="header-section-number">4.5</span> Required Users &amp; Groups</a></h2>
-<h3 id="user-authentication" class="pro"><a href="#user-authentication"><span class="header-section-number">4.5.1</span> User Authentication</a></h3>
+<h2 id="required-users-groups" class="pro"><a href="#required-users-groups"><span class="header-section-number">4.6</span> Required Users &amp; Groups</a></h2>
+<h3 id="user-authentication" class="pro"><a href="#user-authentication"><span class="header-section-number">4.6.1</span> User Authentication</a></h3>
 <p>The <code>required_user</code> setting controls which users should be able to access a particular <code>server</code>, <code>location</code>, or <code>admin</code>, as in:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> /app1 {
   <span class="kw">required_user</span> kim tom<span class="kw">;</span>
 }</code></pre>
 <p>This directive would enable authentication on the specified <code>location</code>, which would present any new, un-authenticated visitor to the application with a login page. If the visitor entered valid credentials against your configured authentication mechanism, then he or she would be checked against the list of allowed users for this application. If found (i.e. if the user name was either <code>kim</code> or <code>tom</code>), the visitor would be granted access to the application. Otherwise, he or she would be unable to access the application.</p>
 <p>It is encouraged that any <code>server</code> accepting user credentials be secured via <a href="#ssl">SSL</a>.</p>
-<h3 id="group-authentication" class="pro"><a href="#group-authentication"><span class="header-section-number">4.5.2</span> Group Authentication</a></h3>
+<h3 id="group-authentication" class="pro"><a href="#group-authentication"><span class="header-section-number">4.6.2</span> Group Authentication</a></h3>
 <p>The <code>required_group</code> setting allows the administrator to control access based on the groups of which users are a member. In this way, entire sets of users can be granted access to a particular location in one line in the configuration file.</p>
 <p>Flat-file authentication does not support the notion of user groups, but this feature can be used with LDAP or Active Directory by adding a restriction like the following:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> /app1 {
   <span class="kw">required_group</span> shinyUsers admins<span class="kw">;</span>
 }</code></pre>
 <p>This configuration would grant access to any user who is a member of either the <code>shinyUsers</code> or <code>admins</code> group.</p>
-<h2 id="proxied-headers" class="pro"><a href="#proxied-headers"><span class="header-section-number">4.6</span> Proxied Headers</a></h2>
+<h2 id="ssl" class="pro"><a href="#ssl"><span class="header-section-number">4.7</span> SSL</a></h2>
+<p>In Shiny Server Professional, SSL encryption is available for any configured <code>server</code> and in the <code>admin</code> interface. SSL is a means of encrypting traffic between web clients and servers and should be used for any application that will accept or transmit sensitive information such as passwords. Untrusted SSL certificates can be generated locally by anyone for free; signed SSL certificates can be obtained from authorized certificate authorities fairly inexpensively. Untrusted SSL certificates will still encrypt the traffic between a client and server, but (in most browsers), the client will need to proceed through a warning about the untrusted nature of the SSL certificate in use. SSL can be enabled on a <code>server</code> by configuring the two required parameters: the path to the SSL key, and the path to the SSL certificate.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">server</span> {
+  <span class="co"># Instruct this server to listen on port 443, the default port for HTTPS </span>
+  <span class="co"># traffic</span>
+  <span class="kw">listen</span> 443<span class="kw">;</span>
+  <span class="kw">ssl</span> /etc/shiny-server/ssl-key.pem /etc/shiny-server/ssl.cert<span class="kw">;</span>
+  
+  <span class="kw">...</span>
+}</code></pre>
+<p>If a valid SSL key and certificate were provided, a user would now need to preface their request with &quot;https://&quot; to be able to visit any application hosted within this <code>server</code> or on the <code>admin</code>. It is highly recommended that any Shiny Server Pro configuration which expects to accept its users' LDAP or Active Directory credentials use SSL to secure the usernames and passwords on their applications and admin interface.</p>
+<h2 id="proxied-headers" class="pro"><a href="#proxied-headers"><span class="header-section-number">4.8</span> Proxied Headers</a></h2>
 <p>Typically, HTTP headers sent to Shiny Server will not be forwarded to the underlying Shiny application. However, Shiny Server Professional is able to forward specified headers into the Shiny application using the <code>whitelist_headers</code> configuration directive, which can be set globally or for a particular <code>server</code> or <code>location</code>.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">server</span> {
   <span class="kw">listen</span> 3838<span class="kw">;</span>
@@ -972,17 +1038,6 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 })</code></pre>
 <p>Organizations which employ a centralized authentication system not supported by Shiny Server may use this feature to leverage a proxied authentication system. In such a model, traffic destined for Shiny Server Professional would first be sent through an authenticating proxy which would take care of ensuring that the user is authenticated and the appropriate headers are set indicating the user, groups, or permissions. The application deployed on Shiny Server Professional would then use these headers to determine whether the user should be allowed access to the application, or a subset of the features of the application.</p>
 <p>Be aware that, in such a model, the entirity of the <code>ui.R</code> file will be run and passed to the client before the server-side has a chance to make any decision about what privileges the current user should have given their HTTP headers (if any). So the proxy must be responsible for authenticating or rejecting visitors prior to forwarding any traffic to Shiny Server Professional if any sensitive information would be disclosed by a user merely opening the UI. Additionally, precautions should be taken to ensure that the Shiny Server machine is not accessible directly by users, but is instead <em>only</em> accessible through the authenticating proxy. Otherwise, an attacker would merely need to provide fraudulent HTTP headers when accessing Shiny Server in order to imitate another user or claim particular privileges.</p>
-<h2 id="ssl" class="pro"><a href="#ssl"><span class="header-section-number">4.7</span> SSL</a></h2>
-<p>In Shiny Server Professional, SSL encryption is available for any configured <code>server</code> and in the <code>admin</code> interface. SSL is a means of encrypting traffic between web clients and servers and should be used for any application that will accept or transmit sensitive information such as passwords. Untrusted SSL certificates can be generated locally by anyone for free; signed SSL certificates can be obtained from authorized certificate authorities fairly inexpensively. Untrusted SSL certificates will still encrypt the traffic between a client and server, but (in most browsers), the client will need to proceed through a warning about the untrusted nature of the SSL certificate in use. SSL can be enabled on a <code>server</code> by configuring the two required parameters: the path to the SSL key, and the path to the SSL certificate.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">server</span> {
-  <span class="co"># Instruct this server to listen on port 443, the default port for HTTPS </span>
-  <span class="co"># traffic</span>
-  <span class="kw">listen</span> 443<span class="kw">;</span>
-  <span class="kw">ssl</span> /etc/shiny-server/ssl-key.pem /etc/shiny-server/ssl.cert<span class="kw">;</span>
-  
-  <span class="kw">...</span>
-}</code></pre>
-<p>If a valid SSL key and certificate were provided, a user would now need to preface their request with &quot;https://&quot; to be able to visit any application hosted within this <code>server</code> or on the <code>admin</code>. It is highly recommended that any Shiny Server Pro configuration which expects to accept its users' LDAP or Active Directory credentials use SSL to secure the usernames and passwords on their applications and admin interface.</p>
 <h1 id="admin" class="pro"><a href="#admin"><span class="header-section-number">5</span> Admin</a></h1>
 <h2 id="configuration" class="pro"><a href="#configuration"><span class="header-section-number">5.1</span> Configuration</a></h2>
 <p>The Admin interface provided as a part of Shiny Server Professional is disabled by default. To enable it, use the <code>admin</code> setting and specify the port number on which the admin interface should run.</p>
@@ -2277,6 +2332,60 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 
           <p>
             <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#application">application</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="auth_google"></a>auth_google</h3>
+          <p class="desc"></p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>id</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td>The Client ID available in your Google Apps Console.</td>
+                  <td></td>
+                </tr>
+              
+                <tr>
+                  <td>secret</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td>The Client Secret available in your Google Apps Console.</td>
+                  <td></td>
+                </tr>
+              
+                <tr>
+                  <td>filters</td>
+                  <td>String</td>
+                  <td>multiple</td>
+                  <td>Used to limit the Google users who will be granted access to the system by filtering based on their email address. Filters may begin with a '+' or a '-' to indicate whether this is a 'positive' match (in which case these users should be granted access), or a 'negative' match (in which case any matching email should be rejected). These filters will iteratively be applied to the incoming email address until a match is found, at which point the user will either be admitted or rejected based on whether the filter was a 'positive' or 'negative' filter. A filter not beginning with a '+' or '-' is assumed to be a 'positive' filter. Bash's 'glob'-style matching is available.</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> Top-level<br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
