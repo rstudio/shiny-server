@@ -4,7 +4,6 @@
     if (typeof(Shiny) != "undefined") {
       (function() {
         var supports_html5_storage = exports.supports_html5_storage = function() {
-          return true;
           try {
             return 'localStorage' in window && window['localStorage'] !== null;
           } catch (e) {
@@ -34,10 +33,10 @@
         }
 
         var networkSelector = $('<div style="top: 50%; left: 50%; position: absolute;">' + 
-          '<div style="position: relative; width: 300px; margin-left: -150px; padding: .5em 1em 0 1em; height: 380px; margin-top: -190px; background-color: #FAFAFA; border: 1px solid #CCC; font.size: 1.2em;">'+
+          '<div style="position: relative; width: 300px; margin-left: -150px; padding: .5em 1em 0 1em; height: 400px; margin-top: -190px; background-color: #FAFAFA; border: 1px solid #CCC; font.size: 1.2em;">'+
           '<h3>Select Network Methods</h3>' +
           '<div id="networkOptions"></div>' + 
-          '<div id="network-prot-warning" style="color: #44B">'+(supports_html5_storage()?'':"These network settings can only be configured in browsers that support HTML5 Storage. Please update your browser.")+'</div>' +
+          '<div id="network-prot-warning" style="color: #44B">'+(supports_html5_storage()?'':"These network settings can only be configured in browsers that support HTML5 Storage. Please update your browser or unblock storage for this domain.")+'</div>' +
           '<div style="float: right;">' +
             '<input type="button" value="Reset" onclick="ShinyServer.enableAll()"></input>' +
             '<input type="button" value="OK" onclick="ShinyServer.toggleNetworkSelector();" style="margin-left: 1em;" id="netOptOK"></input>' +
