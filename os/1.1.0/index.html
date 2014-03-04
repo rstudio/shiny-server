@@ -176,7 +176,7 @@ code > span.er { font-weight: bold; }
 </head>
 <body>
 <header>
-<h1 class="title">Shiny Server Professional v1.1.0 Administrator's Guide</h1>
+<h1 class="title">Shiny Server Open Source v1.1.0 Administrator's Guide</h1>
 </header>
 <nav id="TOC">
 <ul>
@@ -216,92 +216,40 @@ code > span.er { font-weight: bold; }
 <li><a href="#server-log"><span class="toc-section-number">2.9</span> Server Log</a><ul>
 <li><a href="#access-logs"><span class="toc-section-number">2.9.1</span> Access Logs</a></li>
 </ul></li>
-<li><a href="#health-check-endpoint"><span class="toc-section-number">2.10</span> Health Check Endpoint</a></li>
-<li><a href="#environment-variable-settings"><span class="toc-section-number">2.11</span> Environment Variable Settings</a><ul>
-<li><a href="#shiny_log_level"><span class="toc-section-number">2.11.1</span> <code>SHINY_LOG_LEVEL</code></a></li>
-<li><a href="#r"><span class="toc-section-number">2.11.2</span> <code>R</code></a></li>
-<li><a href="#shiny_data_dir"><span class="toc-section-number">2.11.3</span> <code class="pro">SHINY_DATA_DIR</code></a></li>
+<li><a href="#environment-variable-settings"><span class="toc-section-number">2.10</span> Environment Variable Settings</a><ul>
+<li><a href="#shiny_log_level"><span class="toc-section-number">2.10.1</span> <code>SHINY_LOG_LEVEL</code></a></li>
+<li><a href="#r"><span class="toc-section-number">2.10.2</span> <code>R</code></a></li>
 </ul></li>
 </ul></li>
 <li><a href="#deploying-applications"><span class="toc-section-number">3</span> Deploying Applications</a><ul>
 <li><a href="#schedulers-application-restarts"><span class="toc-section-number">3.1</span> Schedulers &amp; Application Restarts</a><ul>
 <li><a href="#restarting-an-application"><span class="toc-section-number">3.1.1</span> Restarting an Application</a></li>
 <li><a href="#simple-scheduler"><span class="toc-section-number">3.1.2</span> Simple Scheduler</a></li>
-<li><a href="#utilization-scheduler"><span class="toc-section-number">3.1.3</span> Utilization Scheduler</a></li>
 </ul></li>
 <li><a href="#application-timeouts"><span class="toc-section-number">3.2</span> Application Timeouts</a></li>
-<li><a href="#session-timeouts"><span class="toc-section-number">3.3</span> Session Timeouts</a></li>
-<li><a href="#logging-and-analytics"><span class="toc-section-number">3.4</span> Logging and Analytics</a><ul>
-<li><a href="#application-error-logs"><span class="toc-section-number">3.4.1</span> Application Error Logs</a></li>
-<li><a href="#google-analytics"><span class="toc-section-number">3.4.2</span> Google Analytics</a></li>
+<li><a href="#logging-and-analytics"><span class="toc-section-number">3.3</span> Logging and Analytics</a><ul>
+<li><a href="#application-error-logs"><span class="toc-section-number">3.3.1</span> Application Error Logs</a></li>
+<li><a href="#google-analytics"><span class="toc-section-number">3.3.2</span> Google Analytics</a></li>
 </ul></li>
-<li><a href="#memory-limits"><span class="toc-section-number">3.5</span> Memory Limits</a></li>
-<li><a href="#reactivity-log"><span class="toc-section-number">3.6</span> Reactivity Log</a></li>
-<li><a href="#specifying-protocols"><span class="toc-section-number">3.7</span> Specifying Protocols</a></li>
+<li><a href="#reactivity-log"><span class="toc-section-number">3.4</span> Reactivity Log</a></li>
+<li><a href="#specifying-protocols"><span class="toc-section-number">3.5</span> Specifying Protocols</a></li>
 </ul></li>
-<li><a href="#authentication-security"><span class="toc-section-number">4</span> Authentication &amp; Security</a><ul>
-<li><a href="#authentication-overview"><span class="toc-section-number">4.1</span> Authentication Overview</a></li>
-<li><a href="#auth-duration"><span class="toc-section-number">4.2</span> Auth Duration</a></li>
-<li><a href="#flat-file-authentication"><span class="toc-section-number">4.3</span> Flat-File Authentication</a><ul>
-<li><a href="#sspasswd"><span class="toc-section-number">4.3.1</span> sspasswd</a></li>
+<li><a href="#appendix"><span class="toc-section-number">4</span> Appendix</a><ul>
+<li><a href="#quick-start"><span class="toc-section-number">4.1</span> Quick Start</a><ul>
+<li><a href="#host-a-directory-of-applications-1"><span class="toc-section-number">4.1.1</span> Host a directory of applications</a></li>
+<li><a href="#let-users-manage-their-own-applications"><span class="toc-section-number">4.1.2</span> Let users manage their own applications</a></li>
+<li><a href="#run-shiny-server-on-multiple-ports"><span class="toc-section-number">4.1.3</span> Run Shiny Server on multiple ports</a></li>
 </ul></li>
-<li><a href="#google-authentication"><span class="toc-section-number">4.4</span> Google Authentication</a><ul>
-<li><a href="#create-a-google-application"><span class="toc-section-number">4.4.1</span> Create a Google Application</a></li>
-<li><a href="#configure-shiny-server"><span class="toc-section-number">4.4.2</span> Configure Shiny Server</a></li>
-<li><a href="#email-address-restrictions"><span class="toc-section-number">4.4.3</span> Email Address Restrictions</a></li>
+<li><a href="#configuration-settings"><span class="toc-section-number">4.2</span> Configuration Settings</a></li>
+<li><a href="#migrating-updating"><span class="toc-section-number">4.3</span> Migrating &amp; Updating</a><ul>
+<li><a href="#upgrading-from-shiny-server-0.3.x"><span class="toc-section-number">4.3.1</span> Upgrading from Shiny Server 0.3.x</a></li>
+<li><a href="#upgrading-from-shiny-server-0.4.x"><span class="toc-section-number">4.3.2</span> Upgrading from Shiny Server 0.4.x</a></li>
 </ul></li>
-<li><a href="#ldap-and-active-directory"><span class="toc-section-number">4.5</span> LDAP and Active Directory</a><ul>
-<li><a href="#user_bind_template"><span class="toc-section-number">4.5.1</span> <code class="pro">user_bind_template</code></a></li>
-<li><a href="#group_search_base"><span class="toc-section-number">4.5.2</span> <code class="pro">group_search_base</code></a></li>
-<li><a href="#group_filter"><span class="toc-section-number">4.5.3</span> <code class="pro">group_filter</code></a></li>
-<li><a href="#group_name_attribute"><span class="toc-section-number">4.5.4</span> <code class="pro">group_name_attribute</code></a></li>
-<li><a href="#trusted_ca"><span class="toc-section-number">4.5.5</span> <code class="pro">trusted_ca</code></a></li>
-<li><a href="#check_ssl_ca"><span class="toc-section-number">4.5.6</span> <code class="pro">check_ssl_ca</code></a></li>
-<li><a href="#user_filter"><span class="toc-section-number">4.5.7</span> <code class="pro">user_filter</code></a></li>
-<li><a href="#user_search_base"><span class="toc-section-number">4.5.8</span> <code class="pro">user_search_base</code></a></li>
-</ul></li>
-<li><a href="#required-users-groups"><span class="toc-section-number">4.6</span> Required Users &amp; Groups</a><ul>
-<li><a href="#user-authentication"><span class="toc-section-number">4.6.1</span> User Authentication</a></li>
-<li><a href="#group-authentication"><span class="toc-section-number">4.6.2</span> Group Authentication</a></li>
-</ul></li>
-<li><a href="#ssl"><span class="toc-section-number">4.7</span> SSL</a></li>
-<li><a href="#proxied-headers"><span class="toc-section-number">4.8</span> Proxied Headers</a></li>
-</ul></li>
-<li><a href="#admin"><span class="toc-section-number">5</span> Admin</a><ul>
-<li><a href="#configuration"><span class="toc-section-number">5.1</span> Configuration</a></li>
-<li><a href="#organization"><span class="toc-section-number">5.2</span> Organization</a></li>
-<li><a href="#killing-processes-and-connections"><span class="toc-section-number">5.3</span> Killing Processes and Connections</a></li>
-</ul></li>
-<li><a href="#licensing-activation"><span class="toc-section-number">6</span> Licensing &amp; Activation</a><ul>
-<li><a href="#product-activation"><span class="toc-section-number">6.1</span> Product Activation</a><ul>
-<li><a href="#activation-basics"><span class="toc-section-number">6.1.1</span> Activation Basics</a></li>
-<li><a href="#virtual-machines"><span class="toc-section-number">6.1.2</span> Virtual Machines</a></li>
-</ul></li>
-<li><a href="#connectivity-requirements"><span class="toc-section-number">6.2</span> Connectivity Requirements</a><ul>
-<li><a href="#proxy-servers"><span class="toc-section-number">6.2.1</span> Proxy Servers</a></li>
-<li><a href="#offline-activation"><span class="toc-section-number">6.2.2</span> Offline Activation</a></li>
-</ul></li>
-</ul></li>
-<li><a href="#appendix"><span class="toc-section-number">7</span> Appendix</a><ul>
-<li><a href="#quick-start"><span class="toc-section-number">7.1</span> Quick Start</a><ul>
-<li><a href="#host-a-directory-of-applications-1"><span class="toc-section-number">7.1.1</span> Host a directory of applications</a></li>
-<li><a href="#let-users-manage-their-own-applications"><span class="toc-section-number">7.1.2</span> Let users manage their own applications</a></li>
-<li><a href="#run-shiny-server-on-multiple-ports"><span class="toc-section-number">7.1.3</span> Run Shiny Server on multiple ports</a></li>
-<li><a href="#require-user-authentication-on-an-application"><span class="toc-section-number">7.1.4</span> Require user authentication on an application</a></li>
-<li><a href="#host-a-secure-shiny-server"><span class="toc-section-number">7.1.5</span> Host a secure Shiny Server</a></li>
-<li><a href="#host-an-application-supported-by-multiple-r-processes"><span class="toc-section-number">7.1.6</span> Host an Application Supported by Multiple R Processes</a></li>
-</ul></li>
-<li><a href="#configuration-settings"><span class="toc-section-number">7.2</span> Configuration Settings</a></li>
-<li><a href="#migrating-updating"><span class="toc-section-number">7.3</span> Migrating &amp; Updating</a><ul>
-<li><a href="#upgrading-from-shiny-server-0.3.x"><span class="toc-section-number">7.3.1</span> Upgrading from Shiny Server 0.3.x</a></li>
-<li><a href="#upgrading-from-shiny-server-0.4.x"><span class="toc-section-number">7.3.2</span> Upgrading from Shiny Server 0.4.x</a></li>
-</ul></li>
-<li><a href="#frequently-asked-questions"><span class="toc-section-number">7.4</span> Frequently Asked Questions</a><ul>
-<li><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="toc-section-number">7.4.1</span> What are the hardware requirements for running Shiny Server?</a></li>
-<li><a href="#does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><span class="toc-section-number">7.4.2</span> Does Shiny Server work on Amazon Elastic Compute Cloud (EC2)?</a></li>
-<li><a href="#can-i-deploy-shiny-server-on-an-isolated-network"><span class="toc-section-number">7.4.3</span> Can I Deploy Shiny Server on an Isolated Network?</a></li>
-<li><a href="#how-do-i-translate-my-application-settings-to-nested-locations"><span class="toc-section-number">7.4.4</span> How Do I Translate My 'application' Settings to Nested 'location's?</a></li>
-<li><a href="#can-i-bulk-import-in-flat-file-authentication"><span class="toc-section-number">7.4.5</span> Can I Bulk-Import in Flat-File Authentication?</a></li>
+<li><a href="#frequently-asked-questions"><span class="toc-section-number">4.4</span> Frequently Asked Questions</a><ul>
+<li><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="toc-section-number">4.4.1</span> What are the hardware requirements for running Shiny Server?</a></li>
+<li><a href="#does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><span class="toc-section-number">4.4.2</span> Does Shiny Server work on Amazon Elastic Compute Cloud (EC2)?</a></li>
+<li><a href="#can-i-deploy-shiny-server-on-an-isolated-network"><span class="toc-section-number">4.4.3</span> Can I Deploy Shiny Server on an Isolated Network?</a></li>
+<li><a href="#how-do-i-translate-my-application-settings-to-nested-locations"><span class="toc-section-number">4.4.4</span> How Do I Translate My 'application' Settings to Nested 'location's?</a></li>
 </ul></li>
 </ul></li>
 </ul>
@@ -315,21 +263,6 @@ code > span.er { font-weight: bold; }
 <li>Enable system users to develop and manage their own Shiny applications.</li>
 <li>Automatically have R processes that crash or are terminated restart for the next user requesting the application.</li>
 </ul>
-<span class="pro-tag">PRO</span>
-<div class="pro-chunk">
-<p>This manual describes Shiny Server Professional which offers, among other things, the following additional features:</p>
-<ul>
-<li>Ensure your applications are protected and can only be accessed by specific, authenticated users.</li>
-<li>Scale a Shiny application to support many users by empowering a Shiny application to be backed by multiple R Shiny processes simultaneously.</li>
-<li>Gain insight into the performance and usage of your Shiny applications by monitoring them using a web dashboard.</li>
-<li>Securely encrypt data being sent to and from your applications using SSL.</li>
-<li>Understand and manage current and historical application resource utilization to better configure and optimize your applications.</li>
-<li>Fine-tune the resources devoted to each user of an application by configuring multi-process Shiny applications based on the number of concurrent sessions.</li>
-<li>Monitor the health of your Shiny Server using the health check endpoint.
-</div>
-
-</li>
-</ul>
 <h2 id="system-requirements"><a href="#system-requirements"><span class="header-section-number">1.2</span> System Requirements</a></h2>
 <p>Shiny Server is currently only supported on the Linux operating system. We officially support the following distributions:</p>
 <ul>
@@ -339,10 +272,6 @@ code > span.er { font-weight: bold; }
 <li>Ubuntu 13.04</li>
 </ul>
 <p>We currently only support the x86-64 architecture. As described in the <a href="#installation">Installation</a> section, you will install R and the Shiny package prior to installing Shiny Server. Root privileges will be required both in the installation process and also at runtime.</p>
-<span class="pro-tag">PRO</span>
-<div class="pro-chunk">
-<p>Shiny Server Professional allows you to host multiple R processes concurrently to balance the load of incoming requests across multiple Shiny instances. The <a href="#utilization-scheduler">Utilization Scheduler</a> section explains how to configure this in more detail. We recommend carefully evaluating the computational properties and memory profile of a Shiny application using the tools discussed in the <a href="#admin">Admin</a> section. This dashboard will provide much more insight into the profile of a Shiny application than was previously possible.</p>
-</div>
 <h2 id="installation"><a href="#installation"><span class="header-section-number">1.3</span> Installation</a></h2>
 <p>The Shiny Server installer does not come with R, nor does it provide the Shiny R package. Below are the steps for installing each of them separately.</p>
 <p>If you had previously installed Shiny Server 0.3.x or 0.4.x, please see the relevant section before proceeding to ensure a seamless upgrade:</p>
@@ -444,25 +373,9 @@ code > span.er { font-weight: bold; }
     <span class="co"># visits the corresponding URL?</span>
     <span class="kw">directory_index</span> on<span class="kw">;</span>
   }
-}
-
-
-<span class="co"># Setup a flat-file authentication system. {.pro}</span>
-<span class="kw">auth_passwd_file</span> /etc/shiny-server/passwd<span class="kw">;</span>
-
-<span class="co"># Define a default admin interface to be run on port 4151. {.pro}</span>
-<span class="kw">admin</span> 4151 {
-  <span class="co"># Only permit the user named `admin` to access the admin interface.</span>
-  <span class="kw">required_user</span> admin<span class="kw">;</span>
 }</code></pre>
 <p>Lines beginning with a <code>#</code> are treated as comments and not parsed when configuring the server. Shiny Server can be configured to host multiple <code>server</code>s on different ports or hostnames. Each <code>server</code> can have <code>location</code>s which are capable of serving Shiny Applications and potentially static assets, as well. Individual applications can also override the settings applied to their parent <code>location</code>. These concepts are explained in further detail in the <a href="#server-hierarchy">Server Hierarchy</a> section. The default configuration above will create a single server listening on port 3838, serving any application contained within <code>/srv/shiny-server/</code> at the root URL (<code>/</code>). Each possible setting in the configuration file is explained in the <a href="#appendix">Appendix</a>.</p>
 <p>Most users will want to customize the configuration to meet their needs. The server will attempt to load its configuration from a file stored at <code>/etc/shiny-server/shiny-server.conf</code>; it is in this location that you should place your custom Shiny Server configuration. If this file is not found, the default will be used.</p>
-<span class="pro-tag">PRO</span>
-<div class="pro-chunk">
-<p>This configuration will also create an administrative dashboard running on port 4151. The admin interface requires that a user authenticate themselves, as discussed further in the chapter on <a href="#authentication-security">Authentication &amp; Security</a>. The configuration will attempt to use a flat-file authentication system stored at <code>/etc/shiny-server/passwd</code>; an empty database is created for you here during installation. To create a new user named <code>admin</code> in this file to allow you to login to the dashboard, execute the following command</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/sspasswd /etc/shiny-server/passwd admin</code></pre>
-and then enter and verify the password you wish to use for this user.
-</div>
 <h2 id="server-hierarchy"><a href="#server-hierarchy"><span class="header-section-number">2.2</span> Server Hierarchy</a></h2>
 <p>Detailed descriptions of all available parameters are available in the appendix, but it is important to understand the overall hierarchy of the Shiny Server configuration file when editing the file.</p>
 <h3 id="server"><a href="#server"><span class="header-section-number">2.2.1</span> Server</a></h3>
@@ -531,23 +444,7 @@ and then enter and verify the password you wish to use for this user.
 <li>If your configuration uses <code>run_as</code> to spawn applications as multiple different users.</li>
 <li>If you're running any server on a privileged port (a port in the range of 1-1024).</li>
 </ol>
-By default, the <code>shiny-server</code> process will be started as the <code>root</code> user, then will spawn R processes according to the corresponding <code>run_as</code> setting. You can, however, run the <code>shiny-server</code> process as a non-privileged user such as the <code>shiny</code> user if none of the three limitations above are violated. <span class="pro-tag">PRO</span>
-<div class="pro-chunk">
-<p>For Shiny Server Pro, if it detects that it is running as root but has no need to (i.e. none of the three criteria above were met), then it will drop its privileges and run as an unprivileged user; note that, for security reasons, that change is irreversible. This means that once Shiny Server drops its privileges, it wouldn't be able to regain them should a new configuration be loaded that requires such privileges.</p>
-<p>By default, if <code>shiny-server</code> detects that it doesn't need to run with <code>root</code> privileges, it will attempt to run as an unprivileged user to be more secure. It will determine which user to run as by inspecting the <code>run_as</code> directives in your configuration file -- if there is only one user which we will be running Shiny as (and the aforementioned constraints are satisfied), the entire Shiny Server process will just run as that user. The default configuration sets <code>run_as</code> to <code>shiny</code>, so the process will run as the <code>shiny</code> user. While the process will run as the <code>shiny</code> user (or whatever other user you're running as), it may not behave in exactly the same way as interactively logging in as that user. In particular, no startup scripts (such as <code>.bashrc</code> files) will be executed, and supplemental groups in which the user is a member will not be set.</p>
-<p>Be aware that upon installing Shiny Server, permissions on the file system are set to enable the <code>shiny</code> user to read and write from various directories as is necessary to allow Shiny Server to run as the <code>shiny</code> user. Running Shiny Server as another user will require that you adjust the permissions to grant this other user the necessary privileges to run Shiny Server. In particular, ensure the user has write privileges on these paths (recursively):</p>
-<ul>
-<li><code>/var/lib/shiny-server/</code> (or whatever custom <code>SHINY_DATA_DIR</code> setting you're using)</li>
-<li><code>/var/log/shiny-server/</code> (and/or whatever other directories you use for logging)</li>
-</ul>
-<p>and read privileges on these paths (recursively):</p>
-<ul>
-<li><code>/srv/shiny-server/</code> (and/or whatever other directories you're using to host Shiny applications)</li>
-<li><code>/opt/shiny-server/</code></li>
-<li><code>/etc/shiny-server/</code> (Note that you should enable <strong>only</strong> read access on this directory, as you likely don't want to allow your Shiny applications (which also run as <code>shiny</code>) to be able to write to your configuration or password file.)</li>
-</ul>
-Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all files within it) should be owned by the user you specify.
-</div>
+<p>By default, the <code>shiny-server</code> process will be started as the <code>root</code> user, then will spawn R processes according to the corresponding <code>run_as</code> setting. You can, however, run the <code>shiny-server</code> process as a non-privileged user such as the <code>shiny</code> user if none of the three limitations above are violated.</p>
 <h2 id="local-app-configurations"><a href="#local-app-configurations"><span class="header-section-number">2.4</span> Local App Configurations</a></h2>
 <p>In the global configuration file, the <code>allow_app_override</code> setting can be specified to enable local app configurations. If present, this setting enables owners of Shiny applications to customize the properties of their own applications using a file named <code>.shiny_app.conf</code>. This file can be placed within an application directory (alongside the <code>server.R</code> and <code>ui.R</code> files) and can contain settings which configure how Shiny Server should manage the application.</p>
 <p>This behavior is controlled by the <code>allow_app_override</code> setting which is disabled by default. In order to enable local application configurations, you can add to your configuration file <code>allow_app_override true;</code> (or just <code>allow_app_override;</code> for short).</p>
@@ -731,21 +628,15 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 
 <span class="kw">server</span> {
   <span class="kw">...</span></code></pre>
-<h2 id="health-check-endpoint" class="pro"><a href="#health-check-endpoint"><span class="header-section-number">2.10</span> Health Check Endpoint</a></h2>
-<p>Some advanced deployment scenarios are able to leverage a &quot;health check endpoint&quot; which provides an automated way to ensure that Shiny Server is online and responsive. The URL <code>/ping</code> can be used on any port Shiny Server is instructed to listen on in order to test the health of Shiny Server. If the server is online and responsive, it will respond with the text <code>OK</code> and an HTTP 200 code.</p>
-<h2 id="environment-variable-settings"><a href="#environment-variable-settings"><span class="header-section-number">2.11</span> Environment Variable Settings</a></h2>
+<h2 id="environment-variable-settings"><a href="#environment-variable-settings"><span class="header-section-number">2.10</span> Environment Variable Settings</a></h2>
 <p>We strive to expose most settings through the configuration file described previously. However, there are some settings that we don't include in the configuration file which some users may still wish to change. Where possible, we'll allow users to configure these settings using environment variables. Some of these environment variables will later be promoted to configuration directives, but will be documented here until that time.</p>
 <p>Typically, it is best to define these environment variables in the startup script used to run Shiny Server (often either <code>/etc/init.d/shiny-server</code> or <code>/etc/init/shiny-server.conf</code>, depending on whether or not you're using Upstart).</p>
-<h3 id="shiny_log_level"><a href="#shiny_log_level"><span class="header-section-number">2.11.1</span> <code>SHINY_LOG_LEVEL</code></a></h3>
+<h3 id="shiny_log_level"><a href="#shiny_log_level"><span class="header-section-number">2.10.1</span> <code>SHINY_LOG_LEVEL</code></a></h3>
 <p>Defines the verbosity of logging which will be used by Shiny Server. Valid options -- in level of increasing verbosity -- are <code>TRACE</code>, <code>DEBUG</code>, <code>INFO</code>, <code>WARN</code>, and <code>ERROR</code>. More verbose levels of logging (such as <code>TRACE</code>) may be helpful when debugging an issue or trying to understand exactly what Shiny Server is doing, but will likely be far too much information for a system with even moderate load.</p>
 <p>The default if this environment variable is not found is to use <code>INFO</code>.</p>
-<h3 id="r"><a href="#r"><span class="header-section-number">2.11.2</span> <code>R</code></a></h3>
+<h3 id="r"><a href="#r"><span class="header-section-number">2.10.2</span> <code>R</code></a></h3>
 <p>Defines the path to the R executable which should be used when running Shiny. Systems which have multiple versions of R installed, or don't wish to place R on the path before starting Shiny Server can override this setting to point to a particular version of R.</p>
 <p>If no environment variable is found, Shiny Server will expect an executable named <code>R</code> to be on the path.</p>
-<h3 id="shiny_data_dir"><a href="#shiny_data_dir"><span class="header-section-number">2.11.3</span> <code class="pro">SHINY_DATA_DIR</code></a></h3>
-<p>The historical databases of Shiny applications used in the Admin dashboard can consume multiple Gigabytes of disk space on a system hosting many applications. This environment variable allows you to define the directory in which Shiny Server should persist data to disk. To estimate the amount of disk space required, we recommend reserving 10MB in this directory for every Shiny application you plan to host on a server. Additionally, ensure that this directory is writable by the <code>shiny</code> user, or whichever user you're running Shiny Server as (as is discussed in detail in the <a href="#run_as"><code>run_as</code></a> section).</p>
-<p>Note that Shiny Server expects a directory named <code>monitor/rrd/</code> to already exist inside <code>SHINY_DATA_DIR</code> when it starts.</p>
-<p>By default, Shiny Server will create and store data in <code>/var/lib/shiny-server/</code>.</p>
 <h1 id="deploying-applications"><a href="#deploying-applications"><span class="header-section-number">3</span> Deploying Applications</a></h1>
 <h2 id="schedulers-application-restarts"><a href="#schedulers-application-restarts"><span class="header-section-number">3.1</span> Schedulers &amp; Application Restarts</a></h2>
 <p>A scheduler is responsible for fulfilling incoming requests to a particular application. Each version of an application (see below) will have its own associated scheduler. Each scheduler can have different properties to control things like how many concurrent connections it should accept.</p>
@@ -765,23 +656,6 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
   <span class="kw">...</span>
 }</code></pre>
 <p>In this example, the <code>location</code> defined at the base URL in this <code>server</code> will be configured to use the Simple Scheduler and to limit each application to a maximum of 15 simultaneous connections -- meaning that if there are 15 active connections on the application when a user attempts to visit this application, that user will receive a 503 error page. When one of the 15 active connections is disconnected, one new &quot;seat&quot; will be available for another user to connect to the application.</p>
-<h3 id="utilization-scheduler" class="pro"><a href="#utilization-scheduler"><span class="header-section-number">3.1.3</span> Utilization Scheduler</a></h3>
-<p>The Utilization Scheduler is a more sophisticated scheduler only available in Shiny Server Professional that allows a single Shiny application to be powered by multiple R Shiny processes. Incoming traffic will be routed to the R process associated with this Shiny application which has the fewest current connections.</p>
-<p>The Utilization Scheduler is configured by three parameters.</p>
-<ul>
-<li><code>maxRequestsPerProc</code> -- The number of concurrent connections which a single R process can support before it will begin to return 503 errors for new sessions.</li>
-<li><code>loadFactor</code> -- The &quot;trigger percentage&quot; (on a scale from 0 to 1) at which point a new R process should be spawned. Once session capacity reaches this percentage, a new process will be spawned (unless the <code>maxProc</code> limit has been reached).</li>
-<li><code>maxProc</code> -- The maximum number of processes which should exist concurrently associated with this Shiny application. Note that this does not include restarted versions of the same application in its count.</li>
-</ul>
-<p>As an example:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> /shinyApp1 {
-  <span class="co"># Define the scheduler to use for this application</span>
-  <span class="kw">utilization_scheduler</span> 5 0.5 3<span class="kw">;</span>
-  
-  <span class="kw">...</span>
-}</code></pre>
-<p>The above configuration would create a Utilization Scheduler for this application which would support a maximum of 3 processes, a maximum of 5 connections per process, and a load factor of 0.5. Initially, only one process would be created to facilitate the first and second concurrent connection to this application. The third connection, however, would surpass the load factor (3/5 &gt; 0.5) which would spawn a new R process. The next request would then be routed to this new process. This would continue until the load factor was again surpassed, at which point the third process would be spawned. With a maximum of 3 processes, no more would be created after the third. So the 16th concurrent connection would be turned away with a 503 error.</p>
-<p>Be aware that, upon the restart of an application using a Utilization Scheduler, the resources allotted to this application will effectively double for a time. For instance, if an application is configured to use 4 <code>maxProc</code> and has sufficient load to create and maintain that many R processes, a restart of the application will motivate Shiny Server to create an R process for a &quot;new&quot; Shiny application which also is eligible to run up to 4 Shiny processes in parallel. Thus, with one restart and sufficient traffic to this application, it is possible that it could be running 8 Shiny processes. This behavior is likely to change in future versions of Shiny Server.</p>
 <h2 id="application-timeouts"><a href="#application-timeouts"><span class="header-section-number">3.2</span> Application Timeouts</a></h2>
 <p>Each Shiny Application has two timeouts associated with it:</p>
 <ol type="1">
@@ -789,12 +663,8 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <li><strong><code>app_idle_timeout</code></strong> -- Defines the amount of time (in seconds) an R process with no active connections should remain open. After the last connection disconnects from an R process, this timer will start and, after the specified number of seconds, if no new connections have been created, the R process will be killed.</li>
 </ol>
 <p>Typically, these two parameters will be correlated. Shiny Applications which involve little processing to start (therefore have a small <code>app_init_timeout</code>) can often be closed with minimal concern (thus would have a small <code>app_idle_timeout</code>). Conversely, applications which require a substantial amount of data to be loaded on startup may merit a longer <code>app_init_timeout</code> to give the data time to load, and a longer <code>app_idle_timeout</code> as the task of spawning a new process is more expensive and should be minimized.</p>
-<h2 id="session-timeouts" class="pro"><a href="#session-timeouts"><span class="header-section-number">3.3</span> Session Timeouts</a></h2>
-<p>The <code>app_session_timeout</code> setting can be used to automatically disconnect idle Shiny connections. The setting accepts a single parameter which dictates the number of seconds after which an idle session will be disconnected. Here &quot;idleness&quot; is measured by a connection's interaction with the server. Incoming or outgoing data will reset the countdown time for this user's session. If the number of seconds specified elapses without any data being sent to or from this client, the user's session will be disconnected.</p>
-<p>This parameter can be configured as a setting globally, or of a particular <code>server</code>or <code>location</code>. It can be used to ensure that stale R processes are eventually closed by terminating sessions after they become idle for some period of time.</p>
-<p>Session timeouts are configurable on a per-server or per-application basis. Controlling the session timeout can be important in helping the administrator manage the resource allocation for a given application and in freeing up resources from idle connections which will then be available to newly created sessions.</p>
-<h2 id="logging-and-analytics"><a href="#logging-and-analytics"><span class="header-section-number">3.4</span> Logging and Analytics</a></h2>
-<h3 id="application-error-logs"><a href="#application-error-logs"><span class="header-section-number">3.4.1</span> Application Error Logs</a></h3>
+<h2 id="logging-and-analytics"><a href="#logging-and-analytics"><span class="header-section-number">3.3</span> Logging and Analytics</a></h2>
+<h3 id="application-error-logs"><a href="#application-error-logs"><span class="header-section-number">3.3.1</span> Application Error Logs</a></h3>
 <p>Error logs are created for each R Shiny process separately. For <code>location</code>s configured to use <code>user_apps</code>, these logs are created in each user's <code>~/ShinyApps/log/</code> directory. For <code>location</code>s configured with <code>app_dir</code> or <code>site_dir</code>, the directory in which these logs are created is managed by the <code>log_dir</code> setting, which can be specified globally, for a particular <code>server</code>, or for a particular <code>location</code>. By default, these logs will be located at <code>/var/log/shiny-server/</code>. To change these <code>location</code>s, the <code>log_dir</code> can be specified in the following way:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
   <span class="kw">log_dir</span> /var/log/shiny-server/<span class="kw">;</span>
@@ -803,19 +673,17 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <pre><code>&lt;application directory name&gt;-YYYMMDD-HHmmss-&lt;port number or socket ID&gt;.log</code></pre>
 <p>Log files will be created for each R process when it is started. However, if a process closes successfully, the error log associated with that process will be automatically deleted. The only error log files that will remain on disk are those associated with R processes that did not exit as expected.</p>
 <p>If you're looking for log messages related to Shiny Server itself -- rather than individual Shiny applications -- see the section on the <a href="#server-log">Server Log</a>.</p>
-<h3 id="google-analytics"><a href="#google-analytics"><span class="header-section-number">3.4.2</span> Google Analytics</a></h3>
+<h3 id="google-analytics"><a href="#google-analytics"><span class="header-section-number">3.3.2</span> Google Analytics</a></h3>
 <p>Shiny Server is capable of automatically inserting the necessary JavaScript code to enable Google Analytics tracking globally or for a particular <code>server</code> or <code>location</code>. This is managed by the <code>google_analytics_id</code> setting which can be used as follows:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
   <span class="kw">google_analytics_id</span> UA-12345-1<span class="kw">;</span>
 }</code></pre>
-<h2 id="memory-limits" class="pro"><a href="#memory-limits"><span class="header-section-number">3.5</span> Memory Limits</a></h2>
-<p>Memory limits will be added in a coming version of Shiny Server Professional.</p>
-<h2 id="reactivity-log"><a href="#reactivity-log"><span class="header-section-number">3.6</span> Reactivity Log</a></h2>
+<h2 id="reactivity-log"><a href="#reactivity-log"><span class="header-section-number">3.4</span> Reactivity Log</a></h2>
 <p>The reactivity log is a great browser-based tool for analyzing and debugging reactive dependencies in a Shiny Application. We strongly recommend that you read the <a href="http://rstudio.github.io/shiny/tutorial/#reactivity-overview">Overview of Reactivity</a> in the Shiny tutorial to get the most out of the reactivity log. The symbols and representations introduced in that article are reused in the log. This tool should not be used in a production environment, as it exposes details that should not be publicly available. Many application authors find it to be a useful tool to use locally, however.</p>
 <p>Currently, reactivity logs are maintained for an entire R process. Therefore, it should be used in a fresh R session in which only one Shiny application is active. To enable the reactivity log, run the command <code>options(shiny.reactlog=TRUE)</code> before running your application. Once you've started your application and are viewing it in a browser, you can use <code>Ctrl+F3</code> (or <code>Command+F3</code> for Mac users) to view the reactivity log. This visualization creates a snapshot of all reactive activity that had occurred up to the moment it was created. If you want to view the reactive activity that has occurred since opening the reactivity log, you'll need to refresh the browser.</p>
 <p>The <code>showReactLog()</code> function exposes this functionality from within R and can be used outside of strictly Shiny contexts to generate a static HTML file visualizing reactivity. You can see the full documentation using <code>?showReactLog</code> in R.</p>
 <p>As the reactivity log exposes the architecture and some of the code behind your application, it would likely be unwise to enable this feature in a production environment. Unless explicitly enabled by the user, Shiny Server will not enable this functionality. We recomend using the reactivity log in a local R process not managed by Shiny Server.</p>
-<h2 id="specifying-protocols"><a href="#specifying-protocols"><span class="header-section-number">3.7</span> Specifying Protocols</a></h2>
+<h2 id="specifying-protocols"><a href="#specifying-protocols"><span class="header-section-number">3.5</span> Specifying Protocols</a></h2>
 <p>Shiny Server can use a wide variety of techniques to keep the data in the web browser synchronized. The preferred technique, and the one most widely used, is the use of WebSockets. However, if WebSockets are not supported -- either by some intermediate network between Shiny Server and your client or by your client's web browser -- then a fallback protocol will be used. In total, Shiny Server provides nine different methods of connecting to the server in real-time. In order of preference, they are:</p>
 <ol type="1">
 <li>WebSocket</li>
@@ -830,278 +698,8 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 </ol>
 <p>Each of these will be tried by the client in order until a successful connection to Shiny Server. If you would like to omit one or more of these protocols from the list for whatever reason, you can currently do so only from the client (we hope to make a server-side configuration available in a future release of Shiny Server).</p>
 <p>To change the available protocols, you can open any Shiny Application and press the keyboard shortcut: <code>Ctrl+Alt+Shift+A</code> (or, from a Mac: <code>control+option+shift+A</code>). This will bring up a window that will allow you to select or deselect any of the above protocols. After confirming your changes these settings will be saved in your browser for future visits to this server. These settings will take effect upon loading any Shiny application hosted on this domain and will last until you explicitly change them again.</p>
-<h1 id="authentication-security" class="pro"><a href="#authentication-security"><span class="header-section-number">4</span> Authentication &amp; Security</a></h1>
-<h2 id="authentication-overview" class="pro"><a href="#authentication-overview"><span class="header-section-number">4.1</span> Authentication Overview</a></h2>
-<p>Shiny Server Professional offers the ability to authenticate individual users. By specifying authentication requirements on particular <code>server</code>s or <code>location</code>s, the administrator can control the set of applications particular users are allowed to access.</p>
-<p>Authentication can be implemented by integrating into an existing LDAP or Active Directory database, relying on Google accounts, or by using a &quot;flat-file&quot; authentication system which is simply contained in a local file. To ensure that your users' passwords are being protected, it is <strong>strongly encouraged</strong> that any Shiny application requiring authentication use <a href="#ssl">SSL</a> to encrypt the usernames and passwords being transmitted.</p>
-<p>The current user's username and groups (where applicable) will be available in Shiny (version 0.8 and later) in the <code>session</code> parameter of the <code>shinyServer</code> function. For instance:</p>
-<pre><code>shinyServer(function(input, output, session) {
-  output$username &lt;- reactive({
-    session$user
-  })
-  
-  output$groups &lt;- reactive({
-    session$groups
-  })
-})</code></pre>
-<h2 id="auth-duration" class="pro"><a href="#auth-duration"><span class="header-section-number">4.2</span> Auth Duration</a></h2>
-<p>Regardless of which authentication mechanism is used, the duration of authentication can be configured using the <code>auth_duration</code> setting. This setting controls the amount of time (in minutes) for which a user should remain logged in after the finish using their last application. This setting should be set to 10 minutes or greater.</p>
-<h2 id="flat-file-authentication" class="pro"><a href="#flat-file-authentication"><span class="header-section-number">4.3</span> Flat-File Authentication</a></h2>
-<p>Shiny Server Pro offers flat-file authentication as a simple and easy-to-configure authentication mechanism. This method is self-contained and not integrated into either the system's user/password database, nor any Enterprise authentication mechanism. Thus, usernames and passwords must be created explicitly for each user that should exist in Shiny Server.</p>
-<p>The storage of usernames and passwords is handled by a single file which can be specified using the <code>auth_passwd_file</code> setting as follows:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">run_as</span> shiny<span class="kw">;</span>
-
-<span class="kw">auth_passwd_file</span> /etc/shiny-server/passwd<span class="kw">;</span>
-
-<span class="kw">server</span> {
-  <span class="kw">location</span> / {
-    <span class="kw">...</span></code></pre>
-<p>This will instruct Shiny Server to lookup all usernames and passwords in the file stored at <code>/etc/shiny-server/passwd</code>. This file should have zero or more lines in the format <code>username:{scrypt-hashed-password}</code>. The scrypt encryption algorithm is used to protect users' passwords from theft; the hashed passwords are expected in this file in base64 format. We provide the <a href="#sspasswd">sspasswd</a> utility with Shiny Server Professional that vastly simplifies the process of managing these &quot;sspasswd&quot; files.</p>
-<p>You'll want to think carefully before adjusting the permissions on this file. For instance, if you were to enable the <code>shiny</code> user to write to your password database, any Shiny application running as <code>shiny</code> (the default) would now be able to modify your password database. Because the passwords are securely hashed, granting <code>shiny</code> read access to this file is not problematic and, in fact, is enabled by default.</p>
-<h3 id="sspasswd" class="pro"><a href="#sspasswd"><span class="header-section-number">4.3.1</span> sspasswd</a></h3>
-<p>The <code>sspasswd</code> utility comes with Shiny Server Professional and can be used to manage the username/password file. By default, it is not made available on the <code>PATH</code> but you can find it in <code>opt/shiny-server/bin/</code>. The general pattern for the utility is to provide the file to use for storage followed by a username, as in:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/sspasswd /etc/shiny-server/passwd tina</code></pre>
-<p>To create a (or overwrite an existing) password file, use the <code>-c</code> switch. The default behavior will be to add the username specified (<code>tina</code>, in the example above) to the file after prompting the user for a password (or reading it from <code>stdin</code>). To instead delete a user from the file, use the <code>-D</code> switch. User/password combinations can be verified using the <code>-v</code> switch. Finally, the <code>-C</code> switch will set the maximum amount of time (in seconds) for encryption. The larger this value is, the more secure the password hash will be.</p>
-<p>Currently, the '<code>:</code>', '<code>$</code>' and newline ('<code>\r</code>' or '<code>\n</code>') characters are prohibited in usernames.</p>
-<h2 id="google-authentication" class="pro"><a href="#google-authentication"><span class="header-section-number">4.4</span> Google Authentication</a></h2>
-<p>Shiny Server Pro supports the ability to rely on Google for the management of your users using the <code>auth_google</code> setting. In this environment, users attempting to login to your Shiny Server would be presented with a button asking them to login via Google. If they grant access to your application, they would be returned to your Shiny Server presenting the email address associated with their Google account. At that point, this email address can be used to grant or restrict access to individual <code>application</code>s and <code>location</code>s. This section will show you how to setup this type of Google Authentication for Shiny Server.</p>
-<h3 id="create-a-google-application" class="pro"><a href="#create-a-google-application"><span class="header-section-number">4.4.1</span> Create a Google Application</a></h3>
-<p>Before you can use Google Authentication on your server, you must register an &quot;application&quot; with Google. This is the application that your users will be asked to &quot;connect&quot; to when logging in to your Shiny Server. To do this, you can visit Google's Developer's Console which, at the time of writing, is available at <a href="https://console.developers.google.com/">https://console.developers.google.com/</a>.</p>
-<p>You'll initially create a project then give it a name and ID. Under &quot;APIs &amp; auth&quot; you'll find the &quot;Credentials&quot; section. There you have the ability to &quot;Create new Client ID&quot;; do that now. The type of application is a &quot;Web application&quot;. For the &quot;Authorized JavaScript Origins&quot;, you'll need to explicitly list any name a user might use to access your server including the domain name, port, and protocol. For instance, if you offer both HTTPS and HTTP access to your Shiny Server, you'll need to include both; if you have multiple domain names pointing to your server, you should include all of those domains; if you have servers running on multiple ports, you'll need to include them all explicitly here.</p>
-<p>In the &quot;Authorized redirect URI&quot; field, you'll again need to provide all possible ways a user may be accessing your server, but append the string <code>__login__/callback</code> (note the <strong>double</strong> underscores on either side of &quot;login&quot;) to each URI.</p>
-<p>For instance, if you have a server available at both <code>example.org</code> and <code>example.net</code>, supporting both HTTP and HTTPS, offering web services with our without a <code>www.</code> subdomain prefix, and using the standard ports (80 and 443, respectively), you would use the following origins:</p>
-<ul>
-<li><code>http://example.org</code></li>
-<li><code>http://www.example.org</code></li>
-<li><code>https://example.org</code></li>
-<li><code>https://www.example.org</code></li>
-<li><code>http://example.net</code></li>
-<li><code>http://www.example.net</code></li>
-<li><code>https://example.net</code></li>
-<li><code>https://www.example.net</code></li>
-</ul>
-<p>And the Authorized redirect URIs would include:</p>
-<ul>
-<li><code>http://example.org/__login__/callback</code></li>
-<li><code>http://www.example.org/__login__/callback</code></li>
-<li><code>https://example.org/__login__/callback</code></li>
-<li><code>https://www.example.org/__login__/callback</code></li>
-<li><code>http://example.net/__login__/callback</code></li>
-<li><code>http://www.example.net/__login__/callback</code></li>
-<li><code>https://example.net/__login__/callback</code></li>
-<li><code>https://www.example.net/__login__/callback</code></li>
-</ul>
-<p>You can then &quot;Create&quot; your Client ID.</p>
-<p>You should see your new &quot;Client ID for web application&quot; listed once you have created your new Client ID. You can inspect to confirm that the Redirect URIs and Javascript Origins look correct (if not, you can click &quot;Edit settings&quot;). If they look correct, you should note the &quot;Client ID&quot; and &quot;Client secret&quot;; you'll enter these settings into your Shiny Server configuration file later.</p>
-<p>At this point, you've created a Google application you'll be able to use to allow your users to login via Google on your Shiny Server. You can always add more details to your Google application here including an icon and more textual details.</p>
-<h3 id="configure-shiny-server" class="pro"><a href="#configure-shiny-server"><span class="header-section-number">4.4.2</span> Configure Shiny Server</a></h3>
-<p>Now that you have a Google application created, you can customize your Shiny Server configuration to instruct it to a.) Use Google for its authentication, and b.) provide your Google application's settings.</p>
-<p>You can edit your configuration file stored at <code>/etc/shiny-server/shiny-server.conf</code> to replace any existing authentication system (if you have one) with the <code>auth_google</code> directive. This setting first takes the Client ID, then the Client Secret you created in Google earlier. At this point, you can restart your Shiny Server (see <a href="#stopping-and-starting">Stopping and Starting</a> if you're unsure how). When you try to access a protected resource such as the Admin page or a location secured with a <code>required_user</code> setting, you should be prompted with a login screen asking you to login with Google. Click that link, then decide whether or not you'd like to grant access to your new application. if you do grant access and your email is included in the <code>required_user</code> field associated with the resource you're trying to access, you'll be let in. Otherwise, you'll still be logged in as that user, but won't be granted access to that resource.</p>
-<h3 id="email-address-restrictions" class="pro"><a href="#email-address-restrictions"><span class="header-section-number">4.4.3</span> Email Address Restrictions</a></h3>
-<p>By default, the Google auth strategy will allow any user with a Google account to login to your system. Of course, the <code>required_user</code> settings would continue to secure your resources and only provide access to resources the user is authorized to see.</p>
-<p>Though you can always use <code>required_user</code> to restrict access to a resource, some organizations wish to only allow particular users to login at all. For instance, if you were not concerned about which individual users could access which applications, but wanted to ensure that only users within your organization can access <em>any</em> application, you may want a more broad restriction on the users you authorize.</p>
-<p>For such needs, we provide the ability to globally filter which email addresses will be authorized into your Shiny Server at all -- regardless of what the individual application's <code>required_user</code> settings are. To use this, you can add filters onto the <code>auth_google</code> setting in your configuration file. In the simplest form, you could add one filter to require that the email address the user is using with Google be of a particular form, such as <code>&quot;*@myorganization.org&quot;</code>. This would allow any user who logged into Google with the email address that ended in <code>@myorganization.org</code> to log on to the server. Once logged on, the <code>required_user</code> filters would be applied as usual to control access to individual applications.</p>
-<p>Additionally, you can provide as many filters as you'd like on the <code>auth_google</code> directive and indicate whether email address matching that filter should be admitted (<code>+</code>) or rejected (<code>-</code>). They will be applied one-at-a-time until the given email address matches one of your filters. The filters can be prefixed with a <code>+</code> or <code>-</code> sign to indicate whether the filter is &quot;positive&quot; (in which case any user matching the filter should be admitted) or &quot;negative&quot; (in which case any user matching the filter should be rejected). If no sign is provided, it's assumed that the filter is &quot;positive&quot;. A few examples may be helpful:</p>
-<p>The filter <code>&quot;*&quot;</code> will be interpreted as a positive filter, meaning any email address matching that filter (every possible email address) will be admitted. This is what is applied if you don't provide any filter yourself in the configuration file.</p>
-<p>The filter <code>&quot;*@myorganization.org&quot;</code> will admit any user whose email address ends in <code>@myorganization.org</code> and reject any email address that does not.</p>
-<p>We can examine the filters <code>&quot;-jim@example.org&quot; &quot;*@example.org&quot;</code>. If the user <code>kelly@example.org</code> were attempting to the system, the first filter would be checked and it would be found that <code>kelly@example.org</code> does not match the filter <code>&quot;jim@example.org&quot;</code>, so it would continue on to the next filter. There it would be found that <code>kelly@example.org</code> <em>does</em> match the filter <code>*@example.org</code>, and because this filter is a positive filter (you could have prefixed it with a <code>+</code>, if you wished), this user would be granted access to the system. However, a user <code>john@gmail.com</code> would not match the first filter or the second filter, so he would be denied access to the system, as he did not match any positive filter. Finally, the user <code>jim@example.org</code> would match the first filter, and because that filter is a negative filter, this user would be denied access to the system.</p>
-<p>Formally, we support the <a href="http://en.wikipedia.org/wiki/Glob_(programming)">glob</a> pattern matching syntax. Specifically, you can use the <code>*</code> character to match any string of length 0 or more, the <code>?</code> character will match any <em>one</em> character, and square brackets can be used to match against a set of characters.</p>
-<h2 id="ldap-and-active-directory" class="pro"><a href="#ldap-and-active-directory"><span class="header-section-number">4.5</span> LDAP and Active Directory</a></h2>
-<p>Lightweight Directory Access Protocol (LDAP) is a popular protocol for storing and validating user information in an enterprise. LDAP can store information about users and their group memberships which Shiny Server Pro is able to query using user's username and password. Fundamentally, the LDAP protocol simply describes a framework for storing hierarchical data and can be configured in a multitude of ways. Active Directory is one popular directory service which implements LDAP and encourages a certain model for storing data, while other vendors of LDAP systems often have their own distinct default configurations. A holistic overview of LDAP is outside of the scope of this document, so if you lack a solid background in LDAP you might benefit from consulting with an LDAP administrator in your organization to configure these settings.</p>
-<p>An LDAP configuration in Shiny Server Pro might look like this:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">auth_ldap</span> ldap://ldap.example.org/dc=example,dc=org {
-  <span class="kw">group_filter</span> <span class="st">&quot;memberUid={username}&quot;</span><span class="kw">;</span>
-  <span class="kw">group_search_base</span> ou=Groups<span class="kw">;</span>
-}</code></pre>
-<p>It is fully possible to use the <code>auth_ldap</code> configuration to integrate with an Active Directory system. However, Active Directory encourages a certain pattern which we capture in the <code>auth_active_dir</code> directive which extends <code>auth_ldap</code>. The hope is that this configuration can be used to make setup simpler for groups using Active Directory. If you're using an Active Directory server, you may just be able to specify the <code>auth_active_dir</code> setting and not worry about providing any of the others.</p>
-<p>An Active Directory configuration setting may look something like the following:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">auth_active_dir</span> ldaps://dc01.example.org/dc=example,dc=org example.org{
-  <span class="kw">trusted_ca</span> /etc/ssl/certs/example-org.cert<span class="kw">;</span>
-}</code></pre>
-<p>We currently support only a limited subset of Unicode characters as usernames for LDAP and Active Directory. Usernames must include only:</p>
-<ul>
-<li>Alphanumeric characters</li>
-<li><code>_</code> - Underscore</li>
-<li><code>.</code> - Period</li>
-<li><code>@</code> - &quot;at&quot; symbol</li>
-</ul>
-<p>We do not permit empty usernames or passwords.</p>
-<p>The parent directive for all LDAP-related settings is <code>auth_ldap</code> or <code>auth_active_dir</code>. Both accept an LDAP URL as their first argument. <code>auth_active_dir</code> accepts a second argument which is the suffix (typically a domain name) to be added to all usernames when attempting to bind. All other children settings within this directive are not required, but may be needed depending on your LDAP configuration.</p>
-<p>The LDAP URL should look like the following:</p>
-<pre><code>ldaps://ldap.example.org:1234/dc=example,dc=org</code></pre>
-<p>It begins with the protocol to be used when contacting the LDAP server -- either <code>ldap://</code> (for unencrypted LDAP) or <code>ldaps://</code> (LDAP over an encrypted SSL tunnel). We do not currently support StartTLS. If your LDAP server supports <code>ldaps://</code>, this option is more secure and ensures the username and passwords aren't being transmitted between Shiny Server and your LDAP server in plain text. Next, the hostname or IP of the LDAP server should follow the protocol. Bear in mind that the given hostname or IP <em>must</em> match the hostname associated with the SSL certificate if using <code>ldaps://</code>. If using a non-standard port (anything other than 389 for <code>ldap://</code> or 636 for <code>ldaps://</code>), you can follow the hostname with a colon and the port number which should be used. Following the hostname/port should be a forward slash then the root DIT of the directory to use.</p>
-<p>There are a variety of settings which will be used to guide Shiny Server Pro's interaction with your LDAP server. These will all be defined inside of an <code>auth_ldap</code> or <code>auth_active_dir</code> setting and are described below. Be aware that the primary difference between <code>auth_ldap</code> and <code>auth_active_dir</code> is the default values assigned to these settings. If any of these settings are not specified, the default values will be used.</p>
-<p>Some of the settings may include dynamic values which will be listed under the &quot;Variables Available&quot; section in each. These variables are enclosed in curly braces (&quot;{&quot; and &quot;}&quot;) and will be replaced with their value before being used.</p>
-<h3 id="user_bind_template"><a href="#user_bind_template"><span class="header-section-number">4.5.1</span> <code class="pro">user_bind_template</code></a></h3>
-<p>Shiny Server Pro will transform the username entered at the login screen before attempting to &quot;bind&quot; (authenticate) to the LDAP server using this template. In general (notable exception being Active Directory), this pattern should map the given username to the user's DN in the LDAP database. In systems where that may not be possible (such as Active Directory), you can use the [<code>user_filter</code>] setting to lookup the user's DN given their username. In either case, this setting should manipulate the given username into the username used to perform the LDAP <code>bind</code> operation.</p>
-<p><strong>Variables Available</strong></p>
-<ul>
-<li><code>{username}</code> -- The username entered by the user at the login screen.</li>
-<li><code>{root}</code> -- The root DIT provided to the parent <code>auth_ldap</code> or <code>auth_active_dir</code> setting.</li>
-</ul>
-<p><strong>Default Value</strong></p>
-<ul>
-<li>For <code>auth_ldap</code> -- <code>uid={username},ou=People,{root}</code></li>
-<li>For <code>auth_active_dir</code> -- <code>{username}@example.org</code> (where &quot;example.org&quot; is the domain name you provided as the second argument to <code>auth_active_dir</code>).</li>
-</ul>
-<h3 id="group_search_base"><a href="#group_search_base"><span class="header-section-number">4.5.2</span> <code class="pro">group_search_base</code></a></h3>
-<p>Defines the subtree in which groups are stored. This will be used as the root of all LDAP queries which attempt to find the groups of which a user is a member. The given value will be followed by a comma and the root DIT given in the <code>auth_ldap</code> or <code>auth_active_dir</code> parent setting. If configured to use an empty string as the base, then the unmodified root DIT will be used as the group search base.</p>
-<p><strong>Default Value</strong></p>
-<ul>
-<li>For <code>auth_ldap</code> -- <code>ou=Groups</code></li>
-<li>For <code>auth_active_dir</code> -- <code>cn=Users</code></li>
-</ul>
-<h3 id="group_filter"><a href="#group_filter"><span class="header-section-number">4.5.3</span> <code class="pro">group_filter</code></a></h3>
-<p>The LDAP query to use in determining a user's group membership. The query should return all groups of which the given user is a member</p>
-<p>The default for <code>auth_ldap</code> checks the <code>uniqueMember</code> field -- a setting from the <code>groupOfUniqueMembers</code> LDAP class. If you're using the <code>posixGroup</code> LDAP class to store your group memberships, you should likely set this value to <code>memberUid={username}</code>.</p>
-<p><strong>Variables Available</strong></p>
-<ul>
-<li><code>{username}</code> -- The username entered by the user at the login screen.</li>
-<li><code>{userDN}</code> -- The computed DN for the entered user. If <code>user_filter</code> is unspecified, this will just be the value calculated using the pattern from <code>user_bind_template</code>. If <code>user_filter</code> is provided, then this will be the DN of the first object which matched the query specified in <code>user_filter</code>.</li>
-<li><code>{root}</code> -- The root DIT provided to the parent <code>auth_ldap</code> or <code>auth_active_dir</code> setting.</li>
-</ul>
-<p><strong>Default Value</strong></p>
-<ul>
-<li>For <code>auth_ldap</code> -- <code>uniqueMember={username}</code></li>
-<li>For <code>auth_active_dir</code> -- <code>member:1.2.840.113556.1.4.1941:={userDN}</code></li>
-</ul>
-<h3 id="group_name_attribute"><a href="#group_name_attribute"><span class="header-section-number">4.5.4</span> <code class="pro">group_name_attribute</code></a></h3>
-<p>The attribute of the LDAP group object in which the group name is stored. This field will be compared to the entries in the <code>required_group</code> setting to determine whether or not a user should be granted access to a Shiny application.</p>
-<p><strong>Default Value</strong></p>
-<p><code>cn</code></p>
-<h3 id="trusted_ca"><a href="#trusted_ca"><span class="header-section-number">4.5.5</span> <code class="pro">trusted_ca</code></a></h3>
-<p>By default, Shiny Server Pro trusts many standard SSL Certificate Authorities (CAs) (such as Verisign). If your organization uses a non-trusted Certificate Authority to sign its SSL certificates, you will need to explicitly tell Shiny Server Pro to trust this CA's certificate. You can do this by placing the CA's certificate (in PEM format) in a file on your machine and pointing this setting to that file.</p>
-<p>If this value is provided, the standard list of trusted CAs will be overridden with the provided certificate.</p>
-<p><strong>Default Value</strong></p>
-<p>None.</p>
-<h3 id="check_ssl_ca"><a href="#check_ssl_ca"><span class="header-section-number">4.5.6</span> <code class="pro">check_ssl_ca</code></a></h3>
-<p>When using LDAP over SSL (<code>ldaps://</code>), Shiny Server Pro will check that the SSL certificate was signed by a recognized Certificate Authority (CA) (though this can be modified using the <code>trusted_ca</code> setting). <code>check_ssl_ca</code> can be used to disable the checking of CAs entirely. By default, this option will be 'true' to enable SSL CA validation.</p>
-<p>Disabling these checks is necessary if your LDAP server uses a self-signed certificate, for instance. Otherwise, this setting should typically be left enabled as disabling it will largely defeat the security gained by using SSL.</p>
-<p><strong>Default Value</strong></p>
-<p><code>true</code></p>
-<h3 id="user_filter"><a href="#user_filter"><span class="header-section-number">4.5.7</span> <code class="pro">user_filter</code></a></h3>
-<p>Some systems (notably many Active Directory implementations) do not use the username as a part of the user's DN. In such systems, It may be necessary to perform an extra LDAP query after binding to determine the user's DN based on their username before group membership can be determined. This setting stores the LDAP filter used to find the user object which matches the entered username.</p>
-<p>Using the default provided for <code>auth_active_dir</code> (<code>userPrincipalName={userBind}</code>), as an example. Shiny Server Pro will attempt to bind to the LDAP server using the given username (after being manipulated as defined in <code>user_bind_template</code>) and password. If successful, it will then search for an object whose attribute <code>userPrincipalName</code> matches the username manipulated by <code>user_bind_template</code>. If found, the returned object's DN will be made available to the <code>group_filter</code> as the <code>{userDN}</code> variable.</p>
-<p><strong>Default Value</strong></p>
-<ul>
-<li>For <code>auth_ldap</code> -- N/A</li>
-<li>For <code>auth_active_dir</code> -- <code>userPrincipalName={userBind}</code></li>
-</ul>
-<h3 id="user_search_base"><a href="#user_search_base"><span class="header-section-number">4.5.8</span> <code class="pro">user_search_base</code></a></h3>
-<p>Defines the subtree in which users are stored. This will only be used if <code>user_filter</code> is not empty, as that is the only time that Shiny Server Pro would need to search for a user. If provided, this will be used as the root of the LDAP queries used to lookup a user by his or her username. The given value will be followed by a comma and the root DIT given in the <code>auth_ldap</code> or <code>auth_active_dir</code> parent setting. If configured to use an empty string as the base, then the unmodified root DIT will be used as the user search base.</p>
-<p><strong>Default Value</strong></p>
-<ul>
-<li>For <code>auth_ldap</code> -- <code>ou=People</code></li>
-<li>For <code>auth_active_dir</code> -- <code>cn=Users</code></li>
-</ul>
-<h2 id="required-users-groups" class="pro"><a href="#required-users-groups"><span class="header-section-number">4.6</span> Required Users &amp; Groups</a></h2>
-<h3 id="user-authentication" class="pro"><a href="#user-authentication"><span class="header-section-number">4.6.1</span> User Authentication</a></h3>
-<p>The <code>required_user</code> setting controls which users should be able to access a particular <code>server</code>, <code>location</code>, or <code>admin</code>, as in:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> /app1 {
-  <span class="kw">required_user</span> kim tom<span class="kw">;</span>
-}</code></pre>
-<p>This directive would enable authentication on the specified <code>location</code>, which would present any new, un-authenticated visitor to the application with a login page. If the visitor entered valid credentials against your configured authentication mechanism, then he or she would be checked against the list of allowed users for this application. If found (i.e. if the user name was either <code>kim</code> or <code>tom</code>), the visitor would be granted access to the application. Otherwise, he or she would be unable to access the application.</p>
-<p>It is encouraged that any <code>server</code> accepting user credentials be secured via <a href="#ssl">SSL</a>.</p>
-<h3 id="group-authentication" class="pro"><a href="#group-authentication"><span class="header-section-number">4.6.2</span> Group Authentication</a></h3>
-<p>The <code>required_group</code> setting allows the administrator to control access based on the groups of which users are a member. In this way, entire sets of users can be granted access to a particular location in one line in the configuration file.</p>
-<p>Flat-file authentication does not support the notion of user groups, but this feature can be used with LDAP or Active Directory by adding a restriction like the following:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> /app1 {
-  <span class="kw">required_group</span> shinyUsers admins<span class="kw">;</span>
-}</code></pre>
-<p>This configuration would grant access to any user who is a member of either the <code>shinyUsers</code> or <code>admins</code> group.</p>
-<h2 id="ssl" class="pro"><a href="#ssl"><span class="header-section-number">4.7</span> SSL</a></h2>
-<p>In Shiny Server Professional, SSL encryption is available for any configured <code>server</code> and in the <code>admin</code> interface. SSL is a means of encrypting traffic between web clients and servers and should be used for any application that will accept or transmit sensitive information such as passwords. Untrusted SSL certificates can be generated locally by anyone for free; signed SSL certificates can be obtained from authorized certificate authorities fairly inexpensively. Untrusted SSL certificates will still encrypt the traffic between a client and server, but (in most browsers), the client will need to proceed through a warning about the untrusted nature of the SSL certificate in use. SSL can be enabled on a <code>server</code> by configuring the two required parameters: the path to the SSL key, and the path to the SSL certificate.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">server</span> {
-  <span class="co"># Instruct this server to listen on port 443, the default port for HTTPS </span>
-  <span class="co"># traffic</span>
-  <span class="kw">listen</span> 443<span class="kw">;</span>
-  <span class="kw">ssl</span> /etc/shiny-server/ssl-key.pem /etc/shiny-server/ssl.cert<span class="kw">;</span>
-  
-  <span class="kw">...</span>
-}</code></pre>
-<p>If a valid SSL key and certificate were provided, a user would now need to preface their request with &quot;https://&quot; to be able to visit any application hosted within this <code>server</code> or on the <code>admin</code>. It is highly recommended that any Shiny Server Pro configuration which expects to accept its users' LDAP or Active Directory credentials use SSL to secure the usernames and passwords on their applications and admin interface.</p>
-<h2 id="proxied-headers" class="pro"><a href="#proxied-headers"><span class="header-section-number">4.8</span> Proxied Headers</a></h2>
-<p>Typically, HTTP headers sent to Shiny Server will not be forwarded to the underlying Shiny application. However, Shiny Server Professional is able to forward specified headers into the Shiny application using the <code>whitelist_headers</code> configuration directive, which can be set globally or for a particular <code>server</code> or <code>location</code>.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">server</span> {
-  <span class="kw">listen</span> 3838<span class="kw">;</span>
-  <span class="kw">whitelist_headers</span> myorg_username myorg_groupnames myorg_privileges<span class="kw">;</span>
-  
-  <span class="kw">...</span>
-
-}</code></pre>
-<p>The above configuration would allow the three listed <code>myorg_</code> headers (case-insensitive) to be forwarded from the originating HTTP traffic into the Shiny session. In Shiny, these headers would be converted to capital letters and prefaced with <code>HTTP_</code> to designate that the headers originated in an HTTP request. They would then be available as objects in the <code>session$request</code> environment inside an application's <code>server.R</code> file. For example, the <code>myorg_username</code> object could be accessed via the following <code>server.R</code> file.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">library</span>(shiny)
-<span class="kw">shinyServer</span>(function(input, output, session)<span class="kw">{</span>
-  <span class="kw">output</span><span class="ot">$username</span> <span class="kw">&lt;</span>- renderText({
-    <span class="kw">session</span><span class="ot">$request$HTTP_MYORG_USERNAME</span>
-  <span class="kw">}</span>)
-})</code></pre>
-<p>Organizations which employ a centralized authentication system not supported by Shiny Server may use this feature to leverage a proxied authentication system. In such a model, traffic destined for Shiny Server Professional would first be sent through an authenticating proxy which would take care of ensuring that the user is authenticated and the appropriate headers are set indicating the user, groups, or permissions. The application deployed on Shiny Server Professional would then use these headers to determine whether the user should be allowed access to the application, or a subset of the features of the application.</p>
-<p>Be aware that, in such a model, the entirity of the <code>ui.R</code> file will be run and passed to the client before the server-side has a chance to make any decision about what privileges the current user should have given their HTTP headers (if any). So the proxy must be responsible for authenticating or rejecting visitors prior to forwarding any traffic to Shiny Server Professional if any sensitive information would be disclosed by a user merely opening the UI. Additionally, precautions should be taken to ensure that the Shiny Server machine is not accessible directly by users, but is instead <em>only</em> accessible through the authenticating proxy. Otherwise, an attacker would merely need to provide fraudulent HTTP headers when accessing Shiny Server in order to imitate another user or claim particular privileges.</p>
-<h1 id="admin" class="pro"><a href="#admin"><span class="header-section-number">5</span> Admin</a></h1>
-<h2 id="configuration" class="pro"><a href="#configuration"><span class="header-section-number">5.1</span> Configuration</a></h2>
-<p>The Admin interface provided as a part of Shiny Server Professional is disabled by default. To enable it, use the <code>admin</code> setting and specify the port number on which the admin interface should run.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">admin</span> 3957 {
-  <span class="kw">required_user</span> tom sarah<span class="kw">;</span>
-}</code></pre>
-<p>The above would enable the admin interface on port 3957. This interface would then be available from any modern web browser on that port. First-time visitors would be presented with a login page. If the visitor were able to authenticate themselves to the Shiny Server application as either <code>tom</code> or <code>sarah</code>, they would be granted access to the admin dashboard.</p>
-<p>The required user must be one connected to Shiny Server as described in <a href="#authentication-security">Authentication &amp; Security</a>.</p>
-<p>You can also leverage <a href="#ssl">SSL</a> to secure the usernames and passwords accepted on the admin login screen.</p>
-<h2 id="organization" class="pro"><a href="#organization"><span class="header-section-number">5.2</span> Organization</a></h2>
-<p>The admin interface offers a real-time view into the current state of your Shiny Server. There is no need to refresh the page periodically, as the information is updated as it happens. The interface is divided into four main sections.</p>
-<p><strong>Dashboard</strong></p>
-<p>Initially when logging in, the user will be presented with the Dashboard view. This view shows a basic overview of the state of Shiny Server, including the current RAM and CPU utilization, the number of connections, and historical RAM and CPU saturation.</p>
-<p><strong>Applications</strong></p>
-<p>The highest-level grouping in the admin interface is the notion of an &quot;Application.&quot; An application represents a Shiny App stored in a particular directory on your server. There may be multiple R processes behind one application due to application restarts, but all of these R processes are considered part of the same application. Initially, you will be presented with a table depicting an overview of the various directories on your server in which applications are stored, the current number of processes associated with that application, and the number of open connections to that application.</p>
-<p>Shiny Server does not crawl the disk to discover all the potential Shiny applications which could be spawned. Instead, it only becomes aware of the existence of a Shiny application once its visited.</p>
-<p>Clicking on any &quot;App Directory&quot; in the table will take you to the detailed view for that application. On this page, you'll be able to track current and historical RAM usage, along with CPU utilization, active processes, and open connections.</p>
-<p>You'll also see the current and historical &quot;latency&quot; for this application. Keep in mind that, because R is single-threaded, it is only able to compute one request at at time. Thus, while one user's request is being computed, any other requests that are assigned to this R process will be inserted into a queue until the R process becomes free. Only at that point, will computation begin on the second request. The latency of an application represents the delay between when a request initially arrived at Shiny Server and the moment the assigned R process began computation to fulfill that request. A Shiny application that is not computationally intensive and doesn't have many active users may see a latency of just a few milliseconds. Conversely, an application which is computationally intensive and/or overwhelmed with more users than the associated process(es) can handle will see a much higher latency.</p>
-<p><strong>Processes</strong></p>
-<p>The &quot;Processes&quot; tab provides access to information about the underlying R Shiny processes which support the various applications being hosted on this server. The overview table reveals with which application each process is associated, the latency of this application, and its current memory consumption. Clicking on the ID of the process will take you to the detailed view for this process. Here you can see the current CPU utilization, open connections, and various other information used to help understand this process.</p>
-<p><strong>Connections</strong></p>
-<p>This tab displays all of the connections currently open between Shiny Server and its visitors. You can see which application the connection is accessing, when it was opened, its current status (whether it is idle or awaiting the results of some analysis), the protocol being used, whether or not the connection is encrypted, the IP address associated with the connection, and -- if relevant -- the username to whom the connection belongs. You can also filter to only those connections associated with a particular app directory or status.</p>
-<p>The protocol each connection is using will be displayed in a blue oval at the far left edge of the table using some abbreviation. If you hover the cursor over the oval, you'll see the full protocol name. You can find more details on the various protocols supported by Shiny Server in the section on <a href="#specifying-protocols">Specifying Protocols</a>.</p>
-<h2 id="killing-processes-and-connections" class="pro"><a href="#killing-processes-and-connections"><span class="header-section-number">5.3</span> Killing Processes and Connections</a></h2>
-<p>The Admin interface also provides the opportunity to kill individual processes or connections. Alongside any table in which a process is listed, if you point your mouse at an application or connection, you will see a button appear on the right side which allows you to kill that app/connection. Clicking this button will present you with a confirmation dialogue box which asks you to confirm that you do desire to disconnect this connection or kill this process. If you confirm, that process or connection will be terminated.</p>
-<p>If disconnecting a connection, the user will suddenly be disconnected from the server and the application will appear &quot;greyed out.&quot; Keep in mind that, in some Shiny applications, this could forfeit some of the work being done by this user on that application. If disconnecting a process, any users with connections open to that process will be suddenly disconnected. Again, this potentially could cause the user to lose some data or work if they were using a complex Shiny application.</p>
-<h1 id="licensing-activation" class="pro"><a href="#licensing-activation"><span class="header-section-number">6</span> Licensing &amp; Activation</a></h1>
-<h2 id="product-activation" class="pro"><a href="#product-activation"><span class="header-section-number">6.1</span> Product Activation</a></h2>
-<h3 id="activation-basics" class="pro"><a href="#activation-basics"><span class="header-section-number">6.1.1</span> Activation Basics</a></h3>
-<p>When Shiny Server Professional is first installed on a system it operates in evaluation mode for a period of time and then subsequently requires activation for continued use. To determine the current license status of your system you can use the following command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager status</code></pre>
-<p>After purchasing a license to Shiny Server Professional you'll receive a product key that can be used to activate the license on a given system. You can perform the activation as follows:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager activate <span class="kw">&lt;</span>product-key<span class="kw">&gt;</span>
-$ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;sudo /sbin/service shiny-server reload&quot;</span></code></pre>
-<p>Note that you need to reload or restart the server for licensing changes to take effect.</p>
-<p>If you want to move your license of Shiny Server Professional to another system you should first deactivate it on the system you are moving from. For example:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager deactivate</code></pre>
-<h3 id="virtual-machines" class="pro"><a href="#virtual-machines"><span class="header-section-number">6.1.2</span> Virtual Machines</a></h3>
-<p>By default Shiny Server Professional cannot be activated on virtual machines (this is because virtual machines confound the hardware signature used by the underlying activation mechanism). However, it is possible to activate on a virtual machine by contacting RStudio customer support and requesting that your product key allow VM activations.</p>
-<h2 id="connectivity-requirements" class="pro"><a href="#connectivity-requirements"><span class="header-section-number">6.2</span> Connectivity Requirements</a></h2>
-<p>In order to activate or deactivate Shiny Server Professional internet connectivity is required for communication with the licensing server. If your server is behind an internet proxy or not connected to the internet at all this section describes what's required to successfully activate.</p>
-<h3 id="proxy-servers" class="pro"><a href="#proxy-servers"><span class="header-section-number">6.2.1</span> Proxy Servers</a></h3>
-<p>If your server is behind an internet proxy you may need to add an additional command line flag indicating the address and credentials required to communicate through the proxy. Note however that this may not be necessary if either the <code>http_proxy</code> or <code>all_proxy</code> environment variable is defined (these are read and used by Shiny Server Professional when available).</p>
-<p>If you do need to specify a proxy server explicitly you can do so using the <code>--proxy</code> command line parameter. For example:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager --proxy=http://127.0.0.1/ activate <span class="kw">&lt;</span>product-key<span class="kw">&gt;</span></code></pre>
-<p>Proxy settings can include a host-name, port, and username/password if necessary. The following are all valid proxy configurations:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">http</span>://127.0.0.1/
-<span class="kw">http</span>://127.0.0.1:8080/
-<span class="kw">http</span>://user:pass@127.0.0.1:8080/</code></pre>
-<p>If the port is not specified, the license manager will default to using port 1080.</p>
-<h3 id="offline-activation" class="pro"><a href="#offline-activation"><span class="header-section-number">6.2.2</span> Offline Activation</a></h3>
-<p>If your system has no connection to the internet it's also possible to perform an offline activation. To do this, you first generate an offline activation request as follows:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager activate-offline-request <span class="kw">&lt;</span>product-key<span class="kw">&gt;</span></code></pre>
-<p>Executing this command will print an offline activation request to the terminal which you should copy and paste and then send to RStudio customer support (<a href="support@rstudio.com">support@rstudio.com</a>). You will receive a reply with a file attachment that can be used to activate offline as follows:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager activate-offline <span class="kw">&lt;</span>activation-file<span class="kw">&gt;</span>
-$ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;sudo /sbin/service shiny-server reload&quot;</span></code></pre>
-<p>Note that you need to reload or restart the server in order for licensing changes to take effect.</p>
-<p>If you want to move your license of Shiny Server Professional to another system you can also perform license deactivation offline. You can do this as follows:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager deactivate-offline</code></pre>
-<p>Executing this command will print an offline deactivation request to the terminal which you should copy and paste and then send to RStudio customer support (<a href="support@rstudio.com">support@rstudio.com</a>).</p>
-<p>You can also perform an offline check of your current license status using the following command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager status-offline</code></pre>
-<h1 id="appendix"><a href="#appendix"><span class="header-section-number">7</span> Appendix</a></h1>
-<h2 id="quick-start"><a href="#quick-start"><span class="header-section-number">7.1</span> Quick Start</a></h2>
+<h1 id="appendix"><a href="#appendix"><span class="header-section-number">4</span> Appendix</a></h1>
+<h2 id="quick-start"><a href="#quick-start"><span class="header-section-number">4.1</span> Quick Start</a></h2>
 <p>We recommend reading through the relevant sections of this guide to gain a complete understanding of how to operate Shiny Server. If you're just looking to get running quickly, you can follow one of the guides below.</p>
 <p>All of the guides will help you customize your Shiny Server configuration file which will be stored at <code>/etc/shiny-server/shiny-server.conf</code>. By altering this file, you can control exactly how Shiny Server runs.</p>
 <p>The following guides are available:</p>
@@ -1110,16 +708,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <li><a href="#let-users-manage-their-own-applications">Let users manage their own applications</a> - This guide will serve Shiny applications created by your users and stored in their home directories.</li>
 <li><a href="#run-shiny-server-on-multiple-ports">Run Shiny Server on multiple ports</a> - This guide will introduce a multi-server configuration which demonstrates how to run two distinct services on different ports on your server. It also configures one server with multiple locations.</li>
 </ul>
-<span class="pro-tag">PRO</span>
-<div class="pro-chunk">
-<p>And for Pro features:</p>
-<ul>
-<li><a href="#require-user-authentication-on-an-application">Require user authentication on an application</a> - This example will help you setup a local username/password database and use it to secure your applications.</li>
-<li><a href="#host-a-secure-shiny-server">Host a secure Shiny Server</a> - If you're looking to setup a secure instance of Shiny Server which is encrypted with HTTPS (SSL/TLS), this guide will show you how.</li>
-<li><a href="#host-an-application-supported-by-multiple-r-processes">Host an Application Supported by Multiple R Processes</a> - This guide will demonstrate how to scale a Shiny application to multiple R processes.</li>
-</ul>
-</div>
-<h3 id="host-a-directory-of-applications-1"><a href="#host-a-directory-of-applications-1"><span class="header-section-number">7.1.1</span> Host a directory of applications</a></h3>
+<h3 id="host-a-directory-of-applications-1"><a href="#host-a-directory-of-applications-1"><span class="header-section-number">4.1.1</span> Host a directory of applications</a></h3>
 <p>Until a custom configuration is specified, Shiny Server will use the configuration stored at <code>/opt/shiny-server/config/default.config</code>. This configuration expects your Shiny applications to be hosted in <code>/srv/shiny-server/</code>. Let's start by copying one of the example applications from the Shiny package to this directory.</p>
 <p>We'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
 <pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
@@ -1136,7 +725,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
 <p>You should now find that Shiny Server is no longer running on port 3838, but is on whichever new port you selected.</p>
-<h3 id="let-users-manage-their-own-applications"><a href="#let-users-manage-their-own-applications"><span class="header-section-number">7.1.2</span> Let users manage their own applications</a></h3>
+<h3 id="let-users-manage-their-own-applications"><a href="#let-users-manage-their-own-applications"><span class="header-section-number">4.1.2</span> Let users manage their own applications</a></h3>
 <p>Some administrators of Shiny Server would prefer to give users -- or some trusted subgroup of users -- the ability to manage and host their own Shiny applications. This allows users to work directly with their applications rather than requiring an administrator to deploy and update applications on their behalf. This guide will document how to create such an environment using the <code>user_apps</code> directive documented in the section named <a href="#host-per-user-application-directories">Host Per-User Application Directories</a>.</p>
 <p>We provide a configuration file in <code>/opt/shiny-server/config/user-apps.config</code> that enables this functionality. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/user-apps.config /etc/shiny-server/shiny-server.conf</code></pre>
@@ -1153,7 +742,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
 <p>By default, Shiny Server listens on port 3838, so your new application will be available at <code>http://myserver.com:3838/&lt;your_username&gt;/01_hello</code> where <code>myserver</code> is the hostname or IP address of the Shiny Server and <code>&lt;your_username&gt;</code> is your Linux username.</p>
 <p>If you wanted to restrict the privilege of running Shiny applications to a particular set of users on your system, you can uncomment the <code>members_of</code> line in the configuration file. You can then specify the Linux group name of which a user must be a member before he or she would be allowed to host Shiny applications.</p>
-<h3 id="run-shiny-server-on-multiple-ports"><a href="#run-shiny-server-on-multiple-ports"><span class="header-section-number">7.1.3</span> Run Shiny Server on multiple ports</a></h3>
+<h3 id="run-shiny-server-on-multiple-ports"><a href="#run-shiny-server-on-multiple-ports"><span class="header-section-number">4.1.3</span> Run Shiny Server on multiple ports</a></h3>
 <p>This guide will show how to run Shiny Server on multiple ports simultaneously and will also show how to run a single server with multiple locations.</p>
 <p>We provide a configuration file in <code>/opt/shiny-server/config/multi-server.config</code> that enables this functionality. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/multi-server.config /etc/shiny-server/shiny-server.conf</code></pre>
@@ -1180,93 +769,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <li>Also on the server running on port 3838, you have a single application available at the <code>/example1</code> location. So the URL like <code>http://myserver.com:3838/example1</code> (where <code>myserver</code> is the hostname or IP address of the Shiny Server) should point you to the example you previously copied to <code>/srv/shiny-server/01_hello</code>.</li>
 <li>Finally, the server on port 4949 will host any application defined in <code>/srv/shiny-server</code>. You can access the one we just copied at a URL like <code>http://myserver.com:4949/01_hello</code> (where <code>myserver</code> is the hostname or IP address of the Shiny Server) which, coincidentally, should point you to the same application you just loaded a moment ago.</li>
 </ul>
-<h3 id="require-user-authentication-on-an-application" class="pro"><a href="#require-user-authentication-on-an-application"><span class="header-section-number">7.1.4</span> Require user authentication on an application</a></h3>
-<p>Shiny Server Pro comes with multiple different methods of authenticating users (as described in the chapter on <a href="#authentication-security">Authentication &amp; Security</a>). Out of the box, it's configured to use a <a href="#flat-file-authentication">Flat-File Authentication</a> database stored in <code>/etc/shiny-server/passwd</code>. This database is initially empty; to create a user named <code>admin</code>, execute the following command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/sspasswd /etc/shiny-server/passwd admin</code></pre>
-<p>then enter the new password for the <code>admin</code> user when prompted. Once completed, you'll have a single user defined in your database named <code>admin</code>.</p>
-<p>You should now be able to login to your administrative dashboard at a URL like <code>http://myserver.com:4151/</code> (after replacing <code>myserver.com</code> with your server's IP or hostname) using the username <code>admin</code> with the password you just created. See the chapter entitled <a href="#admin">Admin</a> for more details on how to take advantage of this interface.</p>
-<p>After defining usernames and passwords in this password database, you can also restrict access to <code>server</code>s and <code>location</code>s using the <code>required_user</code> directive. We provide an example of such a configuration at <code>/opt/shiny-server/auth.config</code>. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/auth.config /etc/shiny-server/shiny-server.conf</code></pre>
-<p>You'll need to restart Shiny Server to make it aware of the changes you made to the configuration file. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions, including Ubuntu 12 and later and CentOS 6):</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> restart shiny-server</code></pre>
-<p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
-<p>If you haven't already, let's start by copying one of the example applications from the Shiny package to <code>/srv/shiny-server/</code>, which is the directory in which this configuration expects applications to be stored.</p>
-<p>We'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
-<pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
-<p>which will return something like:</p>
-<pre><code>[1] &quot;/usr/local/lib/R/site-library/shiny/examples/01_hello&quot;</code></pre>
-<p>You can copy that entire directory into <code>/srv/shiny-server</code> using the following command (using the directory that was returned in the previous command, if it's different):</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello /srv/shiny-server/</code></pre>
-<p>Because of the specifications provided in our current configuration file (in <code>/etc/shiny-server/shiny-server.conf</code>), the application we just copied requires authentication -- you must be logged in as the user named &quot;admin&quot; to access it. If you already visited the Administrative Dashboard on port 4151 mentioned earlier, then you may already be logged in. But you can test your configuration by either logging out or using another browser/computer to confirm that you're unable to access the application you just copied hosted at a URL like <code>http://myserver.com:3838/01_hello</code> without logging in, where <code>myserver</code> is the hostname or IP address of the Shiny Server. However, once you login as the user named &quot;admin&quot; using the password you defined above, you will be granted access to this application.</p>
-<p>Note that, because the configuration in use is structured like so:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">server</span> {
-  <span class="kw">listen</span> 3838<span class="kw">;</span>
-  
-  <span class="kw">location</span> / {
-
-    <span class="kw">...</span>
-
-    <span class="kw">location</span> /01_hello {
-      <span class="kw">required_user</span> admin<span class="kw">;</span>
-    }
-  }
-}</code></pre>
-<p><em>only</em> the <code>01_hello</code> location requires authentication; all other applications are freely available. If you were to move the <code>required_user</code> directive to the parent location, however, all applications defined in that location would require being authenticated as the user named &quot;admin&quot;.</p>
-<h3 id="host-a-secure-shiny-server" class="pro"><a href="#host-a-secure-shiny-server"><span class="header-section-number">7.1.5</span> Host a secure Shiny Server</a></h3>
-<p>Shiny Server Professional is able to serve Shiny applications using SSL/TLS -- an encrypted channel between your server and your clients. A configuration exemplifying this setup is available in <code>/opt/shiny-server/ssl.config</code>. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/ssl.config /etc/shiny-server/shiny-server.conf</code></pre>
-<p>This configuration expects your SSL key and certificate to be available in <code>/etc/shiny-server/server.key</code> and <code>/etc/shiny-server/server.cert</code>, respectively. If you have an existing SSL certificate stored elsewhere, you can update the configuration file at <code>/etc/shiny-server/shiny-server.conf</code> to point to the appropriate files. If you don't have an SSL certificate available, you can setup a &quot;self-signed&quot; certificate. This certificate will allow you to encrypt traffic between your clients and server but will not be &quot;trusted&quot; by most browsers. Thus, when a user visits a page secured via a self-signed certificate, the user will get a warning advising them not to proceed. Nonetheless, we can demonstrate how to create a self-signed certificate and integrate it into Shiny Server. The details of creating and signing SSL certificates is outside the scope of this guide, but the commands are given below for your convenience.</p>
-<p>In order to create a certificate, you'll need to have the <code>openssl</code> library installed on your server. You can then create an SSL key using the following command.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> openssl genrsa -out /etc/shiny-server/server.key 1024</code></pre>
-<p>You'll then generate a certificate signing request (CSR) using the following command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> openssl req -new -key /etc/shiny-server/server.key \
-  <span class="kw">-out</span> /etc/shiny-server/server.csr</code></pre>
-<p>(Where a command includes a <code>\</code> you can either enter that literally as it appears in this document or you can omit it and enter the whole command on a single line.) This command will ask you a variety of information about your organization which you can provide or omit, if you just plan to sign this certificate yourself.</p>
-<p>You can then sign that request yourself using this command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> openssl x509 -req -days 3650 \
-  <span class="kw">-in</span> /etc/shiny-server/server.csr \
-  <span class="kw">-signkey</span> /etc/shiny-server/server.key \
-  <span class="kw">-out</span> /etc/shiny-server/server.cert</code></pre>
-<p>At this point, you can restart the server to make it recognize its new configuration. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions, including Ubuntu 12 and later and CentOS 6):</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> restart shiny-server</code></pre>
-<p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
-<p>It is a good idea to inspect the log file at this point to ensure that there were no problems using your SSL key and certificate. The server log file is stored in <code>/var/log/shiny-server.log</code>. You can preview the last 20 lines of this file using the following command.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> tail -n 20 /var/log/shiny-server.log</code></pre>
-<p>You can ensure here that there were no errors in using your SSL configuration.</p>
-<p>Finally, if you haven't already, you'll need to copy an example application into <code>/srv/shiny-server/</code> which is the directory this configuration expects your applications to be hosted in. Let's start by copying one of the example applications from the Shiny package to this directory.</p>
-<p>We'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
-<pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
-<p>which will return something like:</p>
-<pre><code>[1] &quot;/usr/local/lib/R/site-library/shiny/examples/01_hello&quot;</code></pre>
-<p>You can copy that entire directory into <code>/srv/shiny-server</code> using the following command (using the directory that was returned in the previous command, if it's different):</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello /srv/shiny-server/</code></pre>
-<p>Once you've copied this application in, you should be able to connect to your server from a browser by visiting a URL like <code>https://myserver.com:3939/01_hello</code> (after replacing <code>myserver.com</code> with your server's IP or hostname). Note that this guide uses the port 3939, unlike the other guides and that you <em>must</em> specify the <code>https://</code> protocol when visiting the page. If you signed the certificate yourself, your browser will likely prompt you about the untrusted certificate. If you instruct your browser to accept the certificate regardless, you'll be taken to your application which now is secured via SSL/TLS encryption.</p>
-<h3 id="host-an-application-supported-by-multiple-r-processes" class="pro"><a href="#host-an-application-supported-by-multiple-r-processes"><span class="header-section-number">7.1.6</span> Host an Application Supported by Multiple R Processes</a></h3>
-<p>You can configure Shiny Server Professional to run multiple Shiny processes for a single application. You could evenly balance incoming traffic across up to three processes (the default), or even create a separate Shiny process for each incoming user. The details for configuring this setup is discussed in the section on the <a href="#utilization-scheduler">Utilization Scheduler</a>. An example of such a configuration is available in <code>/opt/shiny-server/config/multi-proc.config</code>. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/multi-proc.config /etc/shiny-server/shiny-server.conf</code></pre>
-<p>This configuration includes the following line to specify that a Utilization Scheduler should be used when serving Shiny applications.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">utilization_scheduler</span> 1 .7 5<span class="kw">;</span></code></pre>
-<p>This configuration dictates that a Shiny process should only have one active Shiny session and that there should be at most 5 Shiny processes per application. This configuration would be appropriate for an application that were computationally intensive. In such an application, one session may tie up the Shiny process for minutes at a time while doing computation which would create an unpleasant experience for other users who try to connect during that window. In this way, we can ensure that each user gets his or her own designated Shiny process.</p>
-<p>At this point, you can restart the server to make it recognize its new configuration. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions, including Ubuntu 12 and later and CentOS 6):</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> restart shiny-server</code></pre>
-<p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
-<p>Finally, if you haven't already, you'll need to copy an example application into <code>/srv/shiny-server/</code> which is the directory this configuration expects your applications to be hosted in. Let's start by copying one of the example applications from the Shiny package to this directory.</p>
-<p>We'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
-<pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
-<p>which will return something like:</p>
-<pre><code>[1] &quot;/usr/local/lib/R/site-library/shiny/examples/01_hello&quot;</code></pre>
-<p>You can copy that entire directory into <code>/srv/shiny-server</code> using the following command (using the directory that was returned in the previous command, if it's different):</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello /srv/shiny-server/</code></pre>
-<p>Once you've copied this application in, you should be able to connect to your server from a browser by visiting a URL like <code>http://myserver.com:3838/01_hello</code> (after replacing <code>myserver.com</code> with your server's IP or hostname).</p>
-<p>In order to inspect what processes are being created and how they're performing, it is useful to open Shiny Server's Admin Dashboard. Before you can login to the dashboard, you'll need to create a user who is allowed to access the Dashboard. Shiny Server Pro comes with multiple different methods of authenticating users (as described in the chapter on <a href="#authentication-security">Authentication &amp; Security</a>). Out of the box, it's configured to use a <a href="#flat-file-authentication">Flat-File Authentication</a> database stored in <code>/etc/shiny-server/passwd</code>. This database is initially empty; to create a user named <code>admin</code>, execute the following command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/sspasswd /etc/shiny-server/passwd admin</code></pre>
-<p>then enter the new password for the <code>admin</code> user when prompted. Once completed, you'll have a single user defined in your database named <code>admin</code>.</p>
-<p>You should now be able to login to your administrative dashboard at a URL like <code>http://myserver.com:4151/</code> (after replacing <code>myserver.com</code> with your server's IP or hostname) using the username <code>admin</code> with the password you just created. See the chapter entitled <a href="#admin">Admin</a> for more details on how to take advantage of this interface.</p>
-<p>You will be able to monitor the processes that are being created in real-time using the Dashboard. You can also drill down into each process to verify that the connections are being assigned to their own private Shiny processes as we expected.</p>
-<h2 id="configuration-settings"><a href="#configuration-settings"><span class="header-section-number">7.2</span> Configuration Settings</a></h2>
+<h2 id="configuration-settings"><a href="#configuration-settings"><span class="header-section-number">4.2</span> Configuration Settings</a></h2>
 <p></p>
     <p>Listed below are all the directives that are supported in Shiny Server config files.</p>
     <p><strong>Applies to</strong> indicates the kind of parent scope that this directive normally appears inside.</p>
@@ -1343,7 +846,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
                   <td>format</td>
                   <td>String</td>
                   <td>optional</td>
-                  <td>The log file format; see the Connect documentation (http://www.senchalabs.org/connect/logger.html) under "Formats"</td>
+                  <td>The log file format; see <a href="http://www.senchalabs.org/connect/logger.html">Connect documentation</a> under "Formats"</td>
                   <td>default</td>
                 </tr>
               
@@ -1368,7 +871,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
             <label>Applies to:</label> Top-level<br/>
             <label>Inheritable:</label> Yes<br/>
             
-              <label>Child directives:</label> <code><a href="#listen">listen</a></code>, <code><a href="#server_name">server_name</a></code><br/>
+              <label>Child directives:</label> <code><a href="#listen">listen</a></code>, <code><a href="#server_name">server_name</a></code>, <code><a href="#location">location</a></code><br/>
             
           </p>
         </li>
@@ -1489,10 +992,10 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
+            <label>Applies to:</label> <code><a href="#server">server</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
-              <label>Child directives:</label> <code><a href="#run_as">run_as</a></code>, <code><a href="#location">location</a></code>, <code><a href="#site_dir">site_dir</a></code>, <code><a href="#directory_index">directory_index</a></code>, <code><a href="#user_apps">user_apps</a></code>, <code><a href="#app_dir">app_dir</a></code>, <code><a href="#redirect">redirect</a></code>, <code><a href="#log_dir">log_dir</a></code>, <code><a href="#members_of">members_of</a></code>, <code><a href="#application">application</a></code><br/>
+              <label>Child directives:</label> <code><a href="#run_as">run_as</a></code>, <code><a href="#site_dir">site_dir</a></code>, <code><a href="#directory_index">directory_index</a></code>, <code><a href="#user_apps">user_apps</a></code>, <code><a href="#app_dir">app_dir</a></code>, <code><a href="#redirect">redirect</a></code>, <code><a href="#log_dir">log_dir</a></code>, <code><a href="#members_of">members_of</a></code>, <code><a href="#google_analytics_id">google_analytics_id</a></code>, <code><a href="#application">application</a></code><br/>
             
           </p>
         </li>
@@ -1529,7 +1032,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#application">application</a></code>, <code><a href="#location">location</a></code><br/>
+            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
@@ -1780,158 +1283,6 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
         </li>
       
         <li>
-          <h3 class="code"><a name="required_group"></a>required_group</h3>
-          <p class="desc">Restricts a location to require membership in one or more groups in order to access the application.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>groups</td>
-                  <td>String</td>
-                  <td>multiple</td>
-                  <td>Users must be a member of at least one of these groups in order to access the application</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#admin">admin</a></code>, <code><a href="#application">application</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="required_user"></a>required_user</h3>
-          <p class="desc">Restricts a location to only be available to the specified users.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>users</td>
-                  <td>String</td>
-                  <td>multiple</td>
-                  <td>Users who are allowed to access the application</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#admin">admin</a></code>, <code><a href="#application">application</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="auth_passwd_file"></a>auth_passwd_file</h3>
-          <p class="desc">Configures the server to use the specified file as the username/password store. The file should contain zero or more lines in the format <code>username + ":{scrypt}" + hashed-password</code>, where hashed-password is the scrypted password in base64 format. Use the <code>sspasswd</code> utility to create and modify passwd files.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>path</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The file path where the username/password file can be found</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level<br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="auth_duration"></a>auth_duration</h3>
-          <p class="desc">Approximate time in minutes that a user should be kept logged in, from the time that they finish using their last application. The default value is 120.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>minutes</td>
-                  <td>Float</td>
-                  <td>required</td>
-                  <td>The number of minutes; must be greater than or equal to 10 or applications may behave unpredictably</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level<br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
           <h3 class="code"><a name="google_analytics_id"></a>google_analytics_id</h3>
           <p class="desc">Configure Google Analytics tracking code to be inserted in Shiny application pages.</p>
           
@@ -1963,8 +1314,48 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
           
 
           <p>
-            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#application">application</a></code><br/>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="application"></a>application</h3>
+          <p class="desc">Defines the parameters for an application. The values defined in the global configuration file will be used as defaults, and individual applications can override those defaults by placing a file named '.shiny_app.conf' in the base directory of an application.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>appDir</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td>Specify the application by its app directory.</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+              <label>Child directives:</label> <code><a href="#app_init_timeout">app_init_timeout</a></code>, <code><a href="#app_idle_timeout">app_idle_timeout</a></code>, <code><a href="#simple_scheduler">simple_scheduler</a></code><br/>
             
           </p>
         </li>
@@ -2046,44 +1437,6 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
         </li>
       
         <li>
-          <h3 class="code"><a name="app_session_timeout"></a>app_session_timeout</h3>
-          <p class="desc">Defines how long an idle user's session should remain connected to the server.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>timeout</td>
-                  <td>Integer</td>
-                  <td>required</td>
-                  <td>The number of seconds after which an idle session will be disconnected. If 0, sessions will never be automatically disconnected.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#application">application</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
           <h3 class="code"><a name="simple_scheduler"></a>simple_scheduler</h3>
           <p class="desc">A basic scheduler which will spawn one single-threaded R worker for each application. If no scheduler is specified, this is the default scheduler.</p>
           
@@ -2107,7 +1460,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
                   <td>maxRequests</td>
                   <td>Integer</td>
                   <td>optional</td>
-                  <td>The maximum number of requests to assign to this scheduler before it should start returning rejecting incoming traffic using a '503 - Service Unavailable' message. Once this threshold is hit, users attempting to initialize a new session will receive 503 errors.</td>
+                  <td>The maximum number of requests to assign to this scheduler before it should start returning rejecting incoming traffic using a '503 - Service Unavailable' message. Once this threshold is hit, users attempting to initialize a new sessio will receive 503 errors.</td>
                   <td>100</td>
                 </tr>
               
@@ -2116,106 +1469,6 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 
           <p>
             <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#application">application</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="utilization_scheduler"></a>utilization_scheduler</h3>
-          <p class="desc">A multi-process scheduler which will load-balance incoming traffic to multiple R processes. Each incoming request will be routed to the running worker with the fewest open connections, unless the request is explicitly targetting a particular worker.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>maxRequestsPerProc</td>
-                  <td>Integer</td>
-                  <td>required</td>
-                  <td>The maximum number of simultaneous requests (web socket or HTTP) per R process.</td>
-                  <td></td>
-                </tr>
-              
-                <tr>
-                  <td>loadFactor</td>
-                  <td>Float</td>
-                  <td>required</td>
-                  <td>A decimal value in (0, 1] defining the capacity at which a new R process should be pre-emptively spawned.</td>
-                  <td></td>
-                </tr>
-              
-                <tr>
-                  <td>maxProc</td>
-                  <td>Integer</td>
-                  <td>required</td>
-                  <td>The maximum number of concurrent R processes to run for this application.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#application">application</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="ssl"></a>ssl</h3>
-          <p class="desc">The absolute paths to the files to use as the SSL key and certificate for this server.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>key_path</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The absolute path to the SSL key for this server.</td>
-                  <td></td>
-                </tr>
-              
-                <tr>
-                  <td>cert_path</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The absolute path to the SSL certificate for this server.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#server">server</a></code>, <code><a href="#admin">admin</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
@@ -2259,647 +1512,9 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
           </p>
         </li>
       
-        <li>
-          <h3 class="code"><a name="admin"></a>admin</h3>
-          <p class="desc">If present, will provide an administrative interface on the specified port allowing specified users to monitor deployed Shiny applications.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>port</td>
-                  <td>Integer</td>
-                  <td>required</td>
-                  <td>The port on which the admin interface will be made available.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level<br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-              <label>Child directives:</label> <code><a href="#ssl">ssl</a></code>, <code><a href="#template_dir">template_dir</a></code><br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="whitelist_headers"></a>whitelist_headers</h3>
-          <p class="desc">Enumerates the HTTP headers that should be trusted and passed from the original HTTP request to the Shiny application.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>headers</td>
-                  <td>String</td>
-                  <td>multiple</td>
-                  <td>The list of headers which should be trusted.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#application">application</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="auth_google"></a>auth_google</h3>
-          <p class="desc"></p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>id</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The Client ID available in your Google Apps Console.</td>
-                  <td></td>
-                </tr>
-              
-                <tr>
-                  <td>secret</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The Client Secret available in your Google Apps Console.</td>
-                  <td></td>
-                </tr>
-              
-                <tr>
-                  <td>filters</td>
-                  <td>String</td>
-                  <td>multiple</td>
-                  <td>Used to limit the Google users who will be granted access to the system by filtering based on their email address. Filters may begin with a '+' or a '-' to indicate whether this is a 'positive' match (in which case these users should be granted access), or a 'negative' match (in which case any matching email should be rejected). These filters will iteratively be applied to the incoming email address until a match is found, at which point the user will either be admitted or rejected based on whether the filter was a 'positive' or 'negative' filter. A filter not beginning with a '+' or '-' is assumed to be a 'positive' filter. Bash's 'glob'-style matching is available.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level<br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="auth_ldap"></a>auth_ldap</h3>
-          <p class="desc">Define how the LDAP (or Active Directory) server will be accessed.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>url</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The URL for the LDAP server and the root DIT of the directory. The URL can either use the unsecured 'ldap://' protocol, or the SSL-secured 'ldaps://' protocol, followed by the hostname or IP address of the LDAP server. Optionally, a port number can be provided after the LDAP server's address prefixed by a colon. If no port number is provided, the default port numbers of 389 and 636 for 'ldap://' and 'ldaps://' (respectively) will be used. This should be followed by a forward slash and the root DIT of the directory to use for authentication. For example, one configuration could be 'ldaps://ldap.exapmle.org:1636/dc=example,dc=org'.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level<br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="auth_active_dir"></a>auth_active_dir</h3>
-          <p class="desc">Define how the Active Directory server will be accessed. This provides the same functionality as <a class="code" href="#auth_ldap">auth_ldap</a>, but tailors the defaults to be appropriate for Active Directory.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>url</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The URL for the Active Directory (AD) server and the root DIT of the directory. The URL can either use the unsecured 'ldap://' protocol, or the SSL-secured 'ldaps://' protocol, followed by the hostname or IP address of the AD server. Optionally, a port number can be provided after the LDAP server's address prefixed by a colon. If no port number is provided, the default port numbers of 389 and 636 for 'ldap://' and 'ldaps://' (respectively) will be used. This should be followed by a forward slash and the root DIT of the directory to use for authentication. For example, one configuration could be 'ldaps://ad.example.org:1636/dc=example,dc=org'.</td>
-                  <td></td>
-                </tr>
-              
-                <tr>
-                  <td>userSuffix</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The suffix (typically the domain name) to be appended to usernames when attempting to bind to the AD server. The default <a class="code" href="#user_bind_template">user_bind_template</a> will be set to '{{username}}@' followed by the userSuffix. This setting will be ignored if <code>user_bind_template</code> is explicitly set.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level<br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-              <label>Child directives:</label> <code><a href="#ldap_timeout">ldap_timeout</a></code>, <code><a href="#user_bind_template">user_bind_template</a></code>, <code><a href="#trusted_ca">trusted_ca</a></code>, <code><a href="#check_ssl_ca">check_ssl_ca</a></code>, <code><a href="#user_filter">user_filter</a></code>, <code><a href="#user_search_base">user_search_base</a></code>, <code><a href="#group_search_base">group_search_base</a></code>, <code><a href="#group_filter">group_filter</a></code>, <code><a href="#group_name_attribute">group_name_attribute</a></code><br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="ldap_timeout"></a>ldap_timeout</h3>
-          <p class="desc">Define the timeout for the parent LDAP connection. This timeout will be used when trying to connect to the LDAP server, and also when trying to query the server once connected. If not provided, a default timeout of 10 seconds will be used.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>timeout</td>
-                  <td>Integer</td>
-                  <td>required</td>
-                  <td>The number of seconds to wait for an LDAP query or connections before labeling it a failure. If 0, will never timeout.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#auth_ldap">auth_ldap</a></code>, <code><a href="#auth_active_dir">auth_active_dir</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="user_bind_template"></a>user_bind_template</h3>
-          <p class="desc">Define the template by which the username provided by the user should be converted to the username used to bind to the LDAP server. We currently only support storing all users in a single node of the directory.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>template</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The template used in defining the DN of users in the LDAP database when trying to bind. The following variables will be automatically substituted before attempting to bind to the LDAP server: {{username}} will be replaced by the username provided on the login page; {{root}} will be replaced by the root DIT (as provided in the parent <a class="code" href="#auth_ldap">auth_ldap</a> directive). If this setting is not provided, defaults will be used. For <a class="code" href="#auth_active_dir">auth_active_dir</a> systems, the the default is '{{username}}@example.org' (where 'example.org' is the domain inferred/provided in <code>auth_active_dir</code>). For other <code>auth_ldap</code> systems, the default will be 'uid={{username}},ou=People,{{root}}'.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#auth_ldap">auth_ldap</a></code>, <code><a href="#auth_active_dir">auth_active_dir</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="trusted_ca"></a>trusted_ca</h3>
-          <p class="desc">By default, many commonly accepted Certificate Authorities (CAs) will be trusted when establishing secure ldap (ldaps://) connections. This parameter instructs Shiny Server to instead trust this CA certificate. Organizations that are using an internal CA to sign their SSL certificates or are using a self-signed SSL certificate on their LDAP server will need to provide the associated CA certificate in order for Shiny Server to trust the ldaps:// connection.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>certificate</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The path to the CA certificate to be trusted in PEM format.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#auth_ldap">auth_ldap</a></code>, <code><a href="#auth_active_dir">auth_active_dir</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="check_ssl_ca"></a>check_ssl_ca</h3>
-          <p class="desc">Define whether or not to check the Certificat Authority (CA) of the SSL certificate returned from the LDAP server. This must be true if using a self-signed SSL certificate. If not provided, this is set to 'true'. This should only be set to false if you know that your LDAP server uses an untrusted SSL certificate.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>value</td>
-                  <td>Boolean</td>
-                  <td>required</td>
-                  <td>If true, will check the certificate against the default list of trusted CAs (or the list provided in the <a class="code" href="#trusted_ca">trusted_ca</a> setting). If false, the returned SSL certificate will not be checked.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#auth_ldap">auth_ldap</a></code>, <code><a href="#auth_active_dir">auth_active_dir</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="user_filter"></a>user_filter</h3>
-          <p class="desc">The filter to be used when querying the LDAP database to find the LDAP user object which contains the username. In Active Directory, the CN of the users are often not the username. In such instances, it is necessary to map the entered username to the user's DN. This will be done by querying in <a class="code" href="#user_search_base">user_search_base</a> for objects using this filter. If this field is left empty, it will be assumed that the name the user enters is the same as the associated LDAP user's CN, and can be used in the user's DN as instructed by <a class="code" href="#user_bind_template">user_bind_template</a>. The following variables are available: {{username}} will be replaced by the username provided on the login page; {{root}} will be replaced by the root DIT (as provided in the parent <a class="code" href="#auth_ldap">auth_ldap</a> directive); {{userBind}} will be replaced by the username after applying the <code>user_bind_template</code>. The default for this setting in <code>auth_ldap</code> is to leave this field empty; the default in <a class="code" href="#auth_active_dir">auth_active_dir</a> is 'userPrincipalName={{userBind}}'</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>filter</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The filter to use to find the LDAP user object referenced by the given username (as entered by the user on the login page).</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#auth_ldap">auth_ldap</a></code>, <code><a href="#auth_active_dir">auth_active_dir</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="user_search_base"></a>user_search_base</h3>
-          <p class="desc">Set the subtree which will be the root of user searches. If this setting is omitted, the defaults of 'cn=Users' or 'ou=People' will be used for systems using <a class="code" href="#auth_active_dir">auth_active_dir</a> and <a class="code" href="#auth_ldap">auth_ldap</a>, respectively. The given string will be followed by a comma and the root DIT to form the base of the search for users. If empty, the unaltered root DIT will be used. This setting will only be used if <a class="code" href="#user_filter">user_filter</a> is set; otherwise, no queries for users will be executed.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>base</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The part of the tree which stores users.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#auth_ldap">auth_ldap</a></code>, <code><a href="#auth_active_dir">auth_active_dir</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="group_search_base"></a>group_search_base</h3>
-          <p class="desc">Set the subtree which will be the root of group searches. If this setting is omitted, the defaults of 'cn=Users' or 'ou=Groups' will be used for systems using <a class="code" href="#auth_active_dir">auth_active_dir</a> and <a class="code" href="#auth_ldap">auth_ldap</a>, respectively. The given string will be followed by a comma and the root DIT to form the base of the search for groups. If empty, the unaltered root DIT will be used. </p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>base</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The part of the tree which stores groups.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#auth_ldap">auth_ldap</a></code>, <code><a href="#auth_active_dir">auth_active_dir</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="group_filter"></a>group_filter</h3>
-          <p class="desc">The LDAP query to use in determining group membership. The query should return all groups of which the given user is a member. Three variables are available for this query: '{{username}}'' will be replaced with the username entered at the login screen; '{{userDN}}' will be replaced with the user's full DN (using the <a class="code" href="#user_bind_template">user_bind_template</a> to compute this); {{root}} will be replaced by the root DIT (as provided in the parent <a class="code" href="#auth_ldap">auth_ldap</a> directive). For <a class="code" href="#auth_active_dir">auth_active_dir</a>, the default is 'member:1.2.840.113556.1.4.1941:={{userDN}}'. For <code>auth_ldap</code>, the default is 'uniqueMember={{username}}'.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>filter</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The filter to use to determine group membership.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#auth_ldap">auth_ldap</a></code>, <code><a href="#auth_active_dir">auth_active_dir</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="group_name_attribute"></a>group_name_attribute</h3>
-          <p class="desc">The attribute of a group which contains the group name.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>attribute</td>
-                  <td>String</td>
-                  <td>optional</td>
-                  <td>The name of the attribute. Default is 'cn' for both <a class="code" href="#auth_active_dir">auth_active_dir</a> and <a class="code" href="#auth_ldap">auth_ldap</a></td>
-                  <td>cn</td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#auth_ldap">auth_ldap</a></code>, <code><a href="#auth_active_dir">auth_active_dir</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="application"></a>application</h3>
-          <p class="desc">DEPRECATED. This setting is deprecated and no longer enforced in Shiny Server. It is not permitted in configuration files.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>empty</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td></td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-              <label>Child directives:</label> <code><a href="#required_group">required_group</a></code>, <code><a href="#required_user">required_user</a></code>, <code><a href="#google_analytics_id">google_analytics_id</a></code>, <code><a href="#app_init_timeout">app_init_timeout</a></code>, <code><a href="#app_idle_timeout">app_idle_timeout</a></code>, <code><a href="#app_session_timeout">app_session_timeout</a></code>, <code><a href="#simple_scheduler">simple_scheduler</a></code>, <code><a href="#utilization_scheduler">utilization_scheduler</a></code>, <code><a href="#whitelist_headers">whitelist_headers</a></code><br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="template_dir"></a>template_dir</h3>
-          <p class="desc">A directory containing custom templates to be used when generating pages in Shiny Server.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>dir</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>The directory containing HTML templates.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#admin">admin</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
     </ul>
-<h2 id="migrating-updating"><a href="#migrating-updating"><span class="header-section-number">7.3</span> Migrating &amp; Updating</a></h2>
-<h3 id="upgrading-from-shiny-server-0.3.x"><a href="#upgrading-from-shiny-server-0.3.x"><span class="header-section-number">7.3.1</span> Upgrading from Shiny Server 0.3.x</a></h3>
+<h2 id="migrating-updating"><a href="#migrating-updating"><span class="header-section-number">4.3</span> Migrating &amp; Updating</a></h2>
+<h3 id="upgrading-from-shiny-server-0.3.x"><a href="#upgrading-from-shiny-server-0.3.x"><span class="header-section-number">4.3.1</span> Upgrading from Shiny Server 0.3.x</a></h3>
 <p>Shiny Server 0.4 and later include many major changes to the architecture of Shiny Server. There are a few things to be aware of when upgrading from Shiny Server 0.3.x.</p>
 <p>First, Shiny Server is now distributed via <code>deb</code> and <code>rpm</code> installers, rather than using <code>npm</code>. Thus, you'll first want to uninstall the old version of Shiny Server which was installed from <code>npm</code>.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> npm uninstall -g shiny-server</code></pre>
@@ -2910,20 +1525,20 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - -c <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">packageVersion(&#39;shiny&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></code></pre>
 <p>(Running this command using the <code>sudo su - -c</code> preface will allow you to see the system-wide version of Shiny. Individual users could have installed more recent versions of Shiny in their own R libraries.) If the installed version of Shiny predates 0.7.0, you should follow the instructions in <a href="#install-shiny">Install Shiny</a> to update to the most recent version.</p>
 <p>At this point, you can proceed with the <a href="#installation">Installation</a> instructions associated with your Operating System.</p>
-<h3 id="upgrading-from-shiny-server-0.4.x"><a href="#upgrading-from-shiny-server-0.4.x"><span class="header-section-number">7.3.2</span> Upgrading from Shiny Server 0.4.x</a></h3>
+<h3 id="upgrading-from-shiny-server-0.4.x"><a href="#upgrading-from-shiny-server-0.4.x"><span class="header-section-number">4.3.2</span> Upgrading from Shiny Server 0.4.x</a></h3>
 <p>There are problems on some systems with updating from 0.4.x versions to a more recent version. Thus, any user updating from the 0.4.x line should uninstall the package before installing the new one. In all versions 0.5.x and later, updating can simply be done by installing the newer version over the old one without explicitly removing the old package.</p>
-<h2 id="frequently-asked-questions"><a href="#frequently-asked-questions"><span class="header-section-number">7.4</span> Frequently Asked Questions</a></h2>
-<h3 id="what-are-the-hardware-requirements-for-running-shiny-server"><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="header-section-number">7.4.1</span> What are the hardware requirements for running Shiny Server?</a></h3>
+<h2 id="frequently-asked-questions"><a href="#frequently-asked-questions"><span class="header-section-number">4.4</span> Frequently Asked Questions</a></h2>
+<h3 id="what-are-the-hardware-requirements-for-running-shiny-server"><a href="#what-are-the-hardware-requirements-for-running-shiny-server"><span class="header-section-number">4.4.1</span> What are the hardware requirements for running Shiny Server?</a></h3>
 <p>The performance footprint of a Shiny application is almost entirely dependent upon the Shiny application code. There are two factors to consider when selecting the hardware platform for Shiny Server.</p>
 <p><strong>RAM</strong></p>
 <p>The memory requirements of a Shiny application depend heavily on the data loaded when running the application. Often users find that a Shiny R process requires a minimum of 50MB of RAM -- beyond this, the amount of memory consumed by an application is determined by the data loaded or generated by that application. The <a href="http://rstudio.github.io/shiny/tutorial/#scoping">Scoping Section</a> of the Shiny Tutorial describes in detail how to take advantage of Shiny's scoping rules to share data across multiple Shiny sessions. This enables application developers to load only one copy of data into memory but still share this data with multiple shiny sessions.</p>
 <p><strong>CPU</strong></p>
 <p>R is fundamentally a single-threaded application. Unless parallel packages and tools are specifically selected when designing a Shiny application, the average R process (and the associated Shiny application) will be run serially on a single processing core. Thus, the typical Shiny application may saturate the processing core to which it's assigned, but will be unable to leverage other cores on the server which may be idle at that time.</p>
-<h3 id="does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><a href="#does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><span class="header-section-number">7.4.2</span> Does Shiny Server work on Amazon Elastic Compute Cloud (EC2)?</a></h3>
+<h3 id="does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><a href="#does-shiny-server-work-on-amazon-elastic-compute-cloud-ec2"><span class="header-section-number">4.4.2</span> Does Shiny Server work on Amazon Elastic Compute Cloud (EC2)?</a></h3>
 <p>Absolutely. Many customers deploy Shiny Server and Shiny Server Professional on the Amazon Web Services (AWS) framework.</p>
-<h3 id="can-i-deploy-shiny-server-on-an-isolated-network"><a href="#can-i-deploy-shiny-server-on-an-isolated-network"><span class="header-section-number">7.4.3</span> Can I Deploy Shiny Server on an Isolated Network?</a></h3>
+<h3 id="can-i-deploy-shiny-server-on-an-isolated-network"><a href="#can-i-deploy-shiny-server-on-an-isolated-network"><span class="header-section-number">4.4.3</span> Can I Deploy Shiny Server on an Isolated Network?</a></h3>
 <p>Of course. Shiny Server does not require a connection to the Internet in order to work properly, so you are free to deploy it in whatever sort of network configuration you would like. Offline activation is also available for Shiny Server Professional customers.</p>
-<h3 id="how-do-i-translate-my-application-settings-to-nested-locations"><a href="#how-do-i-translate-my-application-settings-to-nested-locations"><span class="header-section-number">7.4.4</span> How Do I Translate My 'application' Settings to Nested 'location's?</a></h3>
+<h3 id="how-do-i-translate-my-application-settings-to-nested-locations"><a href="#how-do-i-translate-my-application-settings-to-nested-locations"><span class="header-section-number">4.4.4</span> How Do I Translate My 'application' Settings to Nested 'location's?</a></h3>
 <p>Shiny Server 0.4.2 introduced a new model for managing applications at a more granular level by supporting nested <code>location</code> directives. Any existing <code>application</code> directives in your configuration file will need to be migrated to this nested location format in order to be supported by any version of Shiny Server after 0.4.2.</p>
 <p><code>application</code> directives were addressed by their full path on disk. Nested <code>location</code>s, on the other hand, are indexed by their relative path within their parent location. For instance, the following exemplifies how you could redirect a particular application in the old model:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
@@ -2975,32 +1590,5 @@ TODO:
 //   nginx or non-web-socket proxies
 // Isolated LAN deployments
 -->
-
-
-<h3 id="can-i-bulk-import-in-flat-file-authentication" class="pro"><a href="#can-i-bulk-import-in-flat-file-authentication"><span class="header-section-number">7.4.5</span> Can I Bulk-Import in Flat-File Authentication?</a></h3>
-<p>Some users may have an existing table of usernames and passwords they wish to import into a flat-file authentication system using the <code>sspasswd</code> tool. The shell script below can be used as a model for scripting such a solution, but be aware of the security concern mentioned below.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="co">#!/bin/bash</span>
- 
-<span class="ot">PWFILE=</span><span class="st">&quot;passwdfile&quot;</span>
-<span class="ot">USERFILE=</span><span class="st">&quot;users.txt&quot;</span>
- 
-<span class="kw">if [</span> <span class="ot">!</span> <span class="ot">-f</span> <span class="st">&quot;</span><span class="ot">$PWFILE</span><span class="st">&quot;</span><span class="kw"> ]</span>; <span class="kw">then</span>
-  <span class="kw">touch</span> <span class="ot">$PWFILE</span>
-<span class="kw">fi</span>
-
-<span class="kw">while</span> <span class="kw">read</span> <span class="ot">p</span>; <span class="kw">do</span>
-  <span class="ot">parts=(</span> <span class="ot">$p</span> <span class="ot">)</span>
-  <span class="kw">echo</span> <span class="st">&quot;Adding </span><span class="ot">${parts[0]}</span><span class="st">...&quot;</span>
-  <span class="kw">echo</span> <span class="st">&quot;</span><span class="ot">${parts[1]}</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="kw">/opt/shiny-server/bin/sspasswd</span> \
-    <span class="ot">$PWFILE</span> <span class="st">&quot;</span><span class="ot">${parts[0]}</span><span class="st">&quot;</span>
-<span class="kw">done</span> <span class="kw">&lt;</span> <span class="ot">$USERFILE</span>
-<span class="kw">echo</span> <span class="st">&quot;Done.&quot;</span></code></pre>
-<p>The script above will extract the usernames and passwords from the file specified in the <code>USERFILE</code> variable, and will use the file name provided in the <code>PWFILE</code> variable as the file in which the usernames and passwords should be stored. This script expects a user file which is stored in a tab-delimited format in which the username is in the first column, and the password is in the second.</p>
-<p>Most secure password-generating tools recommend that the password be typed in an interactive console in which the text can be hidden, rather than passing it in via a command-line argument. There are (at least) two reasons for this:</p>
-<ol type="1">
-<li>Such commands (including the password, if it were provided as an argument to the command) are stored in the history file for your shell. Thus, a user with access to your shell history may be able to retrieve the password.</li>
-<li>In a model like the one used above, the passwords won't be stored in your shell's history, but they will be available in the system's process table. The <code>echo</code> command above (and the password associated with it) will likely be accessible by any other user on the system while that command is executing.</li>
-</ol>
-<p>Be sure to fully understand the security implications of the above script before using it, especially if using it on an unsecured or multi-user server.</p>
 </body>
 </html>
