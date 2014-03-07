@@ -844,6 +844,7 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
     session$groups
   })
 })</code></pre>
+<p>It is important to note that when a user logs in to Shiny Server Pro, that authentication will be applied server-wide. This means that a visitor who authenticates as a particular user on one application will be identified as that user to the other applications on this server to which they connect. There is currently no notion in Shiny Server Pro of logging in exclusively to only one particular application.</p>
 <h2 id="auth-duration" class="pro"><a href="#auth-duration"><span class="header-section-number">4.2</span> Auth Duration</a></h2>
 <p>Regardless of which authentication mechanism is used, the duration of authentication can be configured using the <code>auth_duration</code> setting. This setting controls the amount of time (in minutes) for which a user should remain logged in after the finish using their last application. This setting should be set to 10 minutes or greater.</p>
 <h2 id="flat-file-authentication" class="pro"><a href="#flat-file-authentication"><span class="header-section-number">4.3</span> Flat-File Authentication</a></h2>
@@ -1006,6 +1007,7 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
   <span class="kw">required_user</span> kim tom<span class="kw">;</span>
 }</code></pre>
 <p>This directive would enable authentication on the specified <code>location</code>, which would present any new, un-authenticated visitor to the application with a login page. If the visitor entered valid credentials against your configured authentication mechanism, then he or she would be checked against the list of allowed users for this application. If found (i.e. if the user name was either <code>kim</code> or <code>tom</code>), the visitor would be granted access to the application. Otherwise, he or she would be unable to access the application.</p>
+<p>There are two special cases for <code>required_user</code>. Including the user named <code>*</code> will admit any user who is able to login. Additionally, including the user <code>**</code> will admit any visitor, whether or not they are logged in; this is the default behavior if no <code>required_user</code> setting is specified.</p>
 <p>It is encouraged that any <code>server</code> accepting user credentials be secured via <a href="#ssl">SSL</a>.</p>
 <h3 id="group-authentication" class="pro"><a href="#group-authentication"><span class="header-section-number">4.6.2</span> Group Authentication</a></h3>
 <p>The <code>required_group</code> setting allows the administrator to control access based on the groups of which users are a member. In this way, entire sets of users can be granted access to a particular location in one line in the configuration file.</p>
