@@ -11,19 +11,15 @@
 #
 
 local({
-  # Read config directives from stdin and put them in the environment.
-  fd = file('stdin')
-  input <- readLines(fd)
-  Sys.setenv(
-  SHINY_APP=input[1],
-  SHINY_PORT=input[2],
-  SHINY_GAID=input[3],
-  SHINY_SHARED_SECRET=input[4],
-  SHINY_SERVER_VERSION=input[5],
-  # Skip input[6]
-  MIN_R_VERSION=input[7],
-  MIN_SHINY_VERSION=input[8])
-  close(fd)
+  # Expect that the following environment variables will be provided.
+  # SHINY_APP
+  # SHINY_PORT
+  # SHINY_GAID
+  # SHINY_SHARED_SECRET
+  # SHINY_SERVER_VERSION
+  # WORKER_ID
+  # MIN_R_VERSION
+  # MIN_SHINY_VERSION
 
   options(shiny.sharedSecret = Sys.getenv('SHINY_SHARED_SECRET'))
 
@@ -116,6 +112,5 @@ if (is.na(port)) {
   port <- Sys.getenv('SHINY_PORT')
   attr(port, 'mask') <- strtoi('0077', 8)
 }
-
 cat(paste("\nStarting Shiny with process ID: '",Sys.getpid(),"'\n", sep=""))
 runApp(Sys.getenv('SHINY_APP'),port=port,launch.browser=FALSE)
