@@ -204,23 +204,28 @@ code > span.er { font-weight: bold; }
 <li><a href="#run_as"><span class="toc-section-number">2.3</span> <code>run_as</code></a><ul>
 <li><a href="#running-shiny-server-with-root-privileges"><span class="toc-section-number">2.3.1</span> Running Shiny Server with Root Privileges</a></li>
 </ul></li>
-<li><a href="#local-app-configurations"><span class="toc-section-number">2.4</span> Local App Configurations</a></li>
-<li><a href="#hosting-model"><span class="toc-section-number">2.5</span> Hosting Model</a><ul>
-<li><a href="#host-a-directory-of-applications"><span class="toc-section-number">2.5.1</span> Host a Directory of Applications</a></li>
-<li><a href="#host-a-single-application"><span class="toc-section-number">2.5.2</span> Host a Single Application</a></li>
-<li><a href="#host-per-user-application-directories"><span class="toc-section-number">2.5.3</span> Host Per-User Application Directories</a></li>
+<li><a href="#program-supervisors"><span class="toc-section-number">2.4</span> Program Supervisors</a></li>
+<li><a href="#r_path"><span class="toc-section-number">2.5</span> <code class="pro">r_path</code></a></li>
+<li><a href="#local-app-configurations"><span class="toc-section-number">2.6</span> Local App Configurations</a></li>
+<li><a href="#hosting-model"><span class="toc-section-number">2.7</span> Hosting Model</a><ul>
+<li><a href="#host-a-directory-of-applications"><span class="toc-section-number">2.7.1</span> Host a Directory of Applications</a></li>
+<li><a href="#host-a-single-application"><span class="toc-section-number">2.7.2</span> Host a Single Application</a></li>
+<li><a href="#host-per-user-application-directories"><span class="toc-section-number">2.7.3</span> Host Per-User Application Directories</a></li>
 </ul></li>
-<li><a href="#redirecting"><span class="toc-section-number">2.6</span> Redirecting</a></li>
-<li><a href="#virtual-hosts"><span class="toc-section-number">2.7</span> Virtual Hosts</a></li>
-<li><a href="#custom-templates"><span class="toc-section-number">2.8</span> Custom Templates</a></li>
-<li><a href="#server-log"><span class="toc-section-number">2.9</span> Server Log</a><ul>
-<li><a href="#access-logs"><span class="toc-section-number">2.9.1</span> Access Logs</a></li>
+<li><a href="#redirecting"><span class="toc-section-number">2.8</span> Redirecting</a></li>
+<li><a href="#virtual-hosts"><span class="toc-section-number">2.9</span> Virtual Hosts</a></li>
+<li><a href="#custom-templates"><span class="toc-section-number">2.10</span> Custom Templates</a></li>
+<li><a href="#server-log"><span class="toc-section-number">2.11</span> Server Log</a><ul>
+<li><a href="#access-logs"><span class="toc-section-number">2.11.1</span> Access Logs</a></li>
 </ul></li>
-<li><a href="#health-check-endpoint"><span class="toc-section-number">2.10</span> Health Check Endpoint</a></li>
-<li><a href="#environment-variable-settings"><span class="toc-section-number">2.11</span> Environment Variable Settings</a><ul>
-<li><a href="#shiny_log_level"><span class="toc-section-number">2.11.1</span> <code>SHINY_LOG_LEVEL</code></a></li>
-<li><a href="#r"><span class="toc-section-number">2.11.2</span> <code>R</code></a></li>
-<li><a href="#shiny_data_dir"><span class="toc-section-number">2.11.3</span> <code class="pro">SHINY_DATA_DIR</code></a></li>
+<li><a href="#health-check-endpoint"><span class="toc-section-number">2.12</span> Health Check Endpoint</a><ul>
+<li><a href="#customizing-responses"><span class="toc-section-number">2.12.1</span> Customizing Responses</a></li>
+<li><a href="#providing-multiple-health-check-endpoints"><span class="toc-section-number">2.12.2</span> Providing Multiple Health-Check Endpoints</a></li>
+</ul></li>
+<li><a href="#environment-variable-settings"><span class="toc-section-number">2.13</span> Environment Variable Settings</a><ul>
+<li><a href="#shiny_log_level"><span class="toc-section-number">2.13.1</span> <code>SHINY_LOG_LEVEL</code></a></li>
+<li><a href="#r"><span class="toc-section-number">2.13.2</span> <code>R</code></a></li>
+<li><a href="#shiny_data_dir"><span class="toc-section-number">2.13.3</span> <code class="pro">SHINY_DATA_DIR</code></a></li>
 </ul></li>
 </ul></li>
 <li><a href="#deploying-applications"><span class="toc-section-number">3</span> Deploying Applications</a><ul>
@@ -524,6 +529,13 @@ and then enter and verify the password you wish to use for this user.
   <span class="kw">run_as</span> tim<span class="kw">;</span>
 }</code></pre>
 <p>would execute all applications contained within this scope as the user <code>tim</code> with all of <code>tim</code>'s relevant <code>.libPath</code>s.</p>
+<p>Additionally, R processes are spawned using the Bash login shell. This means that prior to the execution of the R session the Bash shell will read and execute commands from this file if it exists:</p>
+<pre><code>/etc/profile</code></pre>
+<p>After reading that file, it looks for the following files and reads and executes commands from the first one that exists and is readable (it’s important to note that only one of these files will be read and executed):</p>
+<pre><code>~/.bash_profile
+~/.bash_login
+~/.profile</code></pre>
+<p>So in the above configuration example, any environment variables defined in <code>/etc/profile</code> or <code>/home/tim/.bash_profile</code> (assuming <code>tim</code>'s home directory was in the standard location) would be available to the R process, since Shiny Server is configured to run applications as the user named <code>tim</code>.</p>
 <h3 id="running-shiny-server-with-root-privileges"><a href="#running-shiny-server-with-root-privileges"><span class="header-section-number">2.3.1</span> Running Shiny Server with Root Privileges</a></h3>
 <p>Aside from spawning R Shiny processes as particular users, the <code>shiny-server</code> process itself can be configured to run as different users to control its privileges. There are three scenarios in which Shiny Server would need to be run as root:</p>
 <ol type="1">
@@ -548,13 +560,48 @@ By default, the <code>shiny-server</code> process will be started as the <code>r
 </ul>
 Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all files within it) should be owned by the user you specify.
 </div>
-<h2 id="local-app-configurations"><a href="#local-app-configurations"><span class="header-section-number">2.4</span> Local App Configurations</a></h2>
+<h2 id="program-supervisors" class="pro"><a href="#program-supervisors"><span class="header-section-number">2.4</span> Program Supervisors</a></h2>
+<p>You may also wish to run R sessions under a program supervisor that modifies their environment or available resources. You can specify a supervisor (and the arguments which control it's behavior) using the <code>exec_supervisor</code> setting. For example:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">
+<span class="kw">...</span>
+
+<span class="kw">location</span> /low {
+  
+  <span class="kw">...</span>
+
+  <span class="kw">exec_supervisor</span> <span class="st">&quot;nice -n 10&quot;</span><span class="kw">;</span>
+}</code></pre>
+<p>This example uses the <code>nice</code> command to run the Shiny processes in the affected location with a lower scheduling priority. See <a href="http://linux.die.net/man/1/nice">http://linux.die.net/man/1/nice</a> for more details on <code>nice</code>. Note that for <code>nice</code>, in particular, it's possible to accomplish the same thing using the <code>pam_limits</code> module (and even specify a custom priority level per user or group).</p>
+<h2 id="r_path"><a href="#r_path"><span class="header-section-number">2.5</span> <code class="pro">r_path</code></a></h2>
+<p>The <code>r_path</code> setting can be used to specify which version of R should be used in a particular context. Often, Shiny applications may be written with dependencies that require a particular version of R. In such a case, multiple versions of R could be installed on a server and <code>r_path</code> could be used to distinguish which applications should use which version of R.</p>
+<p>The following example demonstrates a potential use of this setting.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">run_as</span> shiny<span class="kw">;</span>
+
+<span class="co"># In general, use the R 3.0 binary provided below. {.pro}</span>
+<span class="kw">r_path</span> <span class="st">&quot;/opt/R-3.0/bin/R&quot;</span><span class="kw">;</span>
+
+<span class="kw">server</span> {
+  <span class="kw">listen</span> 3838<span class="kw">;</span>
+
+  <span class="kw">location</span> / {
+    <span class="kw">site_dir</span> /srv/shiny-server<span class="kw">;</span>
+    <span class="kw">log_dir</span> /var/log/shiny-server<span class="kw">;</span>
+
+    <span class="kw">location</span> /oldApp {
+      <span class="co"># For this particular location, use an older version of R.</span>
+      <span class="kw">r_path</span> <span class="st">&quot;/opt/R-2.14/bin/R&quot;</span><span class="kw">;</span>
+    }
+
+  }
+}</code></pre>
+<p>The value of <code>r_path</code> should specify the absolute path to the R executable.</p>
+<h2 id="local-app-configurations"><a href="#local-app-configurations"><span class="header-section-number">2.6</span> Local App Configurations</a></h2>
 <p>In the global configuration file, the <code>allow_app_override</code> setting can be specified to enable local app configurations. If present, this setting enables owners of Shiny applications to customize the properties of their own applications using a file named <code>.shiny_app.conf</code>. This file can be placed within an application directory (alongside the <code>server.R</code> and <code>ui.R</code> files) and can contain settings which configure how Shiny Server should manage the application.</p>
 <p>This behavior is controlled by the <code>allow_app_override</code> setting which is disabled by default. In order to enable local application configurations, you can add to your configuration file <code>allow_app_override true;</code> (or just <code>allow_app_override;</code> for short).</p>
 <p>Server administrators should be mindful of the fact that allowing application owners to specify their own scheduler parmeters has potential performance implications, as an application owner could enable his or her application to consume more resources than is desired. It is thus recommended that write privileges on the <code>.shiny_app.conf</code> files be granted judiciously in the underlying filesystem.</p>
-<h2 id="hosting-model"><a href="#hosting-model"><span class="header-section-number">2.5</span> Hosting Model</a></h2>
+<h2 id="hosting-model"><a href="#hosting-model"><span class="header-section-number">2.7</span> Hosting Model</a></h2>
 <p>There are currently four different methods of configuring a location, three of which serve Shiny applications. These three are described below; see the following section on <a href="#redirecting">Redirecting</a> to learn about a fourth mode.</p>
-<h3 id="host-a-directory-of-applications"><a href="#host-a-directory-of-applications"><span class="header-section-number">2.5.1</span> Host a Directory of Applications</a></h3>
+<h3 id="host-a-directory-of-applications"><a href="#host-a-directory-of-applications"><span class="header-section-number">2.7.1</span> Host a Directory of Applications</a></h3>
 <p>A location which uses <code>site_dir</code> will host an entire directory tree -- both Shiny Apps and static assets. This is the location used to serve an asset or application in <code>/srv/shiny-server/</code> in the default configuration that ships with Shiny Server.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define the location &#39;/&#39;</span>
 <span class="kw">location</span> / {
@@ -598,14 +645,14 @@ Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all fi
 </tr>
 </tbody>
 </table>
-<h3 id="host-a-single-application"><a href="#host-a-single-application"><span class="header-section-number">2.5.2</span> Host a Single Application</a></h3>
+<h3 id="host-a-single-application"><a href="#host-a-single-application"><span class="header-section-number">2.7.2</span> Host a Single Application</a></h3>
 <p>A location configured to use <code>app_dir</code> will attempt to serve a single application hosted at the given directory. For instance,</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define the location &#39;/specialApp&#39;</span>
 <span class="kw">location</span> /specialApp {
   <span class="kw">app_dir</span> /srv/shiny-server/myApp<span class="kw">;</span>
 }</code></pre>
 <p>will configure the <code>location</code> responsible for the path <code>/specialApp</code> to use this <code>app_dir</code> router which serves a single application stored in the directory <code>/srv/shiny-server/myApp</code>. This configuration would presume a <code>server.R</code> file (and corresponding <code>ui.R</code> file) would be available at <code>/srv/shiny-server/myApp/server.R</code>. If so, the application saved there would be available at a URL like <code>http://server.com/specialApp</code>.</p>
-<h3 id="host-per-user-application-directories"><a href="#host-per-user-application-directories"><span class="header-section-number">2.5.3</span> Host Per-User Application Directories</a></h3>
+<h3 id="host-per-user-application-directories"><a href="#host-per-user-application-directories"><span class="header-section-number">2.7.3</span> Host Per-User Application Directories</a></h3>
 <p>A location configured to use <code>user_apps</code> will allow users on the system to create and manage their own Shiny applications available in their home directories. This directive will host any application stored in an eligible user's <code>~/ShinyApps</code> directory publicly at a URL prefaced by their username.</p>
 <p>This privilege can be restricted only to users of particular groups using the <code>members_of</code> restriction. For instance, the following configuration:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define the root location</span>
@@ -616,7 +663,7 @@ Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all fi
   <span class="kw">members_of</span> shinyUsers<span class="kw">;</span>
 }</code></pre>
 <p>will -- for any user who is a member of the <code>shinyUsers</code> group -- publicly host any Shiny application available in the user's <code>~/ShinyApps</code> directory. For instance, if <code>tina</code> is a user on this system and is also a member of the <code>shinyUsers</code> group, any application stored in <code>/home/tina/ShinyApps/</code>, such as the <code>shinyApp1</code> application, would be available on this server at a URL like <code>http://server.com/tina/shinyApp1</code>, assuming <code>/home/tina</code> was <code>tina</code>'s home directory.</p>
-<h2 id="redirecting"><a href="#redirecting"><span class="header-section-number">2.6</span> Redirecting</a></h2>
+<h2 id="redirecting"><a href="#redirecting"><span class="header-section-number">2.8</span> Redirecting</a></h2>
 <p>The final mode in which a location can operate is to redirect to another URL. Such locations will immediately send a response to the client informing them of the URL to which they should redirect and the status code that should be used when informing the client of the redirection. Typically, a redirect will use the <code>301</code> status code for a permanent redirect, or a <code>302</code> status code for a temporary redirect. The final option when configuring a location for redirection is whether or not it should use exact matching. If a redirecting location is configured to use exact matching, only requests for that exact URL will be redirected. If not, any requests for that URL path or any subpath of that URL will be redirected. For example,</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define a location at the base URL of this &#39;server&#39;</span>
 <span class="kw">location</span> / {
@@ -626,7 +673,7 @@ Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all fi
   }
 }</code></pre>
 <p>will redirect any requests for the exact path <code>/shinyApp1</code> to <code>http://server.com</code> temporarily.</p>
-<h2 id="virtual-hosts"><a href="#virtual-hosts"><span class="header-section-number">2.7</span> Virtual Hosts</a></h2>
+<h2 id="virtual-hosts"><a href="#virtual-hosts"><span class="header-section-number">2.9</span> Virtual Hosts</a></h2>
 <p>The <code>server_name</code> setting allows Shiny Server to route incoming requests to a particular <code>server</code> element based on the hostname of the request. This will serve as an additional level of filtering on incoming traffic. Bear in mind that traffic must be destined for this server (i.e. traffic which was bound for the IP address and port on which this server was listening) in order to even be evaluated for a matching hostname.</p>
 <p>The example below may clarify the configuration</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">server</span> {
@@ -658,7 +705,7 @@ Finally, if the directory <code>/tmp/shiny-server/</code> exists, it (and all fi
 }</code></pre>
 <p>This example presupposes that, on this network, the domains <code>server1.com</code> and <code>server2.com</code> both resolve to the same IP address. In the configuration above, we first create a server that listens on port <code>80</code> and will only accept traffic whose hostname matches <code>server1.com</code>. We then configure a server which will also listen on port <code>80</code> and require that it only accept traffic whose hostname equals <code>server2.com</code>.</p>
 <p>This configuration would allow an application stored in <code>/srv/shiny-server1/shinyApp</code> to be accessible at <code>http://server1.com/shinyApp</code> and an application stored in <code>/srv/shiny-server2/shinyApp</code> to be accessible at <code>http://server2.com/shinyApp</code>.</p>
-<h2 id="custom-templates"><a href="#custom-templates"><span class="header-section-number">2.8</span> Custom Templates</a></h2>
+<h2 id="custom-templates"><a href="#custom-templates"><span class="header-section-number">2.10</span> Custom Templates</a></h2>
 <p>Shiny Server can utilize custom templates when generating static pages such as directory indexes and error pages. This feature is controlled using the <code>template_dir</code> directive and can be applied globally, or to a particular <code>server</code> or <code>location</code>.</p>
 <p>To utilize this feature, you'll need a directory in which you'll store your templates. In this example, we'll assume you're using <code>/etc/shiny-server/templates/</code>. Inside this directory, you'll place the <a href="http://handlebarsjs.com/">handlebars</a>-enabled HTML templates for your pages.</p>
 <p>Shiny Server will attempt to find a specific page to accommodate the current need -- for instance, if it encountered a 404 error, it will first look to see if you provided a specific template for handling 404 errors in the specified directory (<code>error-404.html</code>). If it doesn't find this file, it will go one step backwards to see if you provide a generic error template (<code>error.html</code>). If it can't find a suitable template in your template directory, it will fall back to use the provided templates that come with Shiny Server (and are stored in <code>/opt/shiny-server/templates</code>).</p>
@@ -713,11 +760,11 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <p>When you restart the server and access an error page. (Try accessing a hidden file like <code>http://server.com:3838/.hidden</code>, where <code>server.com</code> is the domain name or IP address of your server, which should use the <code>error-403</code> or <code>error</code> template.) You should see your new text or CSS styling on the page that is loaded. Likewise, you can copy the <code>directoryIndex.html</code> template or, for Shiny Server Pro, the <code>login.html</code> template to your custom directory and begin customizing.</p>
 <p>For performance reasons, templates are cached in memory once they're loaded. Thus, you will find that changes to your template may not be immediately visible when you refresh the page. To empty the cache to force Shiny Server to load in the new changes to your template, you can either <code>restart</code> or <code>reload</code> the server (see the section on <a href="#stopping-and-starting">Stopping and Starting</a>).</p>
 <p>Finally, note that these templates currently only apply for HTML pages that are generated by Shiny Server. An HTML page generated by the Shiny package will <em>not</em> have custom templates applied at this time. Currently, this is most visible with 404 errors. If you access a URL which Shiny Server cannot direct to a Shiny application (for instance, <code>http://server.com:3838/flargdarg</code>, where <code>server.com</code> is the domain name or IP address of your server), you will see a Shiny-Server-generated 404 error page which has custom templates applied (assuming this <code>server</code> is configured to have a custom <code>error-404.html</code> or <code>error.html</code> template). However, if you were to access a file that does not exist in a valid application, you would see an un-styled 404 page that did not leverage your custom template. For instance, if you have an application deployed at <code>http://server.com:3838/myApp</code> and you attempt to access <code>http://server.com:3838/myApp/flargDarg</code>, the request would be sent to Shiny which would then look for this file and, if it isn't found, would return a 404 page. Shiny Server would pass this response back directly to the client, as it wasn't generated by Shiny Server. We will be reviewing this architecture in future versions -- please let us know if you find that the current organization inhibits your workflow.</p>
-<h2 id="server-log"><a href="#server-log"><span class="header-section-number">2.9</span> Server Log</a></h2>
+<h2 id="server-log"><a href="#server-log"><span class="header-section-number">2.11</span> Server Log</a></h2>
 <p>All information related to Shiny Server, rather than a particular Shiny application, is logged in the global system log stored in <code>/var/log/shiny-server.log</code>. This log should be checked often to ensure Shiny Server is performing as expected. Any errors and warnings which Shiny Server needs to communicate will be written here.</p>
 <p>If <code>logrotate</code> is available when Shiny Server is installed, a <code>logrotate</code> configuration will be installed. The default configuration is to rotate the logfile when it exceeds 1MB. The old log file will be compressed and stored alongside the original log file with a <code>.1.gz</code> extension (then <code>.2.gz</code>, etc.). Up to twelve archived log files will be maintained; upon the 13th log rotation the oldest log file will be deleted.</p>
 <p>For logs related to individual Shiny Applications, see the section on <a href="#logging-and-analytics">Logging and Analytics</a>.</p>
-<h3 id="access-logs"><a href="#access-logs"><span class="header-section-number">2.9.1</span> Access Logs</a></h3>
+<h3 id="access-logs"><a href="#access-logs"><span class="header-section-number">2.11.1</span> Access Logs</a></h3>
 <p>An access log can be configured globally using the <code>acces_log</code> parameter. This log is not enabled by default. This setting controls the location of the access log as well as the format used. The access log can be useful to audit the security and activity taking place on your Shiny Server installation. These logs can be audited manually or automatically to inspect how often various resources are being accessed, or by whom they are being accessed (using the originating IP address). Currently, one access log is created for the entire Shiny Server process; all Shiny applications share this access log.</p>
 <p>The access logs will be written using the Connect logging libraries, so additional details can be found in <a href="http://www.senchalabs.org/connect/logger.html">their documentation</a> in the &quot;Formats&quot; section. In brief, there are four pre-defined logging formats for access logs specified in the documentation referenced above:</p>
 <ul>
@@ -731,18 +778,62 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 
 <span class="kw">server</span> {
   <span class="kw">...</span></code></pre>
-<h2 id="health-check-endpoint" class="pro"><a href="#health-check-endpoint"><span class="header-section-number">2.10</span> Health Check Endpoint</a></h2>
-<p>Some advanced deployment scenarios are able to leverage a &quot;health check endpoint&quot; which provides an automated way to ensure that Shiny Server is online and responsive. The URL <code>/ping</code> can be used on any port Shiny Server is instructed to listen on in order to test the health of Shiny Server. If the server is online and responsive, it will respond with the text <code>OK</code> and an HTTP 200 code.</p>
-<h2 id="environment-variable-settings"><a href="#environment-variable-settings"><span class="header-section-number">2.11</span> Environment Variable Settings</a></h2>
+<h2 id="health-check-endpoint" class="pro"><a href="#health-check-endpoint"><span class="header-section-number">2.12</span> Health Check Endpoint</a></h2>
+<p>Some advanced deployment scenarios are able to leverage a &quot;health check endpoint&quot; which provides an automated way to ensure that Shiny Server is online and responsive.</p>
+<blockquote>
+<p> The <code>/ping</code> endpoint has been removed from Shiny Server as of version 1.1.0 in favor of the <code>/__health-check__</code> endpoint.</p>
+</blockquote>
+<p>The URL <code>/__health-check__</code> (note the double underscores on either side) can be used on any port Shiny Server is instructed to listen on in order to test the health of Shiny Server. If the server is online and responsive, it will respond an HTTP 200 code and various information about the server including the number of current connections, the current CPU load, and other information about the server. By default, the page will look something like this:</p>
+<pre><code>active-connections: 8
+active-apps: 2
+active-processes: 3
+cpu-percent: 13
+memory-percent: 49
+swap-percent: 39.1
+load-average: 1.01953125</code></pre>
+<h3 id="customizing-responses" class="pro"><a href="#customizing-responses"><span class="header-section-number">2.12.1</span> Customizing Responses</a></h3>
+<p>Shiny Server Pro uses a templating system to determine how to respond to visits to the health-check URL. By default, it uses the following template:</p>
+<pre><code>active-connections: #active-connections#
+active-apps: #active-apps#
+active-processes: #active-processes#
+cpu-percent: #cpu-percent#
+memory-percent: #memory-percent#
+swap-percent: #swap-percent#
+load-average: #load-average#</code></pre>
+<p>As you might infer, the values encompassed by <code>#</code> symbols are treated as variables that will be substituted for their true values before being returned. The template above shows all of the variables that are currently available to the endpoint.</p>
+<p>You can specify whatever format you like for these variables by creating a custom template in <code>/etc/shiny-server/health-check</code>. This file will be used to structure the response to the health check after substituting the available variables. For instance, you could configure the endpoint to return this data in XML by placing the following content in the file:</p>
+<pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;<span class="kw">?&gt;</span>
+<span class="kw">&lt;health-check&gt;</span>
+  <span class="kw">&lt;active-connections&gt;</span>#active-connections#<span class="kw">&lt;active-connections&gt;</span>
+  <span class="kw">&lt;active-apps&gt;</span>#active-apps#<span class="kw">&lt;active-apps&gt;</span>
+  <span class="kw">&lt;active-processes&gt;</span>#active-processes#<span class="kw">&lt;active-processes&gt;</span>
+  <span class="kw">&lt;cpu-percent&gt;</span>#cpu-percent#<span class="kw">&lt;cpu-percent&gt;</span>
+  <span class="kw">&lt;memory-percent&gt;</span>#memory-percent#<span class="kw">&lt;memory-percent&gt;</span>
+  <span class="kw">&lt;swap-percent&gt;</span>#swap-percent#<span class="kw">&lt;swap-percent&gt;</span>
+  <span class="kw">&lt;load-average&gt;</span>#load-average#<span class="kw">&lt;load-average&gt;</span>
+<span class="kw">&lt;/health-check&gt;</span></code></pre>
+<h3 id="providing-multiple-health-check-endpoints" class="pro"><a href="#providing-multiple-health-check-endpoints"><span class="header-section-number">2.12.2</span> Providing Multiple Health-Check Endpoints</a></h3>
+<p>The file at <code>/etc/shiny-server/health-check</code> specifies the default template to use for the health check. Shiny Server Pro supports multiple health check endpoints which can be accessed using different URLs. For instance, you can setup a new endpoint that responds using JSON using the following template:</p>
+<pre class="sourceCode json"><code class="sourceCode json">{
+  <span class="er">&#39;active-connections&#39;</span>: <span class="er">#active-connections#</span>,
+  <span class="er">&#39;active-apps&#39;</span>: <span class="er">#active-apps#</span>,
+  <span class="er">&#39;active-processes&#39;</span>: <span class="er">#active-processes#</span>,
+  <span class="er">&#39;cpu-percent&#39;</span>: <span class="er">#cpu-percent#</span>,
+  <span class="er">&#39;memory-percent&#39;</span>: <span class="er">#memory-percent#</span>,
+  <span class="er">&#39;swap-percent&#39;</span>: <span class="er">#swap-percent#</span>,
+  <span class="er">&#39;load-average&#39;</span>: <span class="er">#load-average#</span>
+}</code></pre>
+<p>Store this text in a new file at <code>/etc/shiny-server/health-check-json</code> (the file is suffixed by a <em>hyphen</em> then some custom string). This endpoint would then be available at <code>http://&lt;server-address-and-port&gt;/__health-check__/json</code> (the URL is suffixed by a <em>forward slash</em> then the same custom string).</p>
+<h2 id="environment-variable-settings"><a href="#environment-variable-settings"><span class="header-section-number">2.13</span> Environment Variable Settings</a></h2>
 <p>We strive to expose most settings through the configuration file described previously. However, there are some settings that we don't include in the configuration file which some users may still wish to change. Where possible, we'll allow users to configure these settings using environment variables. Some of these environment variables will later be promoted to configuration directives, but will be documented here until that time.</p>
 <p>Typically, it is best to define these environment variables in the startup script used to run Shiny Server (often either <code>/etc/init.d/shiny-server</code> or <code>/etc/init/shiny-server.conf</code>, depending on whether or not you're using Upstart).</p>
-<h3 id="shiny_log_level"><a href="#shiny_log_level"><span class="header-section-number">2.11.1</span> <code>SHINY_LOG_LEVEL</code></a></h3>
+<h3 id="shiny_log_level"><a href="#shiny_log_level"><span class="header-section-number">2.13.1</span> <code>SHINY_LOG_LEVEL</code></a></h3>
 <p>Defines the verbosity of logging which will be used by Shiny Server. Valid options -- in level of increasing verbosity -- are <code>TRACE</code>, <code>DEBUG</code>, <code>INFO</code>, <code>WARN</code>, and <code>ERROR</code>. More verbose levels of logging (such as <code>TRACE</code>) may be helpful when debugging an issue or trying to understand exactly what Shiny Server is doing, but will likely be far too much information for a system with even moderate load.</p>
 <p>The default if this environment variable is not found is to use <code>INFO</code>.</p>
-<h3 id="r"><a href="#r"><span class="header-section-number">2.11.2</span> <code>R</code></a></h3>
+<h3 id="r"><a href="#r"><span class="header-section-number">2.13.2</span> <code>R</code></a></h3>
 <p>Defines the path to the R executable which should be used when running Shiny. Systems which have multiple versions of R installed, or don't wish to place R on the path before starting Shiny Server can override this setting to point to a particular version of R.</p>
-<p>If no environment variable is found, Shiny Server will expect an executable named <code>R</code> to be on the path.</p>
-<h3 id="shiny_data_dir"><a href="#shiny_data_dir"><span class="header-section-number">2.11.3</span> <code class="pro">SHINY_DATA_DIR</code></a></h3>
+<p>Note that, for any <code>location</code> with a configured [<code>r_path</code>] in the configuration file, this environment variable will not take effect. If no environment variable is found, Shiny Server will expect an executable named <code>R</code> to be on the path.</p>
+<h3 id="shiny_data_dir"><a href="#shiny_data_dir"><span class="header-section-number">2.13.3</span> <code class="pro">SHINY_DATA_DIR</code></a></h3>
 <p>The historical databases of Shiny applications used in the Admin dashboard can consume multiple Gigabytes of disk space on a system hosting many applications. This environment variable allows you to define the directory in which Shiny Server should persist data to disk. To estimate the amount of disk space required, we recommend reserving 10MB in this directory for every Shiny application you plan to host on a server. Additionally, ensure that this directory is writable by the <code>shiny</code> user, or whichever user you're running Shiny Server as (as is discussed in detail in the <a href="#run_as"><code>run_as</code></a> section).</p>
 <p>Note that Shiny Server expects a directory named <code>monitor/rrd/</code> to already exist inside <code>SHINY_DATA_DIR</code> when it starts.</p>
 <p>By default, Shiny Server will create and store data in <code>/var/lib/shiny-server/</code>.</p>
@@ -1308,6 +1399,14 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
                   <td></td>
                 </tr>
               
+                <tr>
+                  <td>fallbackUser</td>
+                  <td>String</td>
+                  <td>optional</td>
+                  <td>If the first user is a special case, such as <code>:AUTH_USER:</code>, then a fallback user can optionally be provided which would be used in the event that the first user were not applicable. For instance, if the first user is <code>:AUTH_USER:</code> and the visitor is not logged in, a user could be provided in this parameter which would instruct Shiny Server to run Shiny as this user for such a visitor.</td>
+                  <td></td>
+                </tr>
+              
             </table>
           
 
@@ -1499,7 +1598,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
             <label>Applies to:</label> <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
-              <label>Child directives:</label> <code><a href="#run_as">run_as</a></code>, <code><a href="#location">location</a></code>, <code><a href="#site_dir">site_dir</a></code>, <code><a href="#directory_index">directory_index</a></code>, <code><a href="#user_apps">user_apps</a></code>, <code><a href="#app_dir">app_dir</a></code>, <code><a href="#redirect">redirect</a></code>, <code><a href="#log_dir">log_dir</a></code>, <code><a href="#members_of">members_of</a></code>, <code><a href="#application">application</a></code><br/>
+              <label>Child directives:</label> <code><a href="#run_as">run_as</a></code>, <code><a href="#location">location</a></code>, <code><a href="#site_dir">site_dir</a></code>, <code><a href="#directory_index">directory_index</a></code>, <code><a href="#user_apps">user_apps</a></code>, <code><a href="#app_dir">app_dir</a></code>, <code><a href="#redirect">redirect</a></code>, <code><a href="#log_dir">log_dir</a></code>, <code><a href="#members_of">members_of</a></code>, <code><a href="#application">application</a></code>, <code><a href="#pam_sessions_profile">pam_sessions_profile</a></code>, <code><a href="#exec_supervisor">exec_supervisor</a></code>, <code><a href="#r_path">r_path</a></code><br/>
             
           </p>
         </li>
@@ -2346,7 +2445,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
       
         <li>
           <h3 class="code"><a name="auth_google"></a>auth_google</h3>
-          <p class="desc"></p>
+          <p class="desc">Authenticate to a Google Application using a configured application ID and secret.</p>
           
             <table class="params">
               <colgroup>
@@ -2389,6 +2488,20 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
                 </tr>
               
             </table>
+          
+
+          <p>
+            <label>Applies to:</label> Top-level<br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="auth_pam"></a>auth_pam</h3>
+          <p class="desc">Authenticate using the local server's PAM configuration.</p>
+          
+            <p class="noparams">This directive has no parameters.</p>
           
 
           <p>
@@ -2899,6 +3012,120 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 
           <p>
             <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code>, <code><a href="#admin">admin</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="pam_sessions_profile"></a>pam_sessions_profile</h3>
+          <p class="desc">When spawning a Shiny process for a user, the PAM profile specified here will be used. The default is to use the 'su' profile. You can customize this behavior by creating a new profile in '/etc/pam.d' and referencing it here.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>profile</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td>The name of the profile in '/etc/pam.d' you want to use.</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="exec_supervisor"></a>exec_supervisor</h3>
+          <p class="desc">The program supervisor under which Shiny processes should be run. This can be a command that modifies Shiny's environment or resources. The default is to have no supervisor (i.e. the empty string '').</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>command</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td>The command which prefixes the call to start the R process which will run Shiny.</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="r_path"></a>r_path</h3>
+          <p class="desc">The path to the R executable.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>path</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td>The absolute path on disk to the R executable you wish to use.</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
           </p>
