@@ -202,7 +202,8 @@ code > span.er { font-weight: bold; }
 <li><a href="#application"><span class="toc-section-number">2.2.3</span> Application</a></li>
 </ul></li>
 <li><a href="#run_as"><span class="toc-section-number">2.3</span> <code>run_as</code></a><ul>
-<li><a href="#running-shiny-server-with-root-privileges"><span class="toc-section-number">2.3.1</span> Running Shiny Server with Root Privileges</a></li>
+<li><a href="#home_user"><span class="toc-section-number">2.3.1</span> <code>:HOME_USER:</code></a></li>
+<li><a href="#running-shiny-server-with-root-privileges"><span class="toc-section-number">2.3.2</span> Running Shiny Server with Root Privileges</a></li>
 </ul></li>
 <li><a href="#local-app-configurations"><span class="toc-section-number">2.4</span> Local App Configurations</a></li>
 <li><a href="#hosting-model"><span class="toc-section-number">2.5</span> Hosting Model</a><ul>
@@ -437,14 +438,52 @@ code > span.er { font-weight: bold; }
   <span class="kw">run_as</span> tim<span class="kw">;</span>
 }</code></pre>
 <p>would execute all applications contained within this scope as the user <code>tim</code> with all of <code>tim</code>'s relevant <code>.libPath</code>s.</p>
-<h3 id="running-shiny-server-with-root-privileges"><a href="#running-shiny-server-with-root-privileges"><span class="header-section-number">2.3.1</span> Running Shiny Server with Root Privileges</a></h3>
-<p>Aside from spawning R Shiny processes as particular users, the <code>shiny-server</code> process itself can be configured to run as different users to control its privileges. There are three scenarios in which Shiny Server would need to be run as root:</p>
+<p>Additionally, R processes are spawned using the Bash login shell. This means that prior to the execution of the R session the Bash shell will read and execute commands from this file if it exists:</p>
+<pre><code>/etc/profile</code></pre>
+<p>After reading that file, it looks for the following files and reads and executes commands from the first one that exists and is readable (it’s important to note that only one of these files will be read and executed):</p>
+<pre><code>~/.bash_profile
+~/.bash_login
+~/.profile</code></pre>
+<p>So in the above configuration example, any environment variables defined in <code>/etc/profile</code> or <code>/home/tim/.bash_profile</code> (assuming <code>tim</code>'s home directory was in the standard location) would be available to the R process, since Shiny Server is configured to run applications as the user named <code>tim</code>.</p>
+<h3 id="home_user"><a href="#home_user"><span class="header-section-number">2.3.1</span> <code>:HOME_USER:</code></a></h3>
+<p><code>:HOME_USER:</code> is a special instance of a <code>run_as</code> user. When combined with the <code>user_dirs</code> hosting model (described in the section entitled <a href="#host-per-user-application-directories">Host Per-User Application Directories</a>), this setting will instruct Shiny Server to run the process as the user in whose home directory the application exists. For instance, an application stored in <code>/home/jim/ShinyApps/app1</code> would run as <code>jim</code>, whereas an app stored in <code>/home/kelly/ShinyApps/app1</code> would run as <code>kelly</code>.</p>
+<p>Because this username is &quot;special&quot;, it may make sense to provide an additional username as a &quot;fallback&quot; user. For instance, in the following configuration:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">run_as</span> :HOME_USER: shiny<span class="kw">;</span>
+
+<span class="kw">...</span>
+
+<span class="kw">location</span> /users {
+  <span class="kw">user_dirs;</span>
+}
+
+<span class="kw">location</span> /apps {
+  <span class="kw">site_dir</span> /srv/shiny-server<span class="kw">;</span>
+  <span class="kw">log_dir</span> /var/log/shiny-server<span class="kw">;</span>
+  <span class="kw">directory_index</span> on<span class="kw">;</span>
+}</code></pre>
+<p>all of the <code>user_dirs</code> applications hosted in <code>/users</code> would run as <code>:HOME_USER:</code> (the user in whose home directory the application exists), since that's the highest-priority <code>run_as</code> user. Because <code>:HOME_USER:</code> is only meaningful to the <code>user_dirs</code> hosting model, and not to <code>site_dir</code>, the applications hosted in <code>/apps</code> will not run as <code>:HOME_USER:</code> but as whichever user comes next in the list -- in this case, as <code>shiny</code>.</p>
+<p>Of course, you could also accomplish this same effect with the following arrangement:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> /users {
+  <span class="kw">run_as</span> :HOME_USER:<span class="kw">;</span>
+  <span class="kw">user_dirs;</span>
+}
+
+<span class="kw">location</span> /apps {
+  <span class="kw">run_as</span> shiny<span class="kw">;</span>
+  <span class="kw">site_dir</span> /srv/shiny-server<span class="kw">;</span>
+  <span class="kw">log_dir</span> /var/log/shiny-server<span class="kw">;</span>
+  <span class="kw">directory_index</span> on<span class="kw">;</span>
+}</code></pre>
+<p>As described in <a href="#host-per-user-application-directories">Host Per-User Application Directories</a>, <code>user_apps</code> and <code>user_dirs</code> differ only in how they behave with respect to the <code>run_as</code> setting. <code>user_apps</code> will <em>always</em> host the apps as if <code>run_as</code> were set to <code>:HOME_USER:</code>, regardless of how <code>run_as</code> is actually set. <code>user_dirs</code>, on the other hand, will respect the <code>run_as</code> configuration.</p>
+<h3 id="running-shiny-server-with-root-privileges"><a href="#running-shiny-server-with-root-privileges"><span class="header-section-number">2.3.2</span> Running Shiny Server with Root Privileges</a></h3>
+<p>Aside from spawning R Shiny processes as particular users, the <code>shiny-server</code> process itself can be configured to run as different users to control its privileges. There are multiple scenarios in which Shiny Server would need to be run as root:</p>
 <ol type="1">
-<li>If <code>user_apps</code> is enabled for any location. In order to host applications as various users, Shiny Server must have root privileges.</li>
+<li>If <code>user_apps</code> or <code>user_dirs</code> is enabled for any location. In order to host applications as various users, Shiny Server must have root privileges.</li>
 <li>If your configuration uses <code>run_as</code> to spawn applications as multiple different users.</li>
 <li>If you're running any server on a privileged port (a port in the range of 1-1024).</li>
+<li>If you're using <code>auth_pam</code> to leverage PAM authentication. (Pro only)</li>
 </ol>
-<p>By default, the <code>shiny-server</code> process will be started as the <code>root</code> user, then will spawn R processes according to the corresponding <code>run_as</code> setting. You can, however, run the <code>shiny-server</code> process as a non-privileged user such as the <code>shiny</code> user if none of the three limitations above are violated.</p>
+<p>By default, the <code>shiny-server</code> process will be started as the <code>root</code> user, then will spawn R processes according to the corresponding <code>run_as</code> setting. You can, however, run the <code>shiny-server</code> process as a non-privileged user such as the <code>shiny</code> user if none of the limitations above are violated.</p>
 <h2 id="local-app-configurations"><a href="#local-app-configurations"><span class="header-section-number">2.4</span> Local App Configurations</a></h2>
 <p>In the global configuration file, the <code>allow_app_override</code> setting can be specified to enable local app configurations. If present, this setting enables owners of Shiny applications to customize the properties of their own applications using a file named <code>.shiny_app.conf</code>. This file can be placed within an application directory (alongside the <code>server.R</code> and <code>ui.R</code> files) and can contain settings which configure how Shiny Server should manage the application.</p>
 <p>This behavior is controlled by the <code>allow_app_override</code> setting which is disabled by default. In order to enable local application configurations, you can add to your configuration file <code>allow_app_override true;</code> (or just <code>allow_app_override;</code> for short).</p>
@@ -503,16 +542,32 @@ code > span.er { font-weight: bold; }
 }</code></pre>
 <p>will configure the <code>location</code> responsible for the path <code>/specialApp</code> to use this <code>app_dir</code> router which serves a single application stored in the directory <code>/srv/shiny-server/myApp</code>. This configuration would presume a <code>server.R</code> file (and corresponding <code>ui.R</code> file) would be available at <code>/srv/shiny-server/myApp/server.R</code>. If so, the application saved there would be available at a URL like <code>http://server.com/specialApp</code>.</p>
 <h3 id="host-per-user-application-directories"><a href="#host-per-user-application-directories"><span class="header-section-number">2.5.3</span> Host Per-User Application Directories</a></h3>
-<p>A location configured to use <code>user_apps</code> will allow users on the system to create and manage their own Shiny applications available in their home directories. This directive will host any application stored in an eligible user's <code>~/ShinyApps</code> directory publicly at a URL prefaced by their username.</p>
+<p>A location configured to use <code>user_dirs</code> will allow users on the system to create and manage their own Shiny applications available in their home directories. This directive will host any application stored in an eligible user's <code>~/ShinyApps</code> directory publicly at a URL prefaced by their username.</p>
 <p>This privilege can be restricted only to users of particular groups using the <code>members_of</code> restriction. For instance, the following configuration:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define the root location</span>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">run_as</span> :HOME_USER:<span class="kw">;</span>
+
+<span class="co"># Define the root location</span>
 <span class="kw">location</span> / {
-  <span class="kw">user_apps;</span>
+  <span class="kw">user_dirs;</span>
   
   <span class="co"># Only allow members of the &#39;shinyUsers&#39; group to host personal applications.</span>
   <span class="kw">members_of</span> shinyUsers<span class="kw">;</span>
 }</code></pre>
 <p>will -- for any user who is a member of the <code>shinyUsers</code> group -- publicly host any Shiny application available in the user's <code>~/ShinyApps</code> directory. For instance, if <code>tina</code> is a user on this system and is also a member of the <code>shinyUsers</code> group, any application stored in <code>/home/tina/ShinyApps/</code>, such as the <code>shinyApp1</code> application, would be available on this server at a URL like <code>http://server.com/tina/shinyApp1</code>, assuming <code>/home/tina</code> was <code>tina</code>'s home directory.</p>
+<p>The <code>user_dirs</code> setting is intended to ultimately replace the <code>user_apps</code> setting. The two models are very similar but differ in how the handle <code>run_as</code> settings. <code>user_apps</code> ignores the <code>run_as</code> setting and always runs applications as the user in whose home directory they exist. <code>user_dirs</code>, on the other hand, will respect the <code>run_as</code> setting. You can use the special <code>run_as</code> user <code>:HOME_USER:</code> to make <code>user_dirs</code> operate the same way as <code>user_apps</code> does; thus, the two following configurations would be identical:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
+  <span class="kw">user_apps;</span>
+}</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
+  <span class="kw">run_as</span> :HOME_USER:<span class="kw">;</span>
+  <span class="kw">user_dirs;</span>  
+}</code></pre>
+<p>Note that, while Shiny Server supports the ability to run in <code>user_dirs</code> as a single user, this may require some tweaking to make function correctly on your server. For instance, the following configuration:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
+  <span class="kw">run_as</span> shiny<span class="kw">;</span>
+  <span class="kw">user_dirs;</span>
+}</code></pre>
+<p>would indeed attempt to start the applications housed in your users' home directories as the <code>shiny</code> user, but many distributions, by default, restrict access to users' private <code>/home</code> directories, meaning that the <code>shiny</code> user would not be able to read or write to the directories it needs to in order to run these applications properly.</p>
 <h2 id="redirecting"><a href="#redirecting"><span class="header-section-number">2.6</span> Redirecting</a></h2>
 <p>The final mode in which a location can operate is to redirect to another URL. Such locations will immediately send a response to the client informing them of the URL to which they should redirect and the status code that should be used when informing the client of the redirection. Typically, a redirect will use the <code>301</code> status code for a permanent redirect, or a <code>302</code> status code for a temporary redirect. The final option when configuring a location for redirection is whether or not it should use exact matching. If a redirecting location is configured to use exact matching, only requests for that exact URL will be redirected. If not, any requests for that URL path or any subpath of that URL will be redirected. For example,</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># Define a location at the base URL of this &#39;server&#39;</span>
@@ -636,7 +691,7 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <p>The default if this environment variable is not found is to use <code>INFO</code>.</p>
 <h3 id="r"><a href="#r"><span class="header-section-number">2.10.2</span> <code>R</code></a></h3>
 <p>Defines the path to the R executable which should be used when running Shiny. Systems which have multiple versions of R installed, or don't wish to place R on the path before starting Shiny Server can override this setting to point to a particular version of R.</p>
-<p>If no environment variable is found, Shiny Server will expect an executable named <code>R</code> to be on the path.</p>
+<p>Note that, for any <code>location</code> with a configured [<code>r_path</code>] in the configuration file, this environment variable will not take effect. If no environment variable is found, Shiny Server will expect an executable named <code>R</code> to be on the path.</p>
 <h1 id="deploying-applications"><a href="#deploying-applications"><span class="header-section-number">3</span> Deploying Applications</a></h1>
 <h2 id="schedulers-application-restarts"><a href="#schedulers-application-restarts"><span class="header-section-number">3.1</span> Schedulers &amp; Application Restarts</a></h2>
 <p>A scheduler is responsible for fulfilling incoming requests to a particular application. Each version of an application (see below) will have its own associated scheduler. Each scheduler can have different properties to control things like how many concurrent connections it should accept.</p>
@@ -726,17 +781,17 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
 <p>You should now find that Shiny Server is no longer running on port 3838, but is on whichever new port you selected.</p>
 <h3 id="let-users-manage-their-own-applications"><a href="#let-users-manage-their-own-applications"><span class="header-section-number">4.1.2</span> Let users manage their own applications</a></h3>
-<p>Some administrators of Shiny Server would prefer to give users -- or some trusted subgroup of users -- the ability to manage and host their own Shiny applications. This allows users to work directly with their applications rather than requiring an administrator to deploy and update applications on their behalf. This guide will document how to create such an environment using the <code>user_apps</code> directive documented in the section named <a href="#host-per-user-application-directories">Host Per-User Application Directories</a>.</p>
-<p>We provide a configuration file in <code>/opt/shiny-server/config/user-apps.config</code> that enables this functionality. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/user-apps.config /etc/shiny-server/shiny-server.conf</code></pre>
-<p>This configuration enables all users on the system to host their own apps by creating a <code>ShinyApps</code> directory in their home directory; you can always alter this file later to tailor it to meet your needs. You can deploy an application under your username by copying one of the examples that comes with Shiny into your own <code>ShinyApps</code> directory. To do this, we'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
+<p>Some administrators of Shiny Server would prefer to give users -- or some trusted subgroup of users -- the ability to manage and host their own Shiny applications. This allows users to work directly with their applications rather than requiring an administrator to deploy and update applications on their behalf. This guide will document how to create such an environment using the <code>user_dirs</code> directive documented in the section named <a href="#host-per-user-application-directories">Host Per-User Application Directories</a>.</p>
+<p>We provide a configuration file in <code>/opt/shiny-server/config/user-dirs.config</code> that enables this functionality. To use this file as your active configuration, you'll need to copy it to <code>/etc/shiny-server/shiny-server.conf</code> using the following command:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> cp /opt/shiny-server/config/user-dirs.config /etc/shiny-server/shiny-server.conf</code></pre>
+<p>This configuration enables all users on the system to host their own applications by creating a <code>ShinyApps</code> directory in their home directory; you can always alter this file later to tailor it to meet your needs. You can deploy an application under your username by copying one of the examples that comes with Shiny into your own <code>ShinyApps</code> directory. To do this, we'll need to know where the Shiny package was installed -- this can vary from distribution to distribution. You can locate Shiny's first example by entering the following command at a terminal:</p>
 <pre><code>R -e &quot;system.file(&#39;examples/01_hello&#39;, package=&#39;shiny&#39;)&quot;</code></pre>
 <p>which will return something like:</p>
 <pre><code>[1] &quot;/usr/local/lib/R/site-library/shiny/examples/01_hello&quot;</code></pre>
 <p>You can copy that entire directory into <code>~/ShinyApps</code> using the following command (using the directory that was returned in the previous command, if it's different):</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">mkdir</span> ~/ShinyApps
 <span class="kw">sudo</span> cp -R /usr/local/lib/R/site-library/shiny/examples/01_hello ~/ShinyApps/</code></pre>
-<p>If that command succeeds, you've successfully installed a <code>user_apps</code> Shiny application! However, you'll need to restart Shiny Server to make it aware of the changes you made to the configuration file. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions, including Ubuntu 12 and later and CentOS 6):</p>
+<p>If that command succeeds, you've successfully installed a <code>user_dirs</code> Shiny application! However, you'll need to restart Shiny Server to make it aware of the changes you made to the configuration file. The <a href="#stopping-and-starting">Stopping and Starting</a> section explains this in more detail. For now, you'll run this command if you're on a distribution which supports Upstart (most recent distributions, including Ubuntu 12 and later and CentOS 6):</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> restart shiny-server</code></pre>
 <p>If you're on an older system that relies on init.d (such as CentOS 5), you'll use the following command instead:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
