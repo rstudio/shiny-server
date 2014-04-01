@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en-US" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Welcome to Shiny Server!</title>
+  <style type="text/css">
+    body, html {
+      font-family: Helvetica, Arial, sans-serif;
+      background-color: #F5F5F5;
+      color: #114;
+      margin: 0;
+      padding: 0;
+    }
+    a {
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    #titleBar {
+      height: 120px;
+      background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAIAAAC1nk4lAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozQ0I5MTJCOThERTUxMUUzOTYzNzhDMTI0OUEzOTIwRSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozQ0I5MTJCQThERTUxMUUzOTYzNzhDMTI0OUEzOTIwRSI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkM1NUM3Q0E2OERDQTExRTM5NjM3OEMxMjQ5QTM5MjBFIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjNDQjkxMkI4OERFNTExRTM5NjM3OEMxMjQ5QTM5MjBFIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+Bbs28wAAARtJREFUeNrU2EkOwkAMBMAkhI/xvfyML7FOBBIQJrN66e6D5VOr5KPH03IedPK4XjRqx/k4DVRZxQcq9EsclolOTIP+FnOgN2IC9L8YHR0VQ6P3xLjohBgUnRYjorNiOHSJGAtdKAZCl4tR0FViCHSt2B/dIHZGt4k90c1iN3SP2AfdKXZA94ut0SJiU7SU2A4tKDZCy4ot0OJidbSGWBetJA6Z9X6bYd5vKuUT14210NpiebSBWBhtI5ZEm4nF0JZiGbSxWABtL+5Fu4i70F7idrSjuBHtK25Bu4ur0QjiOjSIuAKNIy5FQ4mL0GjiPBpQnEFjilNoWPEuGlkcR4OLI2h88RZNIf5Bs4g/aCLxG80lXtF04pCnAAMAx8YPj7HIsFsAAAAASUVORK5CYII=');
+      overflow: hidden;
+    }
+    #titleBar #container {
+      background-color: rgba(0, 0, 0, 0.5);
+      margin-top: 34px;
+    }
+    #titleBar h1 {
+      margin: 0 auto .5em auto;
+      padding: .2em;
+      color: #DDD;
+      text-shadow: black 0 -1px 1px;
+      text-align: center;
+    }
+    #intro {
+      background-color: #DDD;
+      margin: 1em 1em 0 1em;
+      padding: .75em;
+      font-size: 20px;
+    }
+    #intro p {
+      margin: .3em 0 .3em 0;
+    }
+    #outer-content {
+      max-width: 940px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #content {
+      margin: 1em auto 1em auto;
+      float: left;
+    }
+    #main{
+      margin-right: 320px;
+      float: left;
+      line-height: 24px;
+    }
+
+    #shiny{
+      float: left;
+      width: 295px;
+      margin-left: -300px;
+      padding-top: 20px;
+    }
+    .caption{
+      font-size: 13px;
+    }
+    code {
+      background-color: #E5E5E5;
+      border: 1px solid #AAA;
+      -webkit-border-radius: 4px;
+      -khtml-border-radius: 4px; 
+      -moz-border-radius: 4px;
+      border-radius: 4px;
+      padding: 0 .5em 0 .5em;
+    }
+  </style>
+</head>
+<body>
+  <div id="titleBar">
+    <div id="container">
+      <h1>Welcome to Shiny Server!</h1>
+    </div>
+  </div>
+  <div id="outer-content">
+    <div id="intro">
+      <p>If you're seeing this page, that means Shiny Server is installed and running. <strong>Congratulations!</strong> </p>
+    </div>
+    <div id="content">
+      <h2>What's Next?</h2>
+      <div id="main">
+        Now you're ready to setup Shiny &mdash; if you haven't already &mdash; and start deploying your Shiny applications.
+        <p>If you see a Shiny application running on the right side of this page, then Shiny is configured properly on your server and already running an example. Bravo! You can see this application on your server at <a href="./sample-apps/hello">/sample-apps/hello</a>.</p>
+        <p>If you see a gray box or an error message, then there's a bit more work to do to get Shiny running fully. You can continue with <a href="http://www.rstudio.com/shiny/server/install-opensource">the installation instructions</a> or use <a href="http://rstudio.github.io/shiny-server/latest/">the Admin Guide</a> for more information. If you're seeing an error message in the panel to the right, you can use it to help diagnose what may be wrong. If you think Shiny is installed and setup properly and things still aren't working, you can look in the Shiny Server log which may have more information about what's wrong. By default, the log is stored in <code>/var/log/shiny-server.log</code>.</p>
+        <p>If you're really stuck <em>and you've read the relevant sections in <a href="http://rstudio.github.io/shiny-server/latest/">the Admin Guide</a></em> then you can ask for help on <a href="https://groups.google.com/forum/#!forum/shiny-discuss">the mailing list</a>.</p>
+        <h2>All Done?</h2>
+        <p>Once you can see the Shiny application on the right, you're off to the races! You can look at <a href="http://shiny.rstudio.com">shiny.rstudio.com</a> to take a deeper dive into Shiny or take a look at some of the <a href="http://rstudio.github.io/shiny-server/latest/#quick-start">Shiny Server Quick Start Guides</a> to learn about some of the different things Shiny Server can do.</p>
+        <p>When you're all setup, you can delete this page and/or the sample applications we installed for you if you don't want them anymore. You can delete this page by running <code>sudo rm /srv/shiny-server/index.html</code> or delete the sample applications by running <code>sudo rm /srv/shiny-server/sample-apps</code>.</p>
+
+      </div>
+      <div id="shiny">
+        <iframe src="./sample-apps/hello" style="border: 1px solid #AAA; width: 290px; height: 470px"></iframe>
+        <div class="caption">
+          When Shiny is properly configured on your server, you'll see a Shiny app above.
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

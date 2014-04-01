@@ -13,8 +13,15 @@ else
    sudo useradd -r -m shiny
 fi
 
+if [ ! -d "/srv/shiny-server" ];
+then
+   sudo mkdir -p /srv/shiny-server
+   # And seed with initial apps and index.html
+   sudo ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/assets/welcome.html /srv/shiny-server/index.html
+   sudo ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/assets/sample-apps /srv/shiny-server/sample-apps
+fi
+
 sudo mkdir -p /var/log/shiny-server
-sudo mkdir -p /srv/shiny-server
 
 # Place the logrotate script, if applicable
 if test -d /etc/logrotate.d
