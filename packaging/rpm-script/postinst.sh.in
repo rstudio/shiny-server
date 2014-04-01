@@ -17,8 +17,13 @@ if [ ! -d "/srv/shiny-server" ];
 then
    sudo mkdir -p /srv/shiny-server
    # And seed with initial apps and index.html
-   sudo ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/assets/welcome.html /srv/shiny-server/index.html
-   sudo ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/assets/sample-apps /srv/shiny-server/sample-apps
+   sudo ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/samples/welcome.html /srv/shiny-server/index.html
+   sudo ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps
+fi
+
+if [ ! -f "/etc/shiny-server/shiny-server.conf" ];
+then
+   sudo cp ${CMAKE_INSTALL_PREFIX}/config/default.config /etc/shiny-server/shiny-server.conf
 fi
 
 sudo mkdir -p /var/log/shiny-server

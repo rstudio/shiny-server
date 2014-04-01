@@ -36,6 +36,7 @@ add_subdirectory(src)
 add_subdirectory(external/node)
 
 install(DIRECTORY assets
+                  samples
                   bin
                   build
                   config
