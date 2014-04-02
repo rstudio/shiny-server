@@ -21,6 +21,7 @@ then
    sudo ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps
 fi
 
+sudo mkdir -p /etc/shiny-server
 if [ ! -f "/etc/shiny-server/shiny-server.conf" ];
 then
    sudo cp ${CMAKE_INSTALL_PREFIX}/config/default.config /etc/shiny-server/shiny-server.conf
