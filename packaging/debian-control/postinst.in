@@ -24,7 +24,7 @@ fi
 sudo mkdir -p /etc/shiny-server
 if [ ! -f "/etc/shiny-server/shiny-server.conf" ];
 then
-   sudo cp ${CMAKE_INSTALL_PREFIX}/config/default.config /etc/shiny-server/shiny-server.conf
+   sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/default.config /etc/shiny-server/shiny-server.conf
 fi
 
 sudo mkdir -p /var/log/shiny-server
