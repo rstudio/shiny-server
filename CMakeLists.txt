@@ -50,12 +50,18 @@ install(DIRECTORY assets
                   tools
         USE_SOURCE_PERMISSIONS DESTINATION shiny-server)
 
+# Render and rename NOTICE.md
+execute_process(COMMAND cat 
+                INPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/NOTICE.md
+                OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/NOTICE)
+
 install(FILES binding.gyp
               config.html
               COPYING
               NEWS
               package.json
               README.md
+              "${CMAKE_CURRENT_BINARY_DIR}/NOTICE"
               "${CMAKE_CURRENT_BINARY_DIR}/VERSION"
               "${CMAKE_CURRENT_BINARY_DIR}/GIT_VERSION"
         DESTINATION shiny-server)
