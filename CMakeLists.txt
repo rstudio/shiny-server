@@ -36,8 +36,7 @@ add_subdirectory(src)
 add_subdirectory(external/node)
 
 install(DIRECTORY assets
-                  samples
-                  bin
+                  samples                  
                   build
                   config
                   ext
@@ -49,6 +48,15 @@ install(DIRECTORY assets
                   test
                   tools
         USE_SOURCE_PERMISSIONS DESTINATION shiny-server)
+
+
+# Configure and assemble /bin directory.
+configure_file(bin/deploy-example.in bin/deploy-example)
+install(PROGRAMS bin/node
+                 bin/npm
+                 bin/shiny-server
+                 "${CMAKE_CURRENT_BINARY_DIR}/bin/deploy-example"
+        DESTINATION shiny-server/bin)
 
 # Render and rename NOTICE.md
 execute_process(COMMAND cat 
@@ -66,13 +74,12 @@ install(FILES binding.gyp
               "${CMAKE_CURRENT_BINARY_DIR}/GIT_VERSION"
         DESTINATION shiny-server)
 
+
 set(CPACK_PACKAGE_NAME "shiny-server")
 set(CPACK_PACKAGE_DESCRIPTION "Shiny Server")
 set(CPACK_PACKAGE_VENDOR "RStudio, Inc.")
 set(CPACK_PACKAGE_CONTACT "RStudio <info@rstudio.com>")
 #set(CPACK_PACKAGE_INSTALL_DIRECTORY "Shiny Server")
-
-
 
 # == Linux packaging directives ==
 
@@ -155,7 +162,6 @@ set(CPACK_RPM_PACKAGE_LICENSE "AGPL v.3.0")
 set(CPACK_RPM_PACKAGE_GROUP "System Environment/Daemons")
 set(CPACK_RPM_PACKAGE_ARCHITECTURE "${PACKAGE_ARCHITECTURE}")
 set(CPACK_RPM_PACKAGE_REQUIRES "openssl")
-
 
 
 include(CPack)

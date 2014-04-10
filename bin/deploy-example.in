@@ -1,0 +1,82 @@
+#!/bin/bash
+
+if [ "$(id -u)" != "0" ]; then
+  echo "You must be root to run this script."
+  exit 1
+fi
+
+if [ $# -gt 0 ]; then
+  CONF=$1
+
+  if [ $CONF == "shiny-server-rules" ]; then
+    echo "shiny-server-rules is not a valid configuration."
+    exit 1
+  fi
+
+else
+  # No arguments passed. Use the default.
+  CONF="default"
+fi
+
+echo "Attempting to deploy configuration named: $CONF"
+FILE="${CMAKE_INSTALL_PREFIX}/shiny-server/config/$CONF.config"
+if [ ! -f $FILE ]; then
+  echo "ERROR: There is no configuration named: $CONF"
+  exit 1
+fi
+
+SSCONF="/etc/shiny-server/shiny-server.conf"
+
+# Restart
+restart_shiny () {
+  echo "Restarting Shiny Server..."
+  if test -d /etc/init/
+  then
+    initctl stop shiny-server 2>/dev/null
+    initctl start shiny-server
+  else
+    service shiny-server stop 2>/dev/null
+    service shiny-server start
+  fi
+  echo
+  echo "The $CONF config is all setup now. Enjoy!"
+}
+
+copy_config () {
+  /bin/cp -f $1 $SSCONF 
+  echo "Copied $1 to $SSCONF."
+
+  echo "Installing sample apps..."
+  
+  if [ ! -e /srv/shiny-server/index.html ]; then
+    ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/samples/welcome.html /srv/shiny-server/index.html
+    echo "Created /srv/shiny-server/index.html"
+  else
+    echo "/srv/shiny-server/index.html already exists. Not overwriting."
+  fi
+
+  if [ ! -e /srv/shiny-server/index.html ]; then
+    ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps
+    echo "Created /srv/shiny-server/sample-apps/"
+  else
+    echo "/srv/shiny-server/sample-apps already exists. Not overwriting."
+  fi
+  
+  echo "Done installing samples."
+
+  restart_shiny
+}
+
+if [ -f $SSCONF ]; then
+  read -p "Configuration file already exists at /etc/shiny-server/shiny-server.conf. Are you sure you want to overwrite it? [yN]" -n 1 -r
+  echo 
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    copy_config $FILE
+  else 
+    echo "Not overwriting existing file. Exiting."
+    exit 1
+  fi
+else
+  copy_config $FILE
+fi
+
