@@ -35,8 +35,8 @@ restart_shiny () {
     initctl stop shiny-server 2>/dev/null
     initctl start shiny-server
   else
-    service shiny-server stop 2>/dev/null
-    service shiny-server start
+    /sbin/service shiny-server stop 2>/dev/null
+    /sbin/service shiny-server start
   fi
   echo
   echo "The $CONF config is all setup now. Enjoy!"
