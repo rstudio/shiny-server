@@ -33,9 +33,13 @@ restart_shiny () {
   if test -d /etc/init/
   then
     initctl stop shiny-server 2>/dev/null
+    echo "Waiting..."
+    sleep 5
     initctl start shiny-server
   else
     /sbin/service shiny-server stop 2>/dev/null
+    echo "Waiting..."
+    sleep 5
     /sbin/service shiny-server start
   fi
   echo
