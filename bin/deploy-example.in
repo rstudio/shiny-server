@@ -59,7 +59,7 @@ copy_config () {
     echo "/srv/shiny-server/index.html already exists. Not overwriting."
   fi
 
-  if [ ! -e /srv/shiny-server/index.html ]; then
+  if [ ! -e /srv/shiny-server/sample-apps ]; then
     ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps
     echo "Created /srv/shiny-server/sample-apps/"
   else
