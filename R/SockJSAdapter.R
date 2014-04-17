@@ -146,7 +146,9 @@ if (identical(mode, "shiny")){
   }
   library(rmarkdown)
 
-  rmarkdown::run(Sys.getenv('SHINY_APP'), 
+  # TODO: this should point to whatever Rmd doc is specified in the URL.
+  # TODO: don't presume (case-sensitive) "index.Rmd", find the real file.
+  rmarkdown::run(file.path(Sys.getenv('SHINY_APP'), "index.Rmd"), 
     shiny_args=list(port=port,launch.browser=FALSE))
 } else{
   stop(paste("Unclear Shiny mode:", mode))
