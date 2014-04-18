@@ -622,6 +622,10 @@ and then enter and verify the password you wish to use for this user.
 <p>Note that only one &quot;non-special&quot; user should be provided in the <code>run_as</code> configuration. It would be incorrect to use a configuration such as:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">run_as</span> user1 user2<span class="kw">;</span></code></pre>
 <p>as both of these users are &quot;regular&quot; users. In this configuration, <code>user2</code> would never be used, as the program would emit an error if <code>user1</code> was not a valid user on the system.</p>
+<p>There is a known issue at the time of writing in which combining <code>:AUTH_USER:</code> with a Utilization Scheduler will create a new scheduler for each user. This means that in the following configuration:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">run_as</span> :AUTH_USER:
+<span class="kw">utilization_scheduler</span> 3 .5 2<span class="kw">;</span></code></pre>
+<p>each user will be permitted to spawn two processes.</p>
 <h2 id="pam-sessions" class="pro"><span class="header-section-number">2.4</span> PAM Sessions</h2>
 <p>Shiny Server Professional uses PAM (Pluggable Authentication Modules) for both user authentication as well to establish the resources available for R sessions. Binding resources (and limits on their use) to Shiny sessions is accomplished by calling the PAM session API. This section explains how to configure and customize PAM sessions with Shiny Server.</p>
 <h3 id="session-profile" class="pro"><span class="header-section-number">2.4.1</span> Session Profile</h3>
@@ -1287,7 +1291,8 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <p> The <code>/ping</code> endpoint has been removed from Shiny Server as of version 1.1.0 in favor of the <code>/__health-check__</code> endpoint.</p>
 </blockquote>
 <p>The URL <code>/__health-check__</code> (note the double underscores on either side) can be used on any port Shiny Server is instructed to listen on in order to test the health of Shiny Server. If the server is online and responsive, it will respond an HTTP 200 code and various information about the server including the number of current connections, the current CPU load, and other information about the server. By default, the page will look something like this:</p>
-<pre><code>active-connections: 8
+<pre><code>server-version: 1.2.3.4
+active-connections: 8
 active-apps: 2
 active-processes: 3
 cpu-percent: 13
@@ -1296,7 +1301,8 @@ swap-percent: 39.1
 load-average: 1.01953125</code></pre>
 <h3 id="customizing-responses" class="pro"><span class="header-section-number">5.3.1</span> Customizing Responses</h3>
 <p>Shiny Server Pro uses a templating system to determine how to respond to visits to the health-check URL. By default, it uses the following template:</p>
-<pre><code>active-connections: #active-connections#
+<pre><code>server-version: #server-version#
+active-connections: #active-connections#
 active-apps: #active-apps#
 active-processes: #active-processes#
 cpu-percent: #cpu-percent#
@@ -1307,17 +1313,19 @@ load-average: #load-average#</code></pre>
 <p>You can specify whatever format you like for these variables by creating a custom template in <code>/etc/shiny-server/health-check</code>. This file will be used to structure the response to the health check after substituting the available variables. For instance, you could configure the endpoint to return this data in XML by placing the following content in the file:</p>
 <pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;<span class="kw">?&gt;</span>
 <span class="kw">&lt;health-check&gt;</span>
-  <span class="kw">&lt;active-connections&gt;</span>#active-connections#<span class="kw">&lt;active-connections&gt;</span>
-  <span class="kw">&lt;active-apps&gt;</span>#active-apps#<span class="kw">&lt;active-apps&gt;</span>
-  <span class="kw">&lt;active-processes&gt;</span>#active-processes#<span class="kw">&lt;active-processes&gt;</span>
-  <span class="kw">&lt;cpu-percent&gt;</span>#cpu-percent#<span class="kw">&lt;cpu-percent&gt;</span>
-  <span class="kw">&lt;memory-percent&gt;</span>#memory-percent#<span class="kw">&lt;memory-percent&gt;</span>
-  <span class="kw">&lt;swap-percent&gt;</span>#swap-percent#<span class="kw">&lt;swap-percent&gt;</span>
-  <span class="kw">&lt;load-average&gt;</span>#load-average#<span class="kw">&lt;load-average&gt;</span>
+  <span class="kw">&lt;server-version&gt;</span>#server-version#<span class="kw">&lt;/server-version&gt;</span>
+  <span class="kw">&lt;active-connections&gt;</span>#active-connections#<span class="kw">&lt;/active-connections&gt;</span>
+  <span class="kw">&lt;active-apps&gt;</span>#active-apps#<span class="kw">&lt;/active-apps&gt;</span>
+  <span class="kw">&lt;active-processes&gt;</span>#active-processes#<span class="kw">&lt;/active-processes&gt;</span>
+  <span class="kw">&lt;cpu-percent&gt;</span>#cpu-percent#<span class="kw">&lt;/cpu-percent&gt;</span>
+  <span class="kw">&lt;memory-percent&gt;</span>#memory-percent#<span class="kw">&lt;/memory-percent&gt;</span>
+  <span class="kw">&lt;swap-percent&gt;</span>#swap-percent#<span class="kw">&lt;/swap-percent&gt;</span>
+  <span class="kw">&lt;load-average&gt;</span>#load-average#<span class="kw">&lt;/load-average&gt;</span>
 <span class="kw">&lt;/health-check&gt;</span></code></pre>
 <h3 id="providing-multiple-health-check-endpoints" class="pro"><span class="header-section-number">5.3.2</span> Providing Multiple Health-Check Endpoints</h3>
 <p>The file at <code>/etc/shiny-server/health-check</code> specifies the default template to use for the health check. Shiny Server Pro supports multiple health check endpoints which can be accessed using different URLs. For instance, you can setup a new endpoint that responds using JSON using the following template:</p>
 <pre class="sourceCode json"><code class="sourceCode json">{
+  <span class="er">&#39;server-version&#39;</span> : <span class="er">&#39;#server-version#&#39;</span>,
   <span class="er">&#39;active-connections&#39;</span>: <span class="er">#active-connections#</span>,
   <span class="er">&#39;active-apps&#39;</span>: <span class="er">#active-apps#</span>,
   <span class="er">&#39;active-processes&#39;</span>: <span class="er">#active-processes#</span>,
