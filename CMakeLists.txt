@@ -34,6 +34,7 @@ execute_process(COMMAND echo "${CPACK_PACKAGE_VERSION}"
 
 add_subdirectory(src)
 add_subdirectory(external/node)
+add_subdirectory(external/pandoc)
 
 install(DIRECTORY assets
                   samples                  
