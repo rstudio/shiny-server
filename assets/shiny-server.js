@@ -115,7 +115,15 @@
         Shiny.createSocket = function() {
           return new SockJS(location.pathname + "__sockjs__/",null,{protocols_whitelist: whitelist});
         };
+
         Shiny.oncustommessage = function(message) {
+          if (window.location.search){
+            var subApp = window.location.search.match(/\?.*__subapp__=(\d)/);
+            if (subApp && subApp[1]){ //is truthy
+              return;
+            }
+          }
+
           if (typeof message === "string") alert(message); // Legacy format
           if (message.alert) alert(message.alert);
           if (message.console && console.log) console.log(message.console);
