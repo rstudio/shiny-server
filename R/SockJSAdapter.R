@@ -164,8 +164,8 @@ if (identical(Sys.getenv('SHINY_MODE'), "shiny")){
   runApp(Sys.getenv('SHINY_APP'),port=port,launch.browser=FALSE)
 } else if (identical(Sys.getenv('SHINY_MODE'), "rmd")){
   library(rmarkdown)
-  rmarkdown::run(dir=Sys.getenv('SHINY_APP'), 
-    shiny_args=list(port=port,launch.browser=FALSE))
+  rmarkdown::run(file=NULL, dir=Sys.getenv('SHINY_APP'),
+    shiny_args=list(port=port,launch.browser=FALSE), auto_reload=FALSE)
 } else{
   stop(paste("Unclear Shiny mode:", Sys.getenv('SHINY_MODE')))
 }

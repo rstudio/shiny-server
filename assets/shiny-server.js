@@ -113,7 +113,9 @@
         }
 
         Shiny.createSocket = function() {
-          return new SockJS(location.pathname + "__sockjs__/",null,{protocols_whitelist: whitelist});
+          var loc = location.pathname;
+          loc = loc.replace(/\/$/, '');
+          return new SockJS(loc + "/__sockjs__/",null,{protocols_whitelist: whitelist});
         };
 
         Shiny.oncustommessage = function(message) {
