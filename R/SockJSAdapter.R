@@ -21,11 +21,17 @@ local({
   SHINY_SHARED_SECRET=input[4],
   SHINY_SERVER_VERSION=input[5],
   WORKER_ID=input[6],
-  MIN_R_VERSION=input[7],
-  MIN_SHINY_VERSION=input[8],
-  SHINY_MODE=input[9],
-  MIN_RMARKDOWN_VERSION=input[10])
+  SHINY_MODE=input[7])
   close(fd)
+
+  MIN_R_VERSION <- "2.15.1"
+  MIN_SHINY_VERSION <- "0.7.0"
+  MIN_RMARKDOWN_VERSION <- "0.1.90"
+  MIN_KNITR_VERSION <- "1.5.32"
+
+  # We can have a more stringent requirement for the Shiny version when using
+  # rmarkdown
+  MIN_SHINY_RMARKDOWN_VERSION <- "0.9.1.9005"
 
   options(shiny.sharedSecret = Sys.getenv('SHINY_SHARED_SECRET'))
 
@@ -39,12 +45,16 @@ local({
       error=function(e){"0.0.0"});
   cat(paste("rmarkdown version: ", markdownVer, "\n", sep=""))
 
-  if (compareVersion(Sys.getenv('MIN_R_VERSION'),rVer)>0){
+  knitrVer <- tryCatch({as.character(packageVersion("knitr"))},
+      error=function(e){"0.0.0"});
+  cat(paste("knitr version: ", knitrVer, "\n", sep=""))
+
+  if (compareVersion(MIN_R_VERSION,rVer)>0){
     # R is out of date
     stop(paste("R version '", rVer, "' found. Shiny Server requires at least '",
-        Sys.getenv('MIN_R_VERSION'), "'."), sep="")
+        MIN_R_VERSION, "'."), sep="")
   }
-  if (compareVersion(Sys.getenv('MIN_SHINY_VERSION'),shinyVer)>0){
+  if (compareVersion(MIN_SHINY_VERSION,shinyVer)>0){
     if (shinyVer == "0.0.0"){
       # Shiny not found
       stop(paste("The Shiny package was not found in the library. Ensure that ",
@@ -53,12 +63,39 @@ local({
     } else{
       # Shiny is out of date
       stop(paste("Shiny version '", shinyVer, "' found. Shiny Server requires at least '",
-          Sys.getenv('MIN_SHINY_VERSION'), "'."), sep="")      
+          MIN_SHINY_VERSION, "'."), sep="")      
     }  
   }
 
-  library(shiny)
+  mode <- Sys.getenv('SHINY_MODE')
+  # Trying to use rmd, verify package.
+  if (identical(mode, "rmd")){
+    if (compareVersion(MIN_RMARKDOWN_VERSION,markdownVer)>0){
+      if (markdownVer == "0.0.0"){
+        # rmarkdown not found
+        stop(paste("You are attempting to load an rmarkdown file, but the ",
+          "rmarkdown package was not found in the library. Ensure that ",
+          "rmarkdown is installed and is available in the Library of the ",
+          "user you're running this application as.", sep="\n"))
+      } else{
+        # rmarkdown is out of date
+        stop(paste("rmarkdown version '", markdownVer, "' found. Shiny Server requires at least '",
+            MIN_RMARKDOWN_VERSION, "'."), sep="")
+      } 
+    }
+    if (compareVersion(MIN_SHINY_RMARKDOWN_VERSION,shinyVer)>0){
+      # We know it's installed b/c we got to this code chunk, so it's outdated.
+      stop(paste("Shiny version '", shinyVer, "' found. Shiny Server requires at least '",
+          MIN_SHINY_RMARKDOWN_VERSION, "' to use with the rmarkdown package."), sep="")
+    }
+    if (compareVersion(MIN_KNITR_VERSION,knitrVer)>0){
+      # We know it's installed b/c we got to this code chunk, so it's outdated.
+      stop(paste("knitr version '", knitrVer, "' found. Shiny Server requires at least '",
+          MIN_KNITR_VERSION, "' to use with the rmarkdown package."), sep="")
+    }
+  }
 
+  library(shiny)
 
    gaTrackingCode <- ''
    if (nzchar(Sys.getenv('SHINY_GAID'))) {
@@ -113,9 +150,6 @@ local({
    options(shiny.http.response.filter=filter)
 })
 
-markdownVer <- tryCatch({as.character(packageVersion("rmarkdown"))},
-      error=function(e){"0.0.0"});
-
 # Port can be either a TCP port number, in which case we need to cast to
 # integer; or else a Unix domain socket path, in which case we need to
 # leave it as a string
@@ -126,28 +160,12 @@ if (is.na(port)) {
 }
 cat(paste("\nStarting Shiny with process ID: '",Sys.getpid(),"'\n", sep=""))
 
-mode <- Sys.getenv('SHINY_MODE')
-if (identical(mode, "shiny")){
+if (identical(Sys.getenv('SHINY_MODE'), "shiny")){
   runApp(Sys.getenv('SHINY_APP'),port=port,launch.browser=FALSE)
-} else if (identical(mode, "rmd")){
-  # Trying to use rmd, verify package.
-  if (compareVersion(Sys.getenv('MIN_RMARKDOWN_VERSION'),markdownVer)>0){
-    if (markdownVer == "0.0.0"){
-      # rmarkdown not found
-      stop(paste("You are attempting to load an rmarkdown file, but the ",
-        "rmarkdown package was not found in the library. Ensure that ",
-        "rmarkdown is installed and is available in the Library of the ",
-        "user you're running this application as.", sep="\n"))
-    } else{
-      # rmarkdown is out of date
-      stop(paste("rmarkdown version '", markdownVer, "' found. Shiny Server requires at least '",
-          Sys.getenv('MIN_RMARKDOWN_VERSION'), "'."), sep="")      
-    } 
-  }
-
+} else if (identical(Sys.getenv('SHINY_MODE'), "rmd")){
   library(rmarkdown)
   rmarkdown::run(dir=Sys.getenv('SHINY_APP'), 
     shiny_args=list(port=port,launch.browser=FALSE))
 } else{
-  stop(paste("Unclear Shiny mode:", mode))
+  stop(paste("Unclear Shiny mode:", Sys.getenv('SHINY_MODE')))
 }
