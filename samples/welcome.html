@@ -46,7 +46,7 @@
       margin: .3em 0 .3em 0;
     }
     #outer-content {
-      max-width: 940px;
+      max-width: 910px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -55,16 +55,20 @@
       float: left;
     }
     #main{
-      margin-right: 320px;
+      margin-right: 350px;
       float: left;
       line-height: 24px;
     }
 
     #shiny{
       float: left;
-      width: 295px;
-      margin-left: -300px;
-      padding-top: 20px;
+      width: 305px;
+      margin-left: -330px;
+      padding-left: 20px;
+      border-left: 1px solid #AAA;
+    }
+    #shiny iframe {
+      margin-top: 30px;
     }
     .caption{
       font-size: 13px;
@@ -72,10 +76,10 @@
     code {
       background-color: #E5E5E5;
       border: 1px solid #AAA;
-      -webkit-border-radius: 4px;
-      -khtml-border-radius: 4px; 
-      -moz-border-radius: 4px;
-      border-radius: 4px;
+      -webkit-border-radius: 3px;
+      -khtml-border-radius: 3px; 
+      -moz-border-radius: 3px;
+      border-radius: 3px;
       padding: 0 .5em 0 .5em;
     }
   </style>
@@ -91,21 +95,32 @@
       <p>If you're seeing this page, that means Shiny Server is installed and running. <strong>Congratulations!</strong> </p>
     </div>
     <div id="content">
-      <h2>What's Next?</h2>
       <div id="main">
+        <h2>What's Next?</h2>
         Now you're ready to setup Shiny &mdash; if you haven't already &mdash; and start deploying your Shiny applications.
         <p>If you see a Shiny application running on the right side of this page, then Shiny is configured properly on your server and already running an example. Bravo! You can see this application on your server at <a href="./sample-apps/hello">/sample-apps/hello</a>.</p>
         <p>If you see a gray box or an error message, then there's a bit more work to do to get Shiny running fully. You can continue with <a href="http://www.rstudio.com/shiny/server/install-opensource">the installation instructions</a> or use <a href="http://rstudio.github.io/shiny-server/latest/">the Admin Guide</a> for more information. If you're seeing an error message in the panel to the right, you can use it to help diagnose what may be wrong. If you think Shiny is installed and setup properly and things still aren't working, you can look in the Shiny Server log which may have more information about what's wrong. By default, the log is stored in <code>/var/log/shiny-server.log</code>.</p>
         <p>If you're really stuck <em>and you've read the relevant sections in <a href="http://rstudio.github.io/shiny-server/latest/">the Admin Guide</a></em> then please ask for help on <a href="https://groups.google.com/forum/#!forum/shiny-discuss">the mailing list</a>.</p>
+        
+        <h2><pre>rmarkdown</pre></h2>
+        <p>Once you have Shiny working properly (the top application on the right sidebar), you can optionally proceed to setup rmarkdown to enable your server to host reactive R Markdown documents using the <code>rmarkdown</code> package.</p>
+
+        <p>Once you have <code>rmarkdown</code> installed, the lower example to the right should also be available. Once both examples are running, you're all set to host both Shiny applications and reactive documents!</p>
+
         <h2>All Done?</h2>
         <p>Once you can see the Shiny application on the right, you're off to the races! You can look at <a href="http://shiny.rstudio.com">shiny.rstudio.com</a> to take a deeper dive into Shiny or take a look at some of the <a href="http://rstudio.github.io/shiny-server/latest/#quick-start">Shiny Server Quick Start Guides</a> to learn about some of the different things Shiny Server can do.</p>
         <p>When you're all setup, you can delete this page and/or the sample applications we installed for you if you don't want them anymore. You can delete this page by running <code>sudo rm /srv/shiny-server/index.html</code> or delete the sample applications by running <code>sudo rm /srv/shiny-server/sample-apps</code>.</p>
 
       </div>
       <div id="shiny">
-        <iframe src="./sample-apps/hello" style="border: 1px solid #AAA; width: 290px; height: 470px"></iframe>
+        <iframe src="./sample-apps/hello" style="border: 1px solid #AAA; width: 290px; height: 460px"></iframe>
         <div class="caption">
           When Shiny is properly configured on your server, you'll see a Shiny app above.
+        </div>
+
+        <iframe src="./sample-apps/rmd" style="border: 1px solid #AAA; width: 290px; height: 420px"></iframe>
+        <div class="caption">
+          With Shiny and <code>rmarkdown</code> installed, you should see a reactive document above.
         </div>
       </div>
     </div>
