@@ -24,6 +24,11 @@ if (NOT EXISTS "${MY_DOWNLOAD_PATH}")
     EXPECTED_MD5 1541304bf51d86e361b7d930f899ac1c)
 endif()
 
+
+execute_process(
+    COMMAND mkdir -p ${PANDOC_PREFIX}
+    DEPENDS "${MY_DOWNLOAD_PATH}")
+
 execute_process(
     COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/${DISTRIBUTION}/x86_64/pandoc -d ${PANDOC_PREFIX}
     DEPENDS "${MY_DOWNLOAD_PATH}")
