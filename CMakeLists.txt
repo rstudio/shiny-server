@@ -36,8 +36,7 @@ add_subdirectory(src)
 add_subdirectory(external/node)
 add_subdirectory(external/pandoc)
 
-install(DIRECTORY assets
-                  samples                  
+install(DIRECTORY samples                  
                   build
                   config
                   ext
