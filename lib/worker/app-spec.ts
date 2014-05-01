@@ -13,23 +13,17 @@
 
 var _ = require('underscore');
 
-var AppSpec = function(appDir, runAs, prefix, logDir, settings) {
-  this.appDir = appDir;
-  this.runAs = runAs;
-  this.prefix = prefix;
-  this.logDir = logDir;
-  this.settings = settings;
-};
-module.exports = AppSpec;
+export class AppSpec {
+  constructor(public appDir:string, public runAs:any, 
+    public prefix:string, public logDir:string , public settings:any) {
+  }
 
-(function() {
-
-  this.getKey = function() {
+  getKey() {
     return this.appDir + "\n" +
       this.runAs + "\n" +
       this.prefix + "\n" +
       this.logDir + "\n" +
       JSON.stringify(this.settings);
-  };
-
-}).call(AppSpec.prototype);
+  }
+}
+module.exports = AppSpec;
