@@ -1,7 +1,9 @@
 shiny-server 1.1.1
 --------------------------------------------------------------------------------
 
-* Leverage site_dir when hosting in user_dirs mode; user_dirs will now respect the directory_index setting and host static assets other than Shiny applications.
+* Leverage site_dir when hosting in user_dirs mode; user_dirs will now respect 
+  the directory_index setting and host static assets other than Shiny 
+  applications.
 
 shiny-server 1.1.0
 --------------------------------------------------------------------------------
