@@ -156,24 +156,41 @@
     }
   });
 
+  // MultiplexClient sits on top of a SockJS connection and lets the caller
+  // open logical SockJS connections (channels).
+  //
+  // TODO: The actual SockJS connection is never closed, even if all the
+  // logical connections are. Maybe we should make the top-level logical
+  // connection special in that when it closes, the SockJS connection closes
+  // as well (along with any other logical connections that are still around
+  // at that point).
   function MultiplexClient(conn) {
+    // The underlying SockJS connection. At this point it is not likely to
+    // be opened yet.
     this._conn = conn;
+    // A table of all active channels.
+    // Key: id, value: MultiplexClientChannel
     this._channels = {};
+    // ID to use for the next channel that is opened
     this._nextId = 0;
+    // Channels that need to be opened when the SockJS connection's open
+    // event is received
     this._pendingChannels = [];
 
     var self = this;
     this._conn.onopen = function() {
       var channel;
       while ((channel = self._pendingChannels.shift())) {
-        channel.open();
+        channel._open();
       }
     };
     this._conn.onclose = function() {
+      // If the SockJS connection is terminated from the other end (or due
+      // to loss of connectivity or whatever) then we can notify all the
+      // active channels that they are closed too.
       for (var key in self._channels) {
         if (self._channels.hasOwnProperty(key)) {
-          self._channels[key].readyState = 3;
-          self._channels[key].onclose();
+          self._channels[key]._destroy();
         }
       }
     };
@@ -193,8 +210,7 @@
         return;
       }
       if (method === "c") {
-        channel.readyState = 3;
-        channel.onclose(payload.code, payload.reason);
+        channel._destroy(payload);
       } else if (method === "m") {
         channel.onmessage({data: payload});
       }
@@ -211,7 +227,7 @@
         break;
       case 1:
         setTimeout(function() {
-          channel.open();
+          channel._open();
         }, 0);
         break;
       default:
@@ -233,7 +249,7 @@
     this.onclose = function() {};
     this.onmessage = function() {};
   }
-  MultiplexClientChannel.prototype.open = function() {
+  MultiplexClientChannel.prototype._open = function() {
     this.readyState = 1;
     this.conn.send(formatOpenEvent(this.id, this.url));
     this.onopen();
@@ -246,15 +262,19 @@
   };
   MultiplexClientChannel.prototype.close = function(code, reason) {
     // Is the underlying connection open? Send a close message.
-    if (this.conn.readyState === 1) {
+    if (this.readyState !== 3 && this.conn.readyState === 1) {
       this.conn.send(formatCloseEvent(this.id, code, reason));
     }
+    this._destroy(code, reason);
+  };
+  // Internal version of close that doesn't notify the server
+  MultiplexClientChannel.prototype._destroy = function(code, reason) {
     // If we haven't already, invoke onclose handler.
     if (this.readyState !== 3) {
       this.readyState = 3;
       this.onclose();
     }
-  };
+  }
 
   function formatMessage(id, message) {
     return JSON.stringify([id, 'm', message]);
@@ -285,8 +305,7 @@
         break;
       // case 'o' is not valid in the client
       case 'c':
-        if (len != 3 || typeof(msg[2].code) !== 'number' ||
-            typeof(msg[2].reason) !== 'string') {
+        if (len != 3 || typeof(msg[2]) !== 'object') {
           return null;
         }
         break;
