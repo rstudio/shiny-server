@@ -3,6 +3,32 @@
   $(function() {
     if (typeof(Shiny) != "undefined") {
       (function() {
+        var loc = location.pathname;
+        loc = loc.replace(/\/$/, '');
+        var sockjsUrl = loc + "/__sockjs__/";
+
+        var subApp = window.location.search.match(/\?.*__subapp__=(\d)/);
+        if (subApp && subApp[1]) {
+          Shiny.createSocket = function() {
+            try {
+              if (window.parent.ShinyServer && window.parent.ShinyServer.multiplexer) {
+                return window.parent.ShinyServer.multiplexer.open(sockjsUrl);
+              }
+              console.log("Couldn't get multiplexer: multiplexer not found in parent");
+            } catch (e) {
+              console.log("Couldn't get multiplexer: " + e);
+            }
+
+            var fakeSocket = {};
+            setTimeout(function() {
+              if (fakeSocket.onclose) {
+                fakeSocket.onclose();
+              }
+            }, 0);
+          };
+          return;
+        }
+
         var supports_html5_storage = exports.supports_html5_storage = function() {
           try {
             return 'localStorage' in window && window['localStorage'] !== null;
@@ -112,20 +138,15 @@
           store["shiny.whitelist"] = JSON.stringify(whitelist);
         }
 
+        exports.multiplexer = new MultiplexClient(
+          new SockJS(sockjsUrl,null,{protocols_whitelist: whitelist})
+        );
+
         Shiny.createSocket = function() {
-          var loc = location.pathname;
-          loc = loc.replace(/\/$/, '');
-          return new SockJS(loc + "/__sockjs__/",null,{protocols_whitelist: whitelist});
+          return exports.multiplexer.open(sockjsUrl);
         };
 
         Shiny.oncustommessage = function(message) {
-          if (window.location.search){
-            var subApp = window.location.search.match(/\?.*__subapp__=(\d)/);
-            if (subApp && subApp[1]){ //is truthy
-              return;
-            }
-          }
-
           if (typeof message === "string") alert(message); // Legacy format
           if (message.alert) alert(message.alert);
           if (message.console && console.log) console.log(message.console);
@@ -134,4 +155,145 @@
       })();
     }
   });
+
+  function MultiplexClient(conn) {
+    this._conn = conn;
+    this._channels = {};
+    this._nextId = 0;
+    this._pendingChannels = [];
+
+    var self = this;
+    this._conn.onopen = function() {
+      var channel;
+      while ((channel = self._pendingChannels.shift())) {
+        channel.open();
+      }
+    };
+    this._conn.onclose = function() {
+      for (var key in self._channels) {
+        if (self._channels.hasOwnProperty(key)) {
+          self._channels[key].readyState = 3;
+          self._channels[key].onclose();
+        }
+      }
+    };
+    this._conn.onmessage = function(e) {
+      var msg = parseMultiplexData(e.data);
+      if (!msg) {
+        console.log("Invalid multiplex packet received from server");
+        self._conn.close();
+        return;
+      }
+      var id = msg[0];
+      var method = msg[1];
+      var payload = msg[2];
+      var channel = self._channels[id];
+      if (!channel) {
+        console.log("Multiplex channel " + id + " not found");
+        return;
+      }
+      if (method === "c") {
+        channel.readyState = 3;
+        channel.onclose(payload.code, payload.reason);
+      } else if (method === "m") {
+        channel.onmessage({data: payload});
+      }
+    };
+  }
+  MultiplexClient.prototype.open = function(url) {
+    var channel = new MultiplexClientChannel(this._nextId++ + "",
+                                             this._conn, url);
+    this._channels[channel.id] = channel;
+
+    switch (this._conn.readyState) {
+      case 0:
+        this._pendingChannels.push(channel);
+        break;
+      case 1:
+        setTimeout(function() {
+          channel.open();
+        }, 0);
+        break;
+      default:
+        setTimeout(function() {
+          channel.close();
+        });
+        break;
+    }
+    return channel;
+  };
+
+  function MultiplexClientChannel(id, conn, url) {
+    this.id = id;
+    this.conn = conn;
+    this.url = url;
+    this.readyState = 0;
+    this.onopen = function() {};
+    this.onerror = function() {};
+    this.onclose = function() {};
+    this.onmessage = function() {};
+  }
+  MultiplexClientChannel.prototype.open = function() {
+    this.readyState = 1;
+    this.conn.send(formatOpenEvent(this.id, this.url));
+    this.onopen();
+  };
+  MultiplexClientChannel.prototype.send = function(data) {
+    if (this.readyState === 0)
+      throw new Error("Invalid state: can't send when readyState is 0");
+    if (this.readyState === 1)
+      this.conn.send(formatMessage(this.id, data));
+  };
+  MultiplexClientChannel.prototype.close = function(code, reason) {
+    // Is the underlying connection open? Send a close message.
+    if (this.conn.readyState === 1) {
+      this.conn.send(formatCloseEvent(this.id, code, reason));
+    }
+    // If we haven't already, invoke onclose handler.
+    if (this.readyState !== 3) {
+      this.readyState = 3;
+      this.onclose();
+    }
+  };
+
+  function formatMessage(id, message) {
+    return JSON.stringify([id, 'm', message]);
+  }
+  function formatOpenEvent(id, url) {
+    return JSON.stringify([id, 'o', url]);
+  }
+  function formatCloseEvent(id, code, reason) {
+    return JSON.stringify([id, 'c', {code: code, reason: reason}]);
+  }
+  function parseMultiplexData(msg) {
+    try {
+      msg = JSON.parse(msg);
+    }
+    catch(e) {
+      return null;
+    }
+
+    var len = msg.length;
+    if (len < 2)
+      return null;
+    if (typeof(msg[0]) !== 'string' && msg[0].length > 0)
+      return null;
+    switch (msg[1]) {
+      case 'm':
+        if (len != 3 || typeof(msg[2]) !== 'string')
+          return null;
+        break;
+      // case 'o' is not valid in the client
+      case 'c':
+        if (len != 3 || typeof(msg[2].code) !== 'number' ||
+            typeof(msg[2].reason) !== 'string') {
+          return null;
+        }
+        break;
+      default:
+        return null;
+    }
+
+    return msg;
+  }
 })(jQuery);
