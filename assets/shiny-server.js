@@ -156,14 +156,15 @@
     }
   });
 
+  function debug(msg) {
+    // console.log(msg);
+  }
+
   // MultiplexClient sits on top of a SockJS connection and lets the caller
-  // open logical SockJS connections (channels).
-  //
-  // TODO: The actual SockJS connection is never closed, even if all the
-  // logical connections are. Maybe we should make the top-level logical
-  // connection special in that when it closes, the SockJS connection closes
-  // as well (along with any other logical connections that are still around
-  // at that point).
+  // open logical SockJS connections (channels). The SockJS connection is
+  // closed when all of the channels close. This means you can't start with
+  // zero channels, open a channel, close that channel, and then open
+  // another channel.
   function MultiplexClient(conn) {
     // The underlying SockJS connection. At this point it is not likely to
     // be opened yet.
@@ -171,6 +172,7 @@
     // A table of all active channels.
     // Key: id, value: MultiplexClientChannel
     this._channels = {};
+    this._channelCount = 0;
     // ID to use for the next channel that is opened
     this._nextId = 0;
     // Channels that need to be opened when the SockJS connection's open
@@ -181,10 +183,17 @@
     this._conn.onopen = function() {
       var channel;
       while ((channel = self._pendingChannels.shift())) {
-        channel._open();
+        // Be sure to check readyState so we don't open connections for
+        // channels that were closed before they finished opening
+        if (channel.readyState === 0) {
+          channel._open();
+        } else {
+          debug("NOT opening channel " + channel.id);
+        }
       }
     };
     this._conn.onclose = function() {
+      debug("SockJS connection closed");
       // If the SockJS connection is terminated from the other end (or due
       // to loss of connectivity or whatever) then we can notify all the
       // active channels that they are closed too.
@@ -217,9 +226,10 @@
     };
   }
   MultiplexClient.prototype.open = function(url) {
-    var channel = new MultiplexClientChannel(this._nextId++ + "",
+    var channel = new MultiplexClientChannel(this, this._nextId++ + "",
                                              this._conn, url);
     this._channels[channel.id] = channel;
+    this._channelCount++;
 
     switch (this._conn.readyState) {
       case 0:
@@ -233,23 +243,33 @@
       default:
         setTimeout(function() {
           channel.close();
-        });
+        }, 0);
         break;
     }
     return channel;
   };
+  MultiplexClient.prototype.removeChannel = function(id) {
+    delete this._channels[id];
+    this._channelCount--;
+    debug("Removed channel " + id + ", " + this._channelCount + " left");
+    if (this._channelCount === 0 && this._conn.readyState < 2) {
+      debug("Closing SockJS connection since no channels are left");
+      this._conn.close();
+    }
+  };
 
-  function MultiplexClientChannel(id, conn, url) {
+  function MultiplexClientChannel(owner, id, conn, url) {
+    this._owner = owner;
     this.id = id;
     this.conn = conn;
     this.url = url;
     this.readyState = 0;
     this.onopen = function() {};
-    this.onerror = function() {};
     this.onclose = function() {};
     this.onmessage = function() {};
   }
   MultiplexClientChannel.prototype._open = function() {
+    debug("Open channel " + this.id);
     this.readyState = 1;
     this.conn.send(formatOpenEvent(this.id, this.url));
     this.onopen();
@@ -261,18 +281,26 @@
       this.conn.send(formatMessage(this.id, data));
   };
   MultiplexClientChannel.prototype.close = function(code, reason) {
-    // Is the underlying connection open? Send a close message.
-    if (this.readyState !== 3 && this.conn.readyState === 1) {
+    if (this.readyState >= 2)
+      return;
+    debug("Close channel " + this.id);
+    if (this.conn.readyState === 1) {
+      // Is the underlying connection open? Send a close message.
       this.conn.send(formatCloseEvent(this.id, code, reason));
     }
     this._destroy(code, reason);
   };
   // Internal version of close that doesn't notify the server
   MultiplexClientChannel.prototype._destroy = function(code, reason) {
+    var self = this;
     // If we haven't already, invoke onclose handler.
     if (this.readyState !== 3) {
       this.readyState = 3;
-      this.onclose();
+      debug("Channel " + this.id + " is closed");
+      setTimeout(function() {
+        self._owner.removeChannel(self.id);
+        self.onclose();
+      }, 0);
     }
   }
 
