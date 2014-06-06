@@ -26,6 +26,11 @@
               }
             }, 0);
           };
+          Shiny.oncustommessage = function(message) {
+            if (typeof message === "string" && console.log) console.log(message); // Legacy format
+            if (message.alert && console.log) console.log(message.alert);
+            if (message.console && console.log) console.log(message.console);
+          };
           return;
         }
 
@@ -157,7 +162,7 @@
   });
 
   function debug(msg) {
-    // console.log(msg);
+    //console.log(msg);
   }
 
   // MultiplexClient sits on top of a SockJS connection and lets the caller
@@ -210,9 +215,9 @@
         self._conn.close();
         return;
       }
-      var id = msg[0];
-      var method = msg[1];
-      var payload = msg[2];
+      var id = msg.id;
+      var method = msg.method;
+      var payload = msg.payload;
       var channel = self._channels[id];
       if (!channel) {
         console.log("Multiplex channel " + id + " not found");
@@ -305,42 +310,48 @@
   }
 
   function formatMessage(id, message) {
-    return JSON.stringify([id, 'm', message]);
+    return id + '|m|' + message;
   }
   function formatOpenEvent(id, url) {
-    return JSON.stringify([id, 'o', url]);
+    return id + '|o|' + url;
   }
   function formatCloseEvent(id, code, reason) {
-    return JSON.stringify([id, 'c', {code: code, reason: reason}]);
+    return id + '|c|' + JSON.stringify({code: code, reason: reason});
   }
   function parseMultiplexData(msg) {
     try {
-      msg = JSON.parse(msg);
-    }
-    catch(e) {
-      return null;
-    }
-
-    var len = msg.length;
-    if (len < 2)
-      return null;
-    if (typeof(msg[0]) !== 'string' && msg[0].length > 0)
-      return null;
-    switch (msg[1]) {
-      case 'm':
-        if (len != 3 || typeof(msg[2]) !== 'string')
-          return null;
-        break;
-      // case 'o' is not valid in the client
-      case 'c':
-        if (len != 3 || typeof(msg[2]) !== 'object') {
-          return null;
-        }
-        break;
-      default:
+      var m = /^(\d+)\|(m|o|c)\|([\s\S]*)$/m.exec(msg);
+      if (!m)
         return null;
-    }
+      msg = {
+        id: m[1],
+        method: m[2],
+        payload: m[3]
+      }
 
-    return msg;
+      switch (msg.method) {
+        case 'm':
+          break;
+        case 'o':
+          if (msg.payload.length === 0)
+            return null;
+          break;
+        case 'c':
+          try {
+            msg.payload = JSON.parse(msg.payload);
+          } catch(e) {
+            return null;
+          }
+          break;
+        default:
+          return null;
+      }
+
+      return msg;
+
+    } catch(e) {
+      logger.debug('Error parsing multiplex data: ' + e);
+      return null;
+    }
   }
 })(jQuery);
