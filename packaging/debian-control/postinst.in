@@ -51,12 +51,12 @@ LSB_RELEASE=`lsb_release --id --short`
 # Ubuntu needs help setting LANG which we'll do in the Upstart script by 
 # injecting it into the script here.
 . /etc/default/locale
-if [[ $LANG ]]; then
+if [ $LANG ]; then
    # $LANG exists and is set. Just use it
    SS_LANG=$LANG
 else 
    # $LANG is not set, we need to infer it.
-   if [[ `locale -a | grep -e "^C.UTF-8$"` ]]; then
+   if (locale -a | grep -e '^C.UTF-8$' > /dev/null); then
       # We have C.UTF-8, use it.
       SS_LANG="C.UTF-8"
    else 
@@ -69,7 +69,7 @@ if test $LSB_RELEASE = "Ubuntu" && test -d /etc/init/
 then
    sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/upstart/shiny-server.conf /etc/init/
 
-   if [[ `grep -e "^env LANG=" /etc/init/shiny-server.conf | wc -l` -eq 0 ]]; then
+   if ! grep -e "^env LANG=" /etc/init/shiny-server.conf > /dev/null; then
       echo "Adding LANG to /etc/init/shiny-server.conf, setting to $SS_LANG"
       sudo sed -i "1 a env LANG='$SS_LANG'" /etc/init/shiny-server.conf
    fi
@@ -80,7 +80,7 @@ then
 else
    sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/debian/shiny-server /etc/init.d/
 
-   if [[ `grep -e "^export LANG=" /etc/init.d/shiny-server | wc -l` -eq 0 ]]; then
+   if ! grep -e "^export LANG=" /etc/init/shiny-server.conf > /dev/null; then
       echo "Adding LANG to /etc/init.d/shiny-server, setting to $SS_LANG"
       sudo sed -i "10 a export LANG='$SS_LANG'" /etc/init.d/shiny-server
    fi
