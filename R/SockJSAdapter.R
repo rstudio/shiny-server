@@ -21,7 +21,8 @@ local({
   SHINY_SHARED_SECRET=input[4],
   SHINY_SERVER_VERSION=input[5],
   WORKER_ID=input[6],
-  SHINY_MODE=input[7])
+  SHINY_MODE=input[7],
+  RSTUDIO_PANDOC=input[8])
   close(fd)
 
   MIN_R_VERSION <- "2.15.1"
