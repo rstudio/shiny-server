@@ -34,7 +34,6 @@ restart_shiny () {
   then
     initctl stop shiny-server 2>/dev/null
     echo "Waiting..."
-    sleep 5
     initctl start shiny-server
   else
     /sbin/service shiny-server stop 2>/dev/null
