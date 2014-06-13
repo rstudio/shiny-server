@@ -1,9 +1,15 @@
-shiny-server 1.1.1
+shiny-server 1.2.0
 --------------------------------------------------------------------------------
 
+* Added experimental support for Interactive Documents (Shiny + Rmd) via the 
+  rmarkdown package.
 * Leverage site_dir when hosting in user_dirs mode; user_dirs will now respect 
   the directory_index setting and host static assets other than Shiny 
   applications.
+* Provide a more sane handling of LANG by ensuring it's passed through in all 
+  spawning modes and set an environment variable in the startup script on 
+  Ubuntu.
+* Bug fix: Restored functionality of sspasswd's `-v` switch.
 
 shiny-server 1.1.0
 --------------------------------------------------------------------------------
