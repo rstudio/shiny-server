@@ -79,7 +79,7 @@
 
         $.each(availableOptions, function(index, val){
           var checked = ($.inArray(val, whitelist) >= 0);
-          var opt = $('<label><input type="checkbox" id="ss-net-opt-'+val+'" name="checkbox" value="'+index+'" '+
+          var opt = $('<label><input type="checkbox" id="ss-net-opt-'+val+'" name="shiny-server-proto-checkbox" value="'+index+'" '+
             (ShinyServer.supports_html5_storage()?'':'disabled="disabled"')+
             '> '+val+'</label>').appendTo(networkOptions);
           var checkbox = $('input', opt);
