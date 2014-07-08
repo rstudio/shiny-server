@@ -234,17 +234,18 @@ code > span.er { font-weight: bold; }
 <li><a href="#simple-scheduler"><span class="toc-section-number">3.1.2</span> Simple Scheduler</a></li>
 <li><a href="#utilization-scheduler"><span class="toc-section-number">3.1.3</span> Utilization Scheduler</a></li>
 </ul></li>
-<li><a href="#application-timeouts"><span class="toc-section-number">3.2</span> Application Timeouts</a></li>
-<li><a href="#session-timeouts"><span class="toc-section-number">3.3</span> Session Timeouts</a></li>
-<li><a href="#logging-and-analytics"><span class="toc-section-number">3.4</span> Logging and Analytics</a><ul>
-<li><a href="#application-error-logs"><span class="toc-section-number">3.4.1</span> Application Error Logs</a></li>
-<li><a href="#google-analytics"><span class="toc-section-number">3.4.2</span> Google Analytics</a></li>
+<li><a href="#r-markdown"><span class="toc-section-number">3.2</span> R Markdown</a></li>
+<li><a href="#application-timeouts"><span class="toc-section-number">3.3</span> Application Timeouts</a></li>
+<li><a href="#session-timeouts"><span class="toc-section-number">3.4</span> Session Timeouts</a></li>
+<li><a href="#logging-and-analytics"><span class="toc-section-number">3.5</span> Logging and Analytics</a><ul>
+<li><a href="#application-error-logs"><span class="toc-section-number">3.5.1</span> Application Error Logs</a></li>
+<li><a href="#google-analytics"><span class="toc-section-number">3.5.2</span> Google Analytics</a></li>
 </ul></li>
-<li><a href="#program-supervisors"><span class="toc-section-number">3.5</span> Program Supervisors</a></li>
-<li><a href="#memory-limits"><span class="toc-section-number">3.6</span> Memory Limits</a></li>
-<li><a href="#reactivity-log"><span class="toc-section-number">3.7</span> Reactivity Log</a></li>
-<li><a href="#specifying-protocols"><span class="toc-section-number">3.8</span> Specifying Protocols</a><ul>
-<li><a href="#disabling-websockets-on-the-server"><span class="toc-section-number">3.8.1</span> Disabling WebSockets on the Server</a></li>
+<li><a href="#program-supervisors"><span class="toc-section-number">3.6</span> Program Supervisors</a></li>
+<li><a href="#memory-limits"><span class="toc-section-number">3.7</span> Memory Limits</a></li>
+<li><a href="#reactivity-log"><span class="toc-section-number">3.8</span> Reactivity Log</a></li>
+<li><a href="#specifying-protocols"><span class="toc-section-number">3.9</span> Specifying Protocols</a><ul>
+<li><a href="#disabling-websockets-on-the-server"><span class="toc-section-number">3.9.1</span> Disabling WebSockets on the Server</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#authentication-security"><span class="toc-section-number">4</span> Authentication &amp; Security</a><ul>
@@ -935,19 +936,22 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 }</code></pre>
 <p>The above configuration would create a Utilization Scheduler for this application which would support a maximum of 3 processes, a maximum of 5 connections per process, and a load factor of 0.5. Initially, only one process would be created to facilitate the first and second concurrent connection to this application. The third connection, however, would surpass the load factor (3/5 &gt; 0.5) which would spawn a new R process. The next request would then be routed to this new process. This would continue until the load factor was again surpassed, at which point the third process would be spawned. With a maximum of 3 processes, no more would be created after the third. So the 16th concurrent connection would be turned away with a 503 error.</p>
 <p>Be aware that, upon the restart of an application using a Utilization Scheduler, the resources allotted to this application will effectively double for a time. For instance, if an application is configured to use 4 <code>maxProc</code> and has sufficient load to create and maintain that many R processes, a restart of the application will motivate Shiny Server to create an R process for a &quot;new&quot; Shiny application which also is eligible to run up to 4 Shiny processes in parallel. Thus, with one restart and sufficient traffic to this application, it is possible that it could be running 8 Shiny processes. This behavior is likely to change in future versions of Shiny Server.</p>
-<h2 id="application-timeouts"><span class="header-section-number">3.2</span> Application Timeouts</h2>
+<h2 id="r-markdown"><span class="header-section-number">3.2</span> R Markdown</h2>
+<p>In addition to serving traditional Shiny applications out of a directory (a <code>server.R</code> file and an associated UI), Shiny Server now supports interactive R Markdown documents. If a hosted directory does not include a <code>server.R</code> file, Shiny Server will look to see if it contains any <code>.Rmd</code> files. If so, Shiny Server will host that directory in &quot;R Markdown&quot; mode using <code>rmarkdown::run</code>.</p>
+<p>Particular <code>Rmd</code> files can be accessed by referencing their full path including the filename, e.g. <code>http://myserver.org/mydocs/hello.Rmd</code>. If a request is made to a directory rather than a particular <code>Rmd</code> file, Shiny Server will attempt to serve the file <code>index.Rmd</code>. If that file does not exist, the user will get an error alerting them that the file is not available.</p>
+<h2 id="application-timeouts"><span class="header-section-number">3.3</span> Application Timeouts</h2>
 <p>Each Shiny Application has two timeouts associated with it:</p>
 <ol type="1">
 <li><strong><code>app_init_timeout</code></strong> -- Describes the amount of time (in seconds) to wait for an application to start. After this many seconds if the R process still has not become responsive, it will be deemed an unsuccessful startup and the connection will be closed.</li>
 <li><strong><code>app_idle_timeout</code></strong> -- Defines the amount of time (in seconds) an R process with no active connections should remain open. After the last connection disconnects from an R process, this timer will start and, after the specified number of seconds, if no new connections have been created, the R process will be killed.</li>
 </ol>
 <p>Typically, these two parameters will be correlated. Shiny Applications which involve little processing to start (therefore have a small <code>app_init_timeout</code>) can often be closed with minimal concern (thus would have a small <code>app_idle_timeout</code>). Conversely, applications which require a substantial amount of data to be loaded on startup may merit a longer <code>app_init_timeout</code> to give the data time to load, and a longer <code>app_idle_timeout</code> as the task of spawning a new process is more expensive and should be minimized.</p>
-<h2 id="session-timeouts" class="pro"><span class="header-section-number">3.3</span> Session Timeouts</h2>
+<h2 id="session-timeouts" class="pro"><span class="header-section-number">3.4</span> Session Timeouts</h2>
 <p>The <code>app_session_timeout</code> setting can be used to automatically disconnect idle Shiny connections. The setting accepts a single parameter which dictates the number of seconds after which an idle session will be disconnected. Here &quot;idleness&quot; is measured by a connection's interaction with the server. Incoming or outgoing data will reset the countdown time for this user's session. If the number of seconds specified elapses without any data being sent to or from this client, the user's session will be disconnected.</p>
 <p>This parameter can be configured as a setting globally, or of a particular <code>server</code>or <code>location</code>. It can be used to ensure that stale R processes are eventually closed by terminating sessions after they become idle for some period of time.</p>
 <p>Session timeouts are configurable on a per-server or per-application basis. Controlling the session timeout can be important in helping the administrator manage the resource allocation for a given application and in freeing up resources from idle connections which will then be available to newly created sessions.</p>
-<h2 id="logging-and-analytics"><span class="header-section-number">3.4</span> Logging and Analytics</h2>
-<h3 id="application-error-logs"><span class="header-section-number">3.4.1</span> Application Error Logs</h3>
+<h2 id="logging-and-analytics"><span class="header-section-number">3.5</span> Logging and Analytics</h2>
+<h3 id="application-error-logs"><span class="header-section-number">3.5.1</span> Application Error Logs</h3>
 <p>Error logs are created for each R Shiny process separately. For <code>location</code>s configured to use <code>user_apps</code> or <code>user_dirs</code>, these logs are created in each user's <code>~/ShinyApps/log/</code> directory. For <code>location</code>s configured with <code>app_dir</code> or <code>site_dir</code>, the directory in which these logs are created is managed by the <code>log_dir</code> setting, which can be specified globally, for a particular <code>server</code>, or for a particular <code>location</code>. By default, these logs will be located at <code>/var/log/shiny-server/</code>. To change these <code>location</code>s, the <code>log_dir</code> can be specified in the following way:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
   <span class="kw">log_dir</span> /var/log/shiny-server/<span class="kw">;</span>
@@ -956,12 +960,12 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <pre><code>&lt;application directory name&gt;-YYYMMDD-HHmmss-&lt;port number or socket ID&gt;.log</code></pre>
 <p>Log files will be created for each R process when it is started. However, if a process closes successfully, the error log associated with that process will be automatically deleted. The only error log files that will remain on disk are those associated with R processes that did not exit as expected.</p>
 <p>If you're looking for log messages related to Shiny Server itself -- rather than individual Shiny applications -- see the section on the <a href="#server-log">Server Log</a>.</p>
-<h3 id="google-analytics"><span class="header-section-number">3.4.2</span> Google Analytics</h3>
+<h3 id="google-analytics"><span class="header-section-number">3.5.2</span> Google Analytics</h3>
 <p>Shiny Server is capable of automatically inserting the necessary JavaScript code to enable Google Analytics tracking globally or for a particular <code>server</code> or <code>location</code>. This is managed by the <code>google_analytics_id</code> setting which can be used as follows:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">location</span> / {
   <span class="kw">google_analytics_id</span> UA-12345-1<span class="kw">;</span>
 }</code></pre>
-<h2 id="program-supervisors" class="pro"><span class="header-section-number">3.5</span> Program Supervisors</h2>
+<h2 id="program-supervisors" class="pro"><span class="header-section-number">3.6</span> Program Supervisors</h2>
 <p>You may also wish to run R sessions under a program supervisor that modifies their environment or available resources. You can specify a supervisor (and the arguments which control it's behavior) using the <code>exec_supervisor</code> setting. For example:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">
 <span class="kw">...</span>
@@ -974,14 +978,14 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 }</code></pre>
 <p>This example uses the <code>nice</code> command to run the Shiny processes in the affected location with a lower scheduling priority. See <a href="http://linux.die.net/man/1/nice">http://linux.die.net/man/1/nice</a> for more details on <code>nice</code>. Note that for <code>nice</code>, in particular, it's possible to accomplish the same thing using the <code>pam_limits</code> module (and even specify a custom priority level per user or group).</p>
 <p>It is important to note that the <code>exec_supervisor</code> will be executed as the same user the Shiny app will be running as. So if Shiny Server is running as <code>root</code> but runs applications as <code>shiny</code>, the <code>exec_supervisor</code> will be executed as <code>shiny</code>. Because most systems only allow the <code>root</code> user to assign a negative (higher priority) <code>nice</code> privilege, this means that exec_supervisor would not be able to assign a negative nice value without reconfiguring the server to allow certain users to assign negative <code>nice</code> values to a process.</p>
-<h2 id="memory-limits" class="pro"><span class="header-section-number">3.6</span> Memory Limits</h2>
+<h2 id="memory-limits" class="pro"><span class="header-section-number">3.7</span> Memory Limits</h2>
 <p>Memory limits will be added in a coming version of Shiny Server Professional.</p>
-<h2 id="reactivity-log"><span class="header-section-number">3.7</span> Reactivity Log</h2>
+<h2 id="reactivity-log"><span class="header-section-number">3.8</span> Reactivity Log</h2>
 <p>The reactivity log is a great browser-based tool for analyzing and debugging reactive dependencies in a Shiny Application. We strongly recommend that you read the <a href="http://rstudio.github.io/shiny/tutorial/#reactivity-overview">Overview of Reactivity</a> in the Shiny tutorial to get the most out of the reactivity log. The symbols and representations introduced in that article are reused in the log. This tool should not be used in a production environment, as it exposes details that should not be publicly available. Many application authors find it to be a useful tool to use locally, however.</p>
 <p>Currently, reactivity logs are maintained for an entire R process. Therefore, it should be used in a fresh R session in which only one Shiny application is active. To enable the reactivity log, run the command <code>options(shiny.reactlog=TRUE)</code> before running your application. Once you've started your application and are viewing it in a browser, you can use <code>Ctrl+F3</code> (or <code>Command+F3</code> for Mac users) to view the reactivity log. This visualization creates a snapshot of all reactive activity that had occurred up to the moment it was created. If you want to view the reactive activity that has occurred since opening the reactivity log, you'll need to refresh the browser.</p>
 <p>The <code>showReactLog()</code> function exposes this functionality from within R and can be used outside of strictly Shiny contexts to generate a static HTML file visualizing reactivity. You can see the full documentation using <code>?showReactLog</code> in R.</p>
 <p>As the reactivity log exposes the architecture and some of the code behind your application, it would likely be unwise to enable this feature in a production environment. Unless explicitly enabled by the user, Shiny Server will not enable this functionality. We recomend using the reactivity log in a local R process not managed by Shiny Server.</p>
-<h2 id="specifying-protocols"><span class="header-section-number">3.8</span> Specifying Protocols</h2>
+<h2 id="specifying-protocols"><span class="header-section-number">3.9</span> Specifying Protocols</h2>
 <p>Shiny Server can use a wide variety of techniques to keep the data in the web browser synchronized. The preferred technique, and the one most widely used, is the use of WebSockets. However, if WebSockets are not supported -- either by some intermediate network between Shiny Server and your client or by your client's web browser -- then a fallback protocol will be used. In total, Shiny Server provides nine different methods of connecting to the server in real-time. In order of preference, they are:</p>
 <ol type="1">
 <li>WebSocket</li>
@@ -996,7 +1000,7 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 </ol>
 <p>Each of these will be tried by the client in order until a successful connection to Shiny Server. If you would like to omit one or more of these protocols from the list for whatever reason, you can currently do so only from the client (we hope to make a server-side configuration available in a future release of Shiny Server).</p>
 <p>To change the available protocols, you can open any Shiny Application and press the keyboard shortcut: <code>Ctrl+Alt+Shift+A</code> (or, from a Mac: <code>control+option+shift+A</code>). This will bring up a window that will allow you to select or deselect any of the above protocols. After confirming your changes these settings will be saved in your browser for future visits to this server. These settings will take effect upon loading any Shiny application hosted on this domain and will last until you explicitly change them again.</p>
-<h3 id="disabling-websockets-on-the-server"><span class="header-section-number">3.8.1</span> Disabling WebSockets on the Server</h3>
+<h3 id="disabling-websockets-on-the-server"><span class="header-section-number">3.9.1</span> Disabling WebSockets on the Server</h3>
 <p>Most modern networks will work well with WebSockets. If however, you find that WebSockets are unreliable on your network or your users' networks, you can disable them from the server using the <code>disable_websockets</code> setting. Currently this setting must be applied across the configuration file globally if it is present.</p>
 <h1 id="authentication-security" class="pro"><span class="header-section-number">4</span> Authentication &amp; Security</h1>
 <h2 id="authentication-overview" class="pro"><span class="header-section-number">4.1</span> Authentication Overview</h2>
