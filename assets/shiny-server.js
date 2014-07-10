@@ -1,9 +1,7 @@
 
-// Don't try to console.log on IE8
-if (!window.console){ console = {log: function() {}} };
-
 (function( $ ) {
   var exports = window.ShinyServer = window.ShinyServer || {};
+  exports.debugging = false;
   $(function() {
     if (typeof(Shiny) != "undefined") {
       (function() {
@@ -60,9 +58,9 @@ if (!window.console){ console = {log: function() {}} };
                 var relURL = getRelativePath(window.parent.ShinyServer.url, sockjsUrl);
                 return window.parent.ShinyServer.multiplexer.open(relURL);
               }
-              console.log("Couldn't get multiplexer: multiplexer not found in parent");
+              log("Couldn't get multiplexer: multiplexer not found in parent");
             } catch (e) {
-              console.log("Couldn't get multiplexer: " + e);
+              log("Couldn't get multiplexer: " + e);
             }
 
             var fakeSocket = {};
@@ -208,7 +206,15 @@ if (!window.console){ console = {log: function() {}} };
   });
 
   function debug(msg) {
-    //console.log(msg);
+    if (window.console && exports.debugging){
+      console.log(msg);
+    }
+  }
+
+  function log(msg) {
+    if (window.console){
+      console.log(msg);
+    }
   }
 
   // MultiplexClient sits on top of a SockJS connection and lets the caller
@@ -257,7 +263,7 @@ if (!window.console){ console = {log: function() {}} };
     this._conn.onmessage = function(e) {
       var msg = parseMultiplexData(e.data);
       if (!msg) {
-        console.log("Invalid multiplex packet received from server");
+        log("Invalid multiplex packet received from server");
         self._conn.close();
         return;
       }
@@ -266,7 +272,7 @@ if (!window.console){ console = {log: function() {}} };
       var payload = msg.payload;
       var channel = self._channels[id];
       if (!channel) {
-        console.log("Multiplex channel " + id + " not found");
+        log("Multiplex channel " + id + " not found");
         return;
       }
       if (method === "c") {
