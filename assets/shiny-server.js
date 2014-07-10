@@ -1,3 +1,7 @@
+
+// Don't try to console.log on IE8
+if (!window.console){ console = {log: function() {}} };
+
 (function( $ ) {
   var exports = window.ShinyServer = window.ShinyServer || {};
   $(function() {
@@ -7,12 +11,54 @@
         loc = loc.replace(/\/$/, '');
         var sockjsUrl = loc + "/__sockjs__/";
 
+        exports.url = sockjsUrl;
+
         var subApp = window.location.search.match(/\?.*__subapp__=(\d)/);
         if (subApp && subApp[1]) {
+          // Take from nodeJS's path module.
+          function getRelativePath(from, to) {
+            function trim(arr) {
+              var start = 0;
+              for (; start < arr.length; start++) {
+                if (arr[start] !== '') break;
+              }
+
+              var end = arr.length - 1;
+              for (; end >= 0; end--) {
+                if (arr[end] !== '') break;
+              }
+
+              if (start > end) return [];
+              return arr.slice(start, end - start + 1);
+            }
+
+            var fromParts = trim(from.split('/'));
+            var toParts = trim(to.split('/'));
+
+            var length = Math.min(fromParts.length, toParts.length);
+            var samePartsLength = length;
+            for (var i = 0; i < length; i++) {
+              if (fromParts[i] !== toParts[i]) {
+                samePartsLength = i;
+                break;
+              }
+            }
+
+            var outputParts = [];
+            for (var i = samePartsLength; i < fromParts.length; i++) {
+              outputParts.push('..');
+            }
+
+            outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+            return outputParts.join('/');
+          }
+
           Shiny.createSocket = function() {
             try {
               if (window.parent.ShinyServer && window.parent.ShinyServer.multiplexer) {
-                return window.parent.ShinyServer.multiplexer.open(sockjsUrl);
+                var relURL = getRelativePath(window.parent.ShinyServer.url, sockjsUrl);
+                return window.parent.ShinyServer.multiplexer.open(relURL);
               }
               console.log("Couldn't get multiplexer: multiplexer not found in parent");
             } catch (e) {
@@ -148,7 +194,7 @@
         );
 
         Shiny.createSocket = function() {
-          return exports.multiplexer.open(sockjsUrl);
+          return exports.multiplexer.open("");
         };
 
         Shiny.oncustommessage = function(message) {
@@ -273,9 +319,12 @@
     this.onclose = function() {};
     this.onmessage = function() {};
   }
-  MultiplexClientChannel.prototype._open = function() {
+  MultiplexClientChannel.prototype._open = function(parentURL) {
     debug("Open channel " + this.id);
     this.readyState = 1;
+
+    //var relURL = getRelativePath(parentURL, this.url)
+    
     this.conn.send(formatOpenEvent(this.id, this.url));
     this.onopen();
   };
