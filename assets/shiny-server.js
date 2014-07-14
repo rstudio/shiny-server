@@ -14,6 +14,15 @@
         var subApp = window.location.search.match(/\?.*__subapp__=(\d)/);
         if (subApp && subApp[1]) {
           // Take from nodeJS's path module.
+          // The doc's on this function are lacking, but it looks like the last 
+          // element in each path is treated as a file (regardless of the
+          // presence/absence of a trailing slash). So the relativePath from 
+          // `/foo/a` to `/foo/b` is the empty string, since you're already
+          // in the right directory -- the same holds true if you add trailing
+          // slashes to the above examples. So if we want to resolve the
+          // relative difference between the above two dirs, we need to add 
+          // something to each, like `/whatever/`, then we'd get '../b'.
+          // This is why we append `__sockjs__` to each path before comparing.
           function getRelativePath(from, to) {
             function trim(arr) {
               var start = 0;
