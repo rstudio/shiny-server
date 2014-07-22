@@ -285,7 +285,9 @@
         return;
       }
       if (method === "c") {
-        channel._destroy(payload);
+        // If we're closing, we want to close everything, not just a subapp.
+        // So don't send to a single channel.
+        self._conn.close();
       } else if (method === "m") {
         channel.onmessage({data: payload});
       }
