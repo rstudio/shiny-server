@@ -69,9 +69,11 @@ local({
           MIN_SHINY_VERSION, "'."), sep="")      
     }  
   }
-  
+
   # Redirect all output to rstudio-logger
-  sink(socketConnection(port = Sys.getenv("LOGGING_PORT"), blocking=FALSE))
+  #if (Sys.getEnv("LOGGING_PORT") > 0){
+    sink(socketConnection(port = Sys.getenv("LOGGING_PORT"), blocking=FALSE))  
+  #} #Otherwise leave on stdout and stderr.
 
   # Introduce this connection
   cat(input[9])
