@@ -70,15 +70,6 @@ local({
     }  
   }
 
-  # Redirect all output to rstudio-logger
-  #if (Sys.getEnv("LOGGING_PORT") > 0){
-    sink(socketConnection(port = Sys.getenv("LOGGING_PORT"), blocking=FALSE))  
-  #} #Otherwise leave on stdout and stderr.
-
-  # Introduce this connection
-  cat(input[9])
-  cat("\n|||\n")
-
   mode <- Sys.getenv('SHINY_MODE')
   # Trying to use rmd, verify package.
   if (identical(mode, "rmd")){
@@ -160,6 +151,17 @@ local({
       return(response)
    }
    options(shiny.http.response.filter=filter)
+
+  cat(paste("\nStarting Shiny with process ID: '",Sys.getpid(),"'\n", sep=""))
+
+  # Redirect all output to rstudio-logger
+  #if (Sys.getEnv("LOGGING_PORT") > 0){
+    sink(socketConnection(port = Sys.getenv("LOGGING_PORT"), blocking=FALSE))  
+  #} #Otherwise leave on stdout and stderr.
+
+  # Introduce this connection
+  cat(input[9])
+  cat("\n|||\n")
 })
 
 # Port can be either a TCP port number, in which case we need to cast to
@@ -170,7 +172,6 @@ if (is.na(port)) {
   port <- Sys.getenv('SHINY_PORT')
   attr(port, 'mask') <- strtoi('0077', 8)
 }
-cat(paste("\nStarting Shiny with process ID: '",Sys.getpid(),"'\n", sep=""))
 
 if (identical(Sys.getenv('SHINY_MODE'), "shiny")){
   runApp(Sys.getenv('SHINY_APP'),port=port,launch.browser=FALSE)
