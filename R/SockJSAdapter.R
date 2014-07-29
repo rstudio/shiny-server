@@ -23,7 +23,7 @@ local({
   WORKER_ID=input[6],
   SHINY_MODE=input[7],
   RSTUDIO_PANDOC=input[8],
-  LOGGING_JSON=input[9],
+#  LOGGING_JSON=input[9], # Don't want this one exposed to the app.
   LOGGING_PORT=input[10])
   close(fd)
 
@@ -31,8 +31,6 @@ local({
   MIN_SHINY_VERSION <- "0.7.0"
   MIN_RMARKDOWN_VERSION <- "0.1.90"
   MIN_KNITR_VERSION <- "1.5.32"
-
-  sink(socketConnection(port = Sys.getenv("LOGGING_PORT"), blocking=FALSE))
 
   # We can have a more stringent requirement for the Shiny version when using
   # rmarkdown
@@ -71,6 +69,13 @@ local({
           MIN_SHINY_VERSION, "'."), sep="")      
     }  
   }
+  
+  # Redirect all output to rstudio-logger
+  sink(socketConnection(port = Sys.getenv("LOGGING_PORT"), blocking=FALSE))
+
+  # Introduce this connection
+  cat(input[9])
+  cat("\n|||\n")
 
   mode <- Sys.getenv('SHINY_MODE')
   # Trying to use rmd, verify package.
