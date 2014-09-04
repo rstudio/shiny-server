@@ -98,6 +98,10 @@ local({
 
   library(shiny)
 
+  shiny:::setServerInfo(shinyServer = TRUE, 
+    version = Sys.getenv("SHINY_SERVER_VERSION"), 
+    edition = "OS")
+
    gaTrackingCode <- ''
    if (nzchar(Sys.getenv('SHINY_GAID'))) {
       gaTrackingCode <- HTML(sprintf("<script type=\"text/javascript\">
