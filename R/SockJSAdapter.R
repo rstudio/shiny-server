@@ -98,9 +98,11 @@ local({
 
   library(shiny)
 
-  shiny:::setServerInfo(shinyServer = TRUE, 
-    version = Sys.getenv("SHINY_SERVER_VERSION"), 
-    edition = "OS")
+  if (exists("setServerInfo", envir=asNamespace("shiny"))) {
+    shiny:::setServerInfo(shinyServer = TRUE, 
+      version = Sys.getenv("SHINY_SERVER_VERSION"), 
+      edition = "OS")
+  }
 
    gaTrackingCode <- ''
    if (nzchar(Sys.getenv('SHINY_GAID'))) {
