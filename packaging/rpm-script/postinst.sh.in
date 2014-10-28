@@ -9,8 +9,11 @@ if id -u shiny >/dev/null 2>&1;
 then
    echo User "shiny" already exists
 else
+   echo Creating group "shiny"
+   sudo groupadd shiny
+
    echo Creating user "shiny"
-   sudo useradd -r -m shiny
+   sudo useradd -r -m shiny -g shiny
 fi
 
 if [ ! -d "/srv/shiny-server" ];
