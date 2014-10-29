@@ -48,8 +48,8 @@ case "$1" in
 	rc_status
 	;;
     reload)
-	## we don't support reload
-	rc_failed 3
+	echo -n "Reload shiny-server"
+	/sbin/killproc -HUP shiny-server
 	rc_status -v
 	;;
     status)

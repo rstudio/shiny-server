@@ -53,7 +53,13 @@ then
    sudo initctl stop shiny-server 2>/dev/null
    sudo initctl start shiny-server
 else
-   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/redhat/shiny-server /etc/init.d/
+   if test -d /etc/SuSE-release
+   then
+      cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/suse/shiny-server /etc/init.d/
+   else
+      cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/redhat/shiny-server /etc/init.d/
+   fi
+
    chmod +x /etc/init.d/shiny-server
    chkconfig --add shiny-server
    service shiny-server stop 2>/dev/null
