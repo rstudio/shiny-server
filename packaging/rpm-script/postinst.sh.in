@@ -53,7 +53,7 @@ then
    sudo initctl stop shiny-server 2>/dev/null
    sudo initctl start shiny-server
 else
-   if test -d /etc/SuSE-release
+   if test -e /etc/SuSE-release
    then
       cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/suse/shiny-server /etc/init.d/
    else
