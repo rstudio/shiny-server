@@ -66,5 +66,12 @@ else
    service shiny-server start
 fi
 
+if test -e /etc/SuSE-release
+then
+   # The default Pandoc binaries aren't compatible, overwrite with the static versions.
+   mv -f ${CMAKE_INSTALL_PREFIX}/shiny-server/ext/pandoc/static/pandoc ${CMAKE_INSTALL_PREFIX}/shiny-server/ext/pandoc/pandoc
+   mv -f ${CMAKE_INSTALL_PREFIX}/shiny-server/ext/pandoc/static/pandoc-citeproc ${CMAKE_INSTALL_PREFIX}/shiny-server/ext/pandoc/pandoc-citeproc
+fi
+
 # clear error termination state
 set -e
