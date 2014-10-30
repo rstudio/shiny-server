@@ -140,6 +140,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/rpm-script/${RPM_POSTINST}
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/rpm-script/${RPM_POSTRM}
                ${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/postrm.sh)
 
+# Magic to prevent static pandoc binaries from breaking
+set(CPACK_RPM_SPEC_INSTALL_POST "/bin/true")
+
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/postinst.sh")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/postrm.sh")
 
