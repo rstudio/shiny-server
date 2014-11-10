@@ -50,7 +50,9 @@ LSB_RELEASE=`lsb_release --id --short`
 
 # Ubuntu needs help setting LANG which we'll do in the Upstart script by 
 # injecting it into the script here.
-. /etc/default/locale
+if [ -e /etc/default/locale ]; then
+   . /etc/default/locale
+fi
  if [ $LANG ] && [ "$LANG" != "C" ]; then
    # $LANG exists and is set. Just use it
    SS_LANG=$LANG
