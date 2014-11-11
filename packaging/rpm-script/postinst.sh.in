@@ -13,7 +13,7 @@ else
    sudo groupadd shiny
 
    echo Creating user "shiny"
-   sudo useradd -r -m shiny -g shiny
+   sudo useradd -r -m shiny -g shiny -s /bin/sh
 fi
 
 if [ ! -d "/srv/shiny-server" ];
