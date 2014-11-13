@@ -32,6 +32,10 @@ execute_process(COMMAND echo "${CPACK_PACKAGE_VERSION}"
                 WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
                 OUTPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/VERSION")
 
+execute_process(COMMAND cat /etc/issue
+                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+                OUTPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/BUILD_ENV")
+
 add_subdirectory(src)
 add_subdirectory(external/node)
 add_subdirectory(external/pandoc)
@@ -67,6 +71,7 @@ execute_process(COMMAND cat
 install(FILES binding.gyp
               config.html
               COPYING
+              BUILD_ENV
               NEWS
               package.json
               README.md
