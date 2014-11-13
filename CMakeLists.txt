@@ -71,13 +71,13 @@ execute_process(COMMAND cat
 install(FILES binding.gyp
               config.html
               COPYING
-              BUILD_ENV
               NEWS
               package.json
               README.md
               "${CMAKE_CURRENT_BINARY_DIR}/NOTICE"
               "${CMAKE_CURRENT_BINARY_DIR}/VERSION"
               "${CMAKE_CURRENT_BINARY_DIR}/GIT_VERSION"
+              "${CMAKE_CURRENT_BINARY_DIR}/BUILD_ENV"
         DESTINATION shiny-server)
 
 
@@ -100,8 +100,15 @@ if (NOT PACKAGE_ARCHITECTURE)
    if(DPKG_EXECUTABLE)
       exec_program(dpkg ARGS --print-architecture
                    OUTPUT_VARIABLE PACKAGE_ARCHITECTURE)
+      set(PACKAGE_DIST "deb")
    elseif(RPM_EXECUTABLE)
+      #RHEL/CentOS
       exec_program(arch OUTPUT_VARIABLE PACKAGE_ARCHITECTURE) 
+      execute_process(COMMAND sed -n "s/\\s(\\d+)\\.\\d+\s/\\1/p"
+                INPUT_FILE "/etc/redhat-release"
+                OUTPUT_VARIABLE RH_VER
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+      set(PACKAGE_DIST "rh${RH_VER}")
    endif()
 endif()
 
@@ -152,7 +159,7 @@ set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/packaging/rp
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/postrm.sh")
 
 # package file name
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}${SHINY_SERVER_PACKAGE_SUFFIX}${CPACK_PACKAGE_VERSION}-${PACKAGE_ARCHITECTURE}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}${SHINY_SERVER_PACKAGE_SUFFIX}${CPACK_PACKAGE_VERSION}-${PACKAGE_DIR}-${PACKAGE_ARCHITECTURE}")
 string(TOLOWER "${CPACK_PACKAGE_FILE_NAME}" CPACK_PACKAGE_FILE_NAME)
 
 # variables to be re-used in package description fields
