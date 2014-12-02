@@ -99,7 +99,7 @@ if (NOT PACKAGE_ARCHITECTURE)
    elseif(RPM_EXECUTABLE)
       #RHEL/CentOS
       exec_program(arch OUTPUT_VARIABLE PACKAGE_ARCHITECTURE) 
-      execute_process(COMMAND sed -nr "s/.*\\ ([0-9]+)\\.[0-9]+\\ .*/\\1/p"
+      execute_process(COMMAND sed -nr "s/.*\\ ([0-9]+)\\.[0-9]+(\\.[0-9]+)?\\ .*/\\1/p"
                 INPUT_FILE "/etc/redhat-release"
                 OUTPUT_VARIABLE RH_VER
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
