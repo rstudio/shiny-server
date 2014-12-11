@@ -60,6 +60,7 @@ then
    sleep 1
    sudo initctl start shiny-server
 elif [ "$RH_VER" == "7" ]
+then
    cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/systemd/shiny-server.service /etc/systemd/system/
    systemctl enable shiny-server
    systemctl restart shiny-server
