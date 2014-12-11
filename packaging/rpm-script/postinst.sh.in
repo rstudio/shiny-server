@@ -68,7 +68,13 @@ else
    service shiny-server start
 fi
 
-if test -e /etc/SuSE-release
+RH_VER=""
+if test -e /etc/redhat-release
+then
+  RH_VER=`sed -nr "s/.*\\ ([0-9]+)\\.[0-9]+(\\.[0-9]+)?\\ .*/\\1/p" /etc/redhat-release`
+fi
+
+if [ -e /etc/SuSE-release ] || [ "$RH_VER" == "7" ]  
 then
    # The default Pandoc binaries aren't compatible, overwrite with the static versions.
    mv -f ${CMAKE_INSTALL_PREFIX}/shiny-server/ext/pandoc/static/pandoc ${CMAKE_INSTALL_PREFIX}/shiny-server/ext/pandoc/pandoc

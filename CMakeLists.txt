@@ -115,6 +115,8 @@ set(DEBIAN_POSTRM postrm.in)
 # rpm scripts
 set(RPM_POSTINST postinst.sh.in)
 set(RPM_POSTRM postrm.sh.in)
+set(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
+
 
 # debian dependencies -- to install the .deb from the command line with
 # automatic dependency resolution use e.g.
@@ -172,7 +174,7 @@ set(CPACK_RPM_PACKAGE_DESCRIPTION "${PACKAGE_LONG_DESCRIPTION}")
 set(CPACK_RPM_PACKAGE_LICENSE "AGPL v.3.0")
 set(CPACK_RPM_PACKAGE_GROUP "System Environment/Daemons")
 set(CPACK_RPM_PACKAGE_ARCHITECTURE "${PACKAGE_ARCHITECTURE}")
-set(CPACK_RPM_PACKAGE_REQUIRES "openssl")
+set(CPACK_RPM_PACKAGE_REQUIRES "openssl libffi")
 
 
 include(CPack)
