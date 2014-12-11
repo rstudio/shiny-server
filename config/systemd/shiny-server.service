@@ -1,7 +1,5 @@
 [Unit]
 Description=ShinyServer
-After=service
-Requires=service
 
 [Service]
 TimeoutStartSec=10
