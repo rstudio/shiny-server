@@ -1,0 +1,18 @@
+[Unit]
+Description=ShinyServer
+
+[Service]
+TimeoutStartSec=10
+ExecStart=/usr/bin/bash -c '/opt/shiny-server/bin/shiny-server --pidfile=/var/run/shiny-server.pid >> /var/log/shiny-server.log 2>&1'
+# Needed to give SS a chance to write out to the PID file.
+ExecStartPost=/usr/bin/sleep 3
+PIDFile=/var/run/shiny-server.pid
+Type=simple
+
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStopPost=/usr/bin/sleep 5
+RestartSec=1
+
+
+[Install]
+WantedBy=multi-user.target

@@ -22,32 +22,43 @@ execute_process(
 # Detect distribution
 if(EXISTS "/etc/debian_version")
   set(DISTRIBUTION debian)
+    # Then we'll want the dynamic versions
+    execute_process(
+        COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/${DISTRIBUTION}/x86_64/pandoc -d ${PANDOC_PREFIX}
+        DEPENDS "${MY_DOWNLOAD_PATH}")
+    
+    execute_process(
+        COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/${DISTRIBUTION}/x86_64/pandoc-citeproc -d ${PANDOC_PREFIX}
+        DEPENDS "${MY_DOWNLOAD_PATH}")
 endif()
 
 if(EXISTS "/etc/redhat-release")
   set(DISTRIBUTION rpm)
 
-  # Still want to do the work below to get the proper RHEL pandoc binaries, but 
-  # since we also need to support SUSE, we need to ensure the static version is
-  # also bundled in.
-
   execute_process(
-    COMMAND mkdir -p ${PANDOC_PREFIX}/static
-    DEPENDS "${MY_DOWNLOAD_PATH}")
+    COMMAND sed -nr "s/.*release\\ ([0-9).*/\\1/p" /etc/redhat-release
+    RESULT_VARIABLE REDHAT_VER)
 
-  execute_process(
-    COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/debian/x86_64/pandoc -d ${PANDOC_PREFIX}/static
-    DEPENDS "${MY_DOWNLOAD_PATH}")
-
-  execute_process(
-      COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/debian/x86_64/pandoc-citeproc -d ${PANDOC_PREFIX}/static
-      DEPENDS "${MY_DOWNLOAD_PATH}")
+  if (${REDHAT_VER} EQUAL "5")
+    # Need the dynamic versions of pandoc.
+    execute_process(
+        COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/${DISTRIBUTION}/x86_64/pandoc -d ${PANDOC_PREFIX}
+        DEPENDS "${MY_DOWNLOAD_PATH}")
+    
+    execute_process(
+        COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/${DISTRIBUTION}/x86_64/pandoc-citeproc -d ${PANDOC_PREFIX}
+        DEPENDS "${MY_DOWNLOAD_PATH}")
+  endif()
 endif()
 
 execute_process(
-    COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/${DISTRIBUTION}/x86_64/pandoc -d ${PANDOC_PREFIX}
-    DEPENDS "${MY_DOWNLOAD_PATH}")
+  COMMAND mkdir -p ${PANDOC_PREFIX}/static
+  DEPENDS "${MY_DOWNLOAD_PATH}")
 
 execute_process(
-    COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/${DISTRIBUTION}/x86_64/pandoc-citeproc -d ${PANDOC_PREFIX}
+  COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/debian/x86_64/pandoc -d ${PANDOC_PREFIX}/static
+  DEPENDS "${MY_DOWNLOAD_PATH}")
+
+execute_process(
+    COMMAND unzip -u -j ${MY_DOWNLOAD_PATH} pandoc-${PANDOC_VERSION}/linux/debian/x86_64/pandoc-citeproc -d ${PANDOC_PREFIX}/static
     DEPENDS "${MY_DOWNLOAD_PATH}")

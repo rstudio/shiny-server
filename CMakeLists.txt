@@ -95,8 +95,15 @@ if (NOT PACKAGE_ARCHITECTURE)
    if(DPKG_EXECUTABLE)
       exec_program(dpkg ARGS --print-architecture
                    OUTPUT_VARIABLE PACKAGE_ARCHITECTURE)
+      set(PACKAGE_DIST "")
    elseif(RPM_EXECUTABLE)
+      #RHEL/CentOS
       exec_program(arch OUTPUT_VARIABLE PACKAGE_ARCHITECTURE) 
+      execute_process(COMMAND sed -nr "s/.*\\ ([0-9]+)\\.[0-9]+(\\.[0-9]+)?\\ .*/\\1/p"
+                INPUT_FILE "/etc/redhat-release"
+                OUTPUT_VARIABLE RH_VER
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+      set(PACKAGE_DIST "-rh${RH_VER}")
    endif()
 endif()
 
@@ -108,6 +115,8 @@ set(DEBIAN_POSTRM postrm.in)
 # rpm scripts
 set(RPM_POSTINST postinst.sh.in)
 set(RPM_POSTRM postrm.sh.in)
+set(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
+
 
 # debian dependencies -- to install the .deb from the command line with
 # automatic dependency resolution use e.g.
@@ -147,7 +156,7 @@ set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/packaging/rp
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/postrm.sh")
 
 # package file name
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}${SHINY_SERVER_PACKAGE_SUFFIX}${CPACK_PACKAGE_VERSION}-${PACKAGE_ARCHITECTURE}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}${SHINY_SERVER_PACKAGE_SUFFIX}${CPACK_PACKAGE_VERSION}${PACKAGE_DIST}-${PACKAGE_ARCHITECTURE}")
 string(TOLOWER "${CPACK_PACKAGE_FILE_NAME}" CPACK_PACKAGE_FILE_NAME)
 
 # variables to be re-used in package description fields
@@ -165,7 +174,7 @@ set(CPACK_RPM_PACKAGE_DESCRIPTION "${PACKAGE_LONG_DESCRIPTION}")
 set(CPACK_RPM_PACKAGE_LICENSE "AGPL v.3.0")
 set(CPACK_RPM_PACKAGE_GROUP "System Environment/Daemons")
 set(CPACK_RPM_PACKAGE_ARCHITECTURE "${PACKAGE_ARCHITECTURE}")
-set(CPACK_RPM_PACKAGE_REQUIRES "openssl")
+set(CPACK_RPM_PACKAGE_REQUIRES "openssl libffi")
 
 
 include(CPack)
