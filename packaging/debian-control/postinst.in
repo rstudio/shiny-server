@@ -3,40 +3,40 @@
 # errors shouldn't cause script to exit
 set +e
 
-sudo ln -f -s "${CMAKE_INSTALL_PREFIX}/shiny-server/bin/shiny-server" /usr/bin/shiny-server
+ln -f -s "${CMAKE_INSTALL_PREFIX}/shiny-server/bin/shiny-server" /usr/bin/shiny-server
 # See if "shiny" user exists
 if id -u shiny >/dev/null 2>&1;
 then
    echo User "shiny" already exists
 else
    echo Creating user "shiny"
-   sudo useradd -r -m shiny
+   useradd -r -m shiny
 fi
 
 if [ ! -d "/srv/shiny-server" ];
 then
-   sudo mkdir -p /srv/shiny-server
+   mkdir -p /srv/shiny-server
    # And seed with initial apps and index.html
-   sudo ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/samples/welcome.html /srv/shiny-server/index.html
-   sudo ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps
+   ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/samples/welcome.html /srv/shiny-server/index.html
+   ln -s ${CMAKE_INSTALL_PREFIX}/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps
 fi
 
-sudo mkdir -p /etc/shiny-server
+mkdir -p /etc/shiny-server
 if [ ! -f "/etc/shiny-server/shiny-server.conf" ];
 then
-   sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/default.config /etc/shiny-server/shiny-server.conf
+   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/default.config /etc/shiny-server/shiny-server.conf
 fi
 
-sudo mkdir -p /var/log/shiny-server
+mkdir -p /var/log/shiny-server
 
 # Place the logrotate script, if applicable
 if test -d /etc/logrotate.d
 then
-   sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/logrotate /etc/logrotate.d/shiny-server
+   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/logrotate /etc/logrotate.d/shiny-server
 fi
 
 # Log dir must be writable by "shiny" user
-sudo chown shiny:shiny /var/log/shiny-server
+chown shiny:shiny /var/log/shiny-server
 
 # check lsb release
 LSB_RELEASE=`lsb_release --id --short`
@@ -44,8 +44,8 @@ LSB_RELEASE=`lsb_release --id --short`
 # # add apparmor profile
 # if test $LSB_RELEASE = "Ubuntu" && test -d /etc/apparmor.d/
 # then
-#    sudo cp ${CMAKE_INSTALL_PREFIX}/extras/apparmor/rstudio-server /etc/apparmor.d/
-#    sudo apparmor_parser -r /etc/apparmor.d/rstudio-server 2>/dev/null
+#    cp ${CMAKE_INSTALL_PREFIX}/extras/apparmor/rstudio-server /etc/apparmor.d/
+#    apparmor_parser -r /etc/apparmor.d/rstudio-server 2>/dev/null
 # fi
 
 # Ubuntu needs help setting LANG which we'll do in the Upstart script by 
@@ -69,28 +69,28 @@ fi
 # add upstart profile or init.d script and start the server
 if test $LSB_RELEASE = "Ubuntu" && test -d /etc/init/
 then
-   sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/upstart/shiny-server.conf /etc/init/
+   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/upstart/shiny-server.conf /etc/init/
 
    if ! grep -e "^env LANG=" /etc/init/shiny-server.conf > /dev/null; then
       echo "Adding LANG to /etc/init/shiny-server.conf, setting to $SS_LANG"
-      sudo sed -i "1 a env LANG='$SS_LANG'" /etc/init/shiny-server.conf
+      sed -i "1 a env LANG='$SS_LANG'" /etc/init/shiny-server.conf
    fi
 
-   sudo initctl reload-configuration
-   sudo initctl stop shiny-server 2>/dev/null
-   sudo initctl start shiny-server
+   initctl reload-configuration
+   initctl stop shiny-server 2>/dev/null
+   initctl start shiny-server
 else
-   sudo cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/debian/shiny-server /etc/init.d/
+   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/debian/shiny-server /etc/init.d/
 
    if ! grep -e "^export LANG=" /etc/init/shiny-server.conf > /dev/null; then
       echo "Adding LANG to /etc/init.d/shiny-server, setting to $SS_LANG"
-      sudo sed -i "10 a export LANG='$SS_LANG'" /etc/init.d/shiny-server
+      sed -i "10 a export LANG='$SS_LANG'" /etc/init.d/shiny-server
    fi
 
-   sudo chmod +x /etc/init.d/shiny-server
-   sudo update-rc.d shiny-server defaults
-   sudo /etc/init.d/shiny-server stop  2>/dev/null
-   sudo /etc/init.d/shiny-server start
+   chmod +x /etc/init.d/shiny-server
+   update-rc.d shiny-server defaults
+   /etc/init.d/shiny-server stop  2>/dev/null
+   /etc/init.d/shiny-server start
 fi
 
 # clear error termination state
