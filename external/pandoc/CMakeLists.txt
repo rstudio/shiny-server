@@ -36,7 +36,7 @@ if(EXISTS "/etc/redhat-release")
   set(DISTRIBUTION rpm)
 
   execute_process(
-    COMMAND sed -nr "s/.*release\\ ([0-9).*/\\1/p" /etc/redhat-release
+    COMMAND sed -nr "s/.*release\\ ([0-9]).*/\\1/p" /etc/redhat-release
     RESULT_VARIABLE REDHAT_VER)
 
   if (${REDHAT_VER} EQUAL "5")
