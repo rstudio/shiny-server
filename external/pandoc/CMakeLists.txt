@@ -37,7 +37,7 @@ if(EXISTS "/etc/redhat-release")
 
   execute_process(
     COMMAND sed -nr "s/.*release\\ ([0-9]).*/\\1/p" /etc/redhat-release
-    RESULT_VARIABLE REDHAT_VER)
+    OUTPUT_VARIABLE REDHAT_VER)
 
   if (${REDHAT_VER} EQUAL "5")
     # Need the dynamic versions of pandoc.
