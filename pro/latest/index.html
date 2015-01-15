@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Shiny Server v1.2.0 Configuration Reference</title>
+  <title>Shiny Server v1.3.0 Configuration Reference</title>
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
   <style type="text/css">
@@ -176,7 +176,7 @@ code > span.er { font-weight: bold; }
 </head>
 <body>
 <header>
-<h1 class="title">Shiny Server Professional v1.2.0 Administrator's Guide</h1>
+<h1 class="title">Shiny Server Professional v1.3.0 Administrator's Guide</h1>
 </header>
 <nav id="TOC">
 <ul>
@@ -186,8 +186,9 @@ code > span.er { font-weight: bold; }
 <li><a href="#installation"><span class="toc-section-number">1.3</span> Installation</a><ul>
 <li><a href="#ubuntu-12.04"><span class="toc-section-number">1.3.1</span> Ubuntu (12.04+)</a></li>
 <li><a href="#redhatcentos-5.4"><span class="toc-section-number">1.3.2</span> RedHat/CentOS (5.4+)</a></li>
-<li><a href="#install-shiny"><span class="toc-section-number">1.3.3</span> Install Shiny</a></li>
-<li><a href="#r-installation-location"><span class="toc-section-number">1.3.4</span> R Installation Location</a></li>
+<li><a href="#suse-linux-enterprise-server-11"><span class="toc-section-number">1.3.3</span> SUSE Linux Enterprise Server (11+)</a></li>
+<li><a href="#install-shiny"><span class="toc-section-number">1.3.4</span> Install Shiny</a></li>
+<li><a href="#r-installation-location"><span class="toc-section-number">1.3.5</span> R Installation Location</a></li>
 </ul></li>
 <li><a href="#stopping-and-starting"><span class="toc-section-number">1.4</span> Stopping and Starting</a><ul>
 <li><a href="#upstart"><span class="toc-section-number">1.4.1</span> Upstart</a></li>
@@ -357,6 +358,7 @@ code > span.er { font-weight: bold; }
 <li>RedHat Enterprise Linux (and CentOS) 6.0+</li>
 <li>Ubuntu 12.04</li>
 <li>Ubuntu 13.04</li>
+<li>SUSE Linux Enterprise 11 SP1 and higher</li>
 </ul>
 <p>We currently only support the x86-64 architecture. As described in the <a href="#installation">Installation</a> section, you will install R and the Shiny package prior to installing Shiny Server. Root privileges will be required both in the installation process and also at runtime.</p>
 <span class="pro-tag">PRO</span>
@@ -383,7 +385,7 @@ code > span.er { font-weight: bold; }
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny is installed, you can begin the installation of Shiny Server. You should have been provided with a <code>.deb</code> installer for Shiny Server. If you only have a link to this file, you can use <code>wget</code> to download the file to the current directory. You will need to first install the <code>gdebi-core</code> package to install Shiny Server and its dependencies. Once the <code>.deb</code> file is available locally, run the following commands to complete the installation of Shiny Server.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> apt-get install gdebi-core
-<span class="kw">sudo</span> gdebi shiny-server-1.2.0.deb</code></pre>
+<span class="kw">sudo</span> gdebi shiny-server-1.3.0.deb</code></pre>
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="redhatcentos-5.4"><span class="header-section-number">1.3.2</span> RedHat/CentOS (5.4+)</h3>
 <p><strong>Prerequisites</strong></p>
@@ -392,14 +394,36 @@ code > span.er { font-weight: bold; }
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install R  </code></pre>
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny has been installed, you can begin the installation of Shiny Server. You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). You can install this rpm file using <code>yum</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory. You can install this RPM file using <code>yum</code>.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-1.2.0.rpm</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-1.3.0.rpm</code></pre>
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
-<h3 id="install-shiny"><span class="header-section-number">1.3.3</span> Install Shiny</h3>
+<h3 id="suse-linux-enterprise-server-11"><span class="header-section-number">1.3.3</span> SUSE Linux Enterprise Server (11+)</h3>
+<p><strong>Prerequisites</strong></p>
+<p>Shiny Server recommends an installation of R version 3.0 or higher. You can install R for SUSE Linux Enterprise Server using the instructions on the CRAN SUSE download page: <a href="http://cran.rstudio.com/bin/linux/suse/">http://cran.rstudio.com/bin/linux/suse/</a>. Note that the binaries suggested here have one additional requirement that isn’t satisfied using the default repositories. Before installing R you should install the <code>libgfortran43</code> package. This package is available from the <a href="https://www.suse.com/partners/isv/suse_linux_sdk_9.html">SUSE Linux Enterprise SDK</a>. If the SDK repository is available in your environment you can install <code>libgfortran43</code> as follows:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> zypper install libgfortran43</code></pre>
+<p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
+<p>Once R and Shiny have been installed, you can begin the installation of Shiny Server.</p>
+<p><strong>Additional Prerequisites for SLES</strong></p>
+<p>The Shiny Server Professional RPM binaries link to version 0.9.8 of the <code>openssl</code> and <code>libcrypo</code> shared libraries. On RedHat systems the shared library files have a suffix of &quot;.6&quot; (e.g. libcrypo.so.6) whereas on SLES they have a suffix of &quot;0.9.8&quot;. As a result you should soft-link the existing 0.9.8 shared libraries to a version with a .6 suffix by running the following commands:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> ln -f -s /usr/lib64/libssl.so.0.9.8 /usr/lib64/libssl.so.6
+$ <span class="kw">sudo</span> ln -f -s /usr/lib64/libcrypto.so.0.9.8 /usr/lib64/libcrypto.so.6</code></pre>
+<p>The Shiny Server Professional metrics and monitoring features use a set of Python scripts to introspect the system for performance information. As part of installation a Python native extension needs to be built, and this requires the <code>python-devel-26 package</code> available from the <a href="https://www.suse.com/partners/isv/suse_linux_sdk_9.html">SUSE Linux Enterprise SDK</a>. If the SDK repository is available in your environment you can install <code>python-devel-26</code> as follows:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> zypper install python-devel-26</code></pre>
+<p><strong>Installation</strong></p>
+<p>You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). Note that the CentOS 5 RPM of Shiny Server is the one that's compatible with SLES, so know that there's not a problem if you see that branding on your file. You can install this RPM file using <code>zypper</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory. You can install this RPM file using <code>zypper</code>.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> zypper install shiny-server-1.3.0.rpm</code></pre>
+<p>During the installation <code>zypper</code> will prompt to ensure that you still want to install even without the <code>libffi</code> dependency. The prompt will look like this:</p>
+<pre><code>Problem: nothing provides libffi needed by shiny-server
+Solution 1: do not install shiny-server
+Solution 2: break shiny-server by ignoring some of its dependencies
+Choose from above solutions by number or cancel [1/2/c] (c): 2</code></pre>
+<p>The <code>libffi</code> dependency is not required on SLES so it is safe to install without it. You should enter &quot;2&quot; (ignore the dependencies) at this prompt and continue with the installation.</p>
+<p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
+<h3 id="install-shiny"><span class="header-section-number">1.3.4</span> Install Shiny</h3>
 <p>Before Shiny Server can be installed, the Shiny package must be installed in the system library; you typically need <code>sudo</code> privileges to install to this library. Shiny Server currently requires Shiny version 0.7.0 or later. The following command will download and install the <code>shiny</code> package from CRAN in the system library.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - \
   <span class="kw">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;shiny&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></code></pre>
 <p>Once this command completes, you can continue with the installation of Shiny Server.</p>
-<h3 id="r-installation-location"><span class="header-section-number">1.3.4</span> R Installation Location</h3>
+<h3 id="r-installation-location"><span class="header-section-number">1.3.5</span> R Installation Location</h3>
 <p>Shiny Server expects that R is available as an executable named <code>R</code> and is in the <code>PATH</code> of the user which you run <code>shiny-server</code> as. Note that on some CentOS systems, the <code>PATH</code> will be overridden by the startup script to <code>/sbin:/usr/sbin:/bin:/usr/bin</code>. On such systems, if <code>R</code> is not available in one of these locations (regardless of the user's <code>PATH</code>), you'll need to adjust the startup script.</p>
 <p>To allow Shiny Server to search for <code>R</code> in additional locations, you'll alter the file in <code>/etc/init.d/shiny-server</code> or <code>/etc/init/shiny-server.conf</code> depending on which startup system you're using (as discussed in <a href="#stopping-and-starting">Stopping and Starting</a>. You can either adjust the <code>PATH</code> variable to include the directory where <code>R</code> will be found, or you can set an environment variable named <code>R</code> to tell Shiny Server exactly where it should look for the executable.</p>
 <p>If you choose to adjust the <code>PATH</code>, you can add the directory in which the executable named <code>R</code> is found to the line that defines the <code>PATH</code> environment variable (<code>PATH=/sbin:/usr/sbin:/bin:/usr/bin</code>).</p>
@@ -1117,7 +1141,7 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
   @include common-password
   @include common-session</code></pre>
 <p>If the <code>/etc/pam.d/other</code> profile reflects the authentication system and policies that you'd like Shiny Server to use then no further configuration is required. If you want to create a custom PAM profile for Shiny Server you would create a file named <code>/etc/pam.d/shiny-server</code> and specify whatever settings are appropriate.</p>
-<p><strong>RedHat/CentOS</strong></p>
+<p><strong>RedHat/CentOS/SLES</strong></p>
 <p>On RedHat and CentOS systems, applications without their own PAM profiles are denied access by default. Therefore to ensure that Shiny Server is running and available after installation a default PAM profile is installed at <code>/etc/pam.d/shiny-server</code>. This profile is configured to require a user-id greater than 500 and to authenticate users against local system accounts:</p>
 <p><em>/etc/pam.d/shiny-server</em></p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">auth</span>      requisite      pam_succeed_if.so uid <span class="kw">&gt;</span>= 500 quiet
@@ -2652,7 +2676,31 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
           <h3 class="code"><a name="auth_pam"></a>auth_pam</h3>
           <p class="desc">Authenticate using the local server's PAM configuration.</p>
           
-            <p class="noparams">This directive has no parameters.</p>
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>forwardPassword</td>
+                  <td>Boolean</td>
+                  <td>optional</td>
+                  <td>If true, will retain the user's password when they login so that it can be provided to PAM when spawning processes on this user's behalf. This can be used where PAM features such as Kerberos or <code>pam_mount</code> which require the user's password are in use.</td>
+                  <td></td>
+                </tr>
+              
+            </table>
           
 
           <p>
