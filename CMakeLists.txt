@@ -115,8 +115,6 @@ set(DEBIAN_POSTRM postrm.in)
 # rpm scripts
 set(RPM_POSTINST postinst.sh.in)
 set(RPM_POSTRM postrm.sh.in)
-set(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
-
 
 # debian dependencies -- to install the .deb from the command line with
 # automatic dependency resolution use e.g.
@@ -151,6 +149,11 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/rpm-script/${RPM_POSTRM}
 
 # Magic to prevent static pandoc binaries from breaking
 set(CPACK_RPM_SPEC_INSTALL_POST "/bin/true")
+
+set(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
+
+# Prevent /opt from being included in the rpm package
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/opt")
 
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/postinst.sh")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/postrm.sh")
