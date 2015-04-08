@@ -152,8 +152,9 @@ set(CPACK_RPM_SPEC_INSTALL_POST "/bin/true")
 
 set(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
 
-# Prevent /opt from being included in the rpm package
-set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/opt")
+# Work-around bug in CMake 2.8.10.2		
+set(CPACK_RPM_SPEC_MORE_DEFINE "%define ignore \#")		
+set(CPACK_RPM_USER_FILELIST    "%ignore /opt")
 
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/postinst.sh")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/postrm.sh")
