@@ -60,7 +60,16 @@ mkdir -p build
 cd build
 "$CMAKE" -DCMAKE_INSTALL_PREFIX=/opt -DPYTHON="$PYTHON" ../..
 make
-(cd ../.. && bin/npm --python="$PYTHON" rebuild)
+
+# START: building in project root --------------------------
+pushd ../..
+
+./bin/npm --python="${PYTHON}" rebuild
+
 # Need to rebuild ourselves since 'npm install' won't run gyp for us.
-(cd ../.. && ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild)
+./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild
+
+popd
+# END: building in project root ----------------------------
+
 "$CPACK" -G "$GENERATOR"
