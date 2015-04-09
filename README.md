@@ -39,6 +39,6 @@ To customize any of the above, or to explore the other ways Shiny Server can hos
 
 ## Documentation & Contact & Support
 
-See [the Administrator's Guide to Shiny Server](http://rstudio.github.io/shiny-server/latest/) for more complete documentation regarding the setup and managemenet of Shiny Server.
+See [the Administrator's Guide to Shiny Server](http://rstudio.github.io/shiny-server/latest/) for more complete documentation regarding the setup and management of Shiny Server.
 
 Please direct questions to the [shiny-discuss](https://groups.google.com/group/shiny-discuss) mailing list. If you're interested in Professional Support, please look at our commercial Shiny Server Professional product.
