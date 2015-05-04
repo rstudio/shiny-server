@@ -2,13 +2,13 @@
 # vi: set ft=ruby :
 
 ####################################
-#       Ubutntu 13.04 Build
+#       Ubutntu 15.04 Build
 #
 # Downloads and installs the latest
-# Ubuntu 13.04 build posted to S3 
-# from Jenkins in a Ubuntu13.04 VM.
+# Ubuntu 12.04 build posted to S3 
+# from Jenkins in a Ubuntu15.04 VM.
 #
-# IP: 10.0.0.70
+# IP: 10.0.0.88
 #
 ####################################
 
@@ -30,7 +30,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  config.vm.network :private_network, ip: "10.0.0.70"
+  config.vm.network :private_network, ip: "10.0.0.88"
   
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on

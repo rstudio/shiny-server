@@ -1,4 +1,4 @@
-echo "deb http://cran.rstudio.com/bin/linux/ubuntu raring/" >> /etc/apt/sources.list
+echo "deb http://cran.rstudio.com/bin/linux/ubuntu vivid/" >> /etc/apt/sources.list
 
 apt-get update
 
@@ -12,7 +12,7 @@ VERSION=`cat version.txt`
 wget "https://s3.amazonaws.com/rstudio-shiny-server-os-build/ubuntu-12.04/x86_64/shiny-server-$VERSION-amd64.deb" -O ss-latest.deb
 
 apt-get install gdebi -y
-#gdebi -n ss-latest.deb
+gdebi -n ss-latest.deb
 
 R -e "install.packages('shiny', repos='http://cran.rstudio.com/')"
 
