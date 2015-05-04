@@ -13,7 +13,7 @@ Shiny Server is a server program that makes [Shiny](http://rstudio.com/shiny) ap
 
 ## Installing
 
-At this time, Shiny Server can be run on Linux servers with explicit support for Ubuntu 12.04 or greater (64 bit) and CentOS/RHEL 5 (64 bit). If you are using one of these distributions, please download the pre-packaged installers from RStudio:
+At this time, Shiny Server can be run on Linux servers with explicit support for Ubuntu 12.04 or greater (64 bit) and CentOS/RHEL 5 (64 bit) or greater. If you are using one of these distributions, please download the pre-packaged installers from RStudio:
 
 > [Download Shiny Server Installers](http://rstudio.com/shiny/server/). 
 
