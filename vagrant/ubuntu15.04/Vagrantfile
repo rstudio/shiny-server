@@ -24,7 +24,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "ubuntu/vivid64"
 
-  config.vm.host_name = "sso-ubuntu1504-latest"
+  # jcheng 2015-05-04: Hostname config appears not to work
+  #config.vm.host_name = "sso-ubuntu1504-latest"
   
   config.vm.provision "shell", path: "setup.sh"
 
