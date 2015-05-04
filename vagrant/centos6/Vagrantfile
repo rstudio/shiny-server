@@ -28,7 +28,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # doesn't already exist on the user's system.
   config.vm.box_url = "https://s3.amazonaws.com/itmat-public/centos-6.3-chef-10.14.2.box"
 
-  config.vm.host_name = "ss-centos6-latest"
+  config.vm.host_name = "sso-centos6-latest"
   
   config.vm.provision "shell", path: "setup.sh"
 

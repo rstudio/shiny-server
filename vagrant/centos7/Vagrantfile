@@ -36,7 +36,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # doesn't already exist on the user's system.
   config.vm.box_url = "https://s3-us-west-2.amazonaws.com/rstudio-vagrant-boxes/boxes/centos7.box"
 
-  config.vm.host_name = "ssp-centos7-latest"
+  config.vm.host_name = "sso-centos7-latest"
   
   config.vm.provision "shell", path: "setup.sh"
 
@@ -47,7 +47,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  config.vm.network :private_network, ip: "10.0.0.68"
+  config.vm.network :private_network, ip: "10.0.0.62"
   
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
