@@ -67,7 +67,17 @@ else
 fi
 
 # add upstart profile or init.d script and start the server
-if test $LSB_RELEASE = "Ubuntu" && test -d /etc/init/
+INIT_SYSTEM=`cat /proc/1/comm`
+if test $INIT_SYSTEM = "systemd"
+then
+   systemctl stop shiny-server.service 2>/dev/null
+   systemctl disable shiny-server.service 2>/dev/null
+   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/systemd/shiny-server.debian.service /etc/systemd/system/shiny-server.service
+   systemctl daemon-reload
+   systemctl enable shiny-server.service
+   systemctl start shiny-server.service
+   systemctl --no-pager status shiny-server.service
+elif test $LSB_RELEASE = "Ubuntu" && test -d /etc/init/
 then
    cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/upstart/shiny-server.conf /etc/init/
 

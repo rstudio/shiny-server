@@ -3,7 +3,12 @@
 # errors shouldn't cause script to exit
 set +e
 
-sudo initctl stop shiny-server 2>/dev/null
+initctl stop shiny-server 2>/dev/null
+
+systemctl stop shiny-server.service 2>/dev/null
+systemctl disable shiny-server.service 2>/dev/null
+rm -rf /etc/systemd/system/shiny-server.service
+systemctl daemon-reload
 
 # clear error termination state
 set -e
