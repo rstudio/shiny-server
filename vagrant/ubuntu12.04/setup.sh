@@ -1,4 +1,4 @@
-echo "deb http://cran.rstudio.com/bin/linux/ubuntu raring/" >> /etc/apt/sources.list
+echo "deb http://cran.rstudio.com/bin/linux/ubuntu precise/" >> /etc/apt/sources.list
 
 apt-get update
 
