@@ -73,6 +73,10 @@ then
    systemctl stop shiny-server.service 2>/dev/null
    systemctl disable shiny-server.service 2>/dev/null
    cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/systemd/shiny-server.debian.service /etc/systemd/system/shiny-server.service
+   if ! grep -e "^Environment=\"LANG=" /etc/systemd/system/shiny-server.service; then
+      echo "Adding LANG to /etc/systemd/system/shiny-server.service, setting to $SS_LANG"
+      sed -i "11 a Environment=\"LANG=$SS_LANG\"" /etc/systemd/system/shiny-server.service
+   fi
    systemctl daemon-reload
    systemctl enable shiny-server.service
    systemctl start shiny-server.service
