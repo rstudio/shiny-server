@@ -36,7 +36,7 @@ case "$1" in
       echo -n "cannot start shiny-server: already running."
       rc_failed 3
   else 
-  	$execute --daemon "--pidfile=$lockfile" >> $logfile &
+  	$execute --daemon "--pidfile=$lockfile" >> $logfile 2>&1 &
 	  retval=$?
 	  [ $retval -eq 0 ] && echo -n || rc_failed 1
   fi

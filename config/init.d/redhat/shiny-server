@@ -27,7 +27,7 @@ start() {
         echo
         return 1
     fi
-    $prog --daemon "--pidfile=$lockfile" >> $logfile &
+    $prog --daemon "--pidfile=$lockfile" >> $logfile 2>&1 &
     retval=$?
     [ $retval -eq 0 ] && success || failure
     echo
