@@ -30,7 +30,13 @@ SSCONF="/etc/shiny-server/shiny-server.conf"
 # Restart
 restart_shiny () {
   echo "Restarting Shiny Server..."
-  if test -d /etc/init/
+  INIT_SYSTEM=`cat /proc/1/comm`
+  if test $INIT_SYSTEM = "systemd"
+  then
+    systemctl stop shiny-server.service 2>/dev/null
+    echo "Waiting..."
+    systemctl start shiny-server.service
+  elif test -d /etc/init/
   then
     initctl stop shiny-server 2>/dev/null
     echo "Waiting..."

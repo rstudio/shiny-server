@@ -3,12 +3,28 @@
 # errors shouldn't cause script to exit
 set +e
 
-initctl stop shiny-server 2>/dev/null
+LSB_RELEASE=`lsb_release --id --short`
 
-systemctl stop shiny-server.service 2>/dev/null
-systemctl disable shiny-server.service 2>/dev/null
-rm -rf /etc/systemd/system/shiny-server.service
-systemctl daemon-reload
+# Stop the service and remove the init/upstart/init.d config.
+INIT_SYSTEM=`cat /proc/1/comm`
+if test $INIT_SYSTEM = "systemd"
+then
+    systemctl stop shiny-server.service 2>/dev/null
+    systemctl disable shiny-server.service 2>/dev/null
+    systemctl daemon-reload
+    rm -f /etc/systemd/system/shiny-server.service
+
+elif test $LSB_RELEASE = "Ubuntu" && test -d /etc/init/
+then
+    initctl stop shiny-server 2>/dev/null
+    rm -r /etc/init/shiny-server.conf
+
+else
+    /etc/init.d/shiny-server stop  2>/dev/null
+    update-rc.d shiny-server remove 2>/dev/null
+    rm -f /etc/init.d/shiny-server
+
+fi
 
 # clear error termination state
 set -e
