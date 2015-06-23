@@ -7,3 +7,4 @@ external/node/ex-node1234/
 external/node/node-*
 ext/
 src/launcher.h
+.vagrant
