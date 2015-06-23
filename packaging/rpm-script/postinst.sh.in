@@ -7,7 +7,9 @@ ln -f -s "${CMAKE_INSTALL_PREFIX}/shiny-server/bin/shiny-server" /usr/bin/shiny-
 # See if "shiny" user exists
 if id -u shiny >/dev/null 2>&1;
 then
-   echo User "shiny" already exists
+   echo User "shiny" already exists. Ensuring proper permissions on /home/shiny/.
+   mkdir -p /home/shiny
+   chown shiny:shiny /home/shiny
 else
    echo Creating group "shiny"
    groupadd shiny
