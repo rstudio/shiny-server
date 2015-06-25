@@ -93,14 +93,12 @@
           } catch (e) {
             return false;
           }
-        }
+        };
 
-        var availableOptions = ['websocket', 'xdr-streaming', 'xhr-streaming', 
-            'iframe-eventsource', 'iframe-htmlfile', 'xdr-polling', 
-            'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
+        var availableOptions = {{{protocols}}}; 
 
         var store = null;
-        var whitelist = [];        
+        var whitelist = [];
 
         if (supports_html5_storage()){
           store = window.localStorage;
