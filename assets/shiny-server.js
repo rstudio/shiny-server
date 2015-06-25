@@ -107,6 +107,13 @@
             whitelist = availableOptions;
           } else{
             whitelist = JSON.parse(whitelistStr);
+            // Regardless of what the user set, disable any protocols that aren't offered by the server.
+            $.each(whitelist, function(i, p){
+              if ($.inArray(p, availableOptions) === -1){
+                // Then it's not a valid option
+                whitelist.splice($.inArray(p, whitelist), 1);  
+              }
+            });
           }
         } 
   
