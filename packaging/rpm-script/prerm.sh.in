@@ -8,9 +8,10 @@ if [ "$1" = "0" ] ; then
     if [ -f /etc/init/shiny-server.conf ]
     then
         sudo initctl stop shiny-server 2>/dev/null
-    fi
-
-    if [ -f /etc/init.d/shiny-server ]
+    elif [ -f /etc/systemd/system/shiny-server.service ]
+    then
+      systemctl stop shiny-server 2>/dev/null
+    elif [ -f /etc/init.d/shiny-server ]
     then
         sudo service shiny-server stop 2>/dev/null
     fi
