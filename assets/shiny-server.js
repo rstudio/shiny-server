@@ -93,14 +93,12 @@
           } catch (e) {
             return false;
           }
-        }
+        };
 
-        var availableOptions = ['websocket', 'xdr-streaming', 'xhr-streaming', 
-            'iframe-eventsource', 'iframe-htmlfile', 'xdr-polling', 
-            'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
+        var availableOptions = {{{protocols}}}; 
 
         var store = null;
-        var whitelist = [];        
+        var whitelist = [];
 
         if (supports_html5_storage()){
           store = window.localStorage;
@@ -109,6 +107,13 @@
             whitelist = availableOptions;
           } else{
             whitelist = JSON.parse(whitelistStr);
+            // Regardless of what the user set, disable any protocols that aren't offered by the server.
+            $.each(whitelist, function(i, p){
+              if ($.inArray(p, availableOptions) === -1){
+                // Then it's not a valid option
+                whitelist.splice($.inArray(p, whitelist), 1);  
+              }
+            });
           }
         } 
   
@@ -116,37 +121,41 @@
           whitelist = availableOptions;
         }
 
-        var networkSelector = $('<div style="top: 50%; left: 50%; position: absolute;">' + 
-          '<div style="position: relative; width: 300px; margin-left: -150px; padding: .5em 1em 0 1em; height: 400px; margin-top: -190px; background-color: #FAFAFA; border: 1px solid #CCC; font.size: 1.2em;">'+
-          '<h3>Select Network Methods</h3>' +
-          '<div id="networkOptions"></div>' + 
-          '<div id="network-prot-warning" style="color: #44B">'+(supports_html5_storage()?'':"These network settings can only be configured in browsers that support HTML5 Storage. Please update your browser or unblock storage for this domain.")+'</div>' +
-          '<div style="float: right;">' +
-            '<input type="button" value="Reset" onclick="ShinyServer.enableAll()"></input>' +
-            '<input type="button" value="OK" onclick="ShinyServer.toggleNetworkSelector();" style="margin-left: 1em;" id="netOptOK"></input>' +
-          '</div>' +
-          '</div></div>');
-        $('body').append(networkSelector); 
-
-        var networkOptions = $('#networkOptions', networkSelector);
-
-        $.each(availableOptions, function(index, val){
-          var checked = ($.inArray(val, whitelist) >= 0);
-          var opt = $('<label><input type="checkbox" id="ss-net-opt-'+val+'" name="shiny-server-proto-checkbox" value="'+index+'" '+
-            (ShinyServer.supports_html5_storage()?'':'disabled="disabled"')+
-            '> '+val+'</label>').appendTo(networkOptions);
-          var checkbox = $('input', opt);
-          checkbox.change(function(evt){
-            ShinyServer.setOption(val, $(evt.target).prop('checked'));
-          });
-          if (checked){
-            checkbox.prop('checked', true);
-          }
-        });
-
         var networkSelectorVisible = false;
-        networkSelector.hide();
+        var networkSelector = undefined;
+        var networkOptions = undefined;
 
+        // Build the SockJS network protocol selector. 
+        // 
+        // Has the side-effect of defining values for both "networkSelector"
+        // and "networkOptions".
+        function buildNetworkSelector() {
+          networkSelector = $('<div style="top: 50%; left: 50%; position: absolute;">' + 
+                           '<div style="position: relative; width: 300px; margin-left: -150px; padding: .5em 1em 0 1em; height: 400px; margin-top: -190px; background-color: #FAFAFA; border: 1px solid #CCC; font.size: 1.2em;">'+
+                           '<h3>Select Network Methods</h3>' +
+                           '<div id="ss-net-opts"></div>' + 
+                           '<div id="ss-net-prot-warning" style="color: #44B">'+(supports_html5_storage()?'':"These network settings can only be configured in browsers that support HTML5 Storage. Please update your browser or unblock storage for this domain.")+'</div>' +
+                           '<div style="float: right;">' +
+                           '<input type="button" value="Reset" onclick="ShinyServer.enableAll()"></input>' +
+                           '<input type="button" value="OK" onclick="ShinyServer.toggleNetworkSelector();" style="margin-left: 1em;" id="netOptOK"></input>' +
+                           '</div>' +
+                           '</div></div>');
+
+          networkOptions = $('#ss-net-opts', networkSelector);
+          $.each(availableOptions, function(index, val){
+            var checked = ($.inArray(val, whitelist) >= 0);
+            var opt = $('<label><input type="checkbox" id="ss-net-opt-'+val+'" name="shiny-server-proto-checkbox" value="'+index+'" '+
+                        (ShinyServer.supports_html5_storage()?'':'disabled="disabled"')+
+                        '> '+val+'</label>').appendTo(networkOptions);
+            var checkbox = $('input', opt);
+            checkbox.change(function(evt){
+              ShinyServer.setOption(val, $(evt.target).prop('checked'));
+            });
+            if (checked){
+              checkbox.prop('checked', true);
+            }
+          });
+        }
 
         $(document).keydown(function(event){
           if (event.shiftKey && event.ctrlKey && event.altKey && event.keyCode == 65){
@@ -155,14 +164,18 @@
         });
 
         var toggleNetworkSelector = exports.toggleNetworkSelector = function(){
-          if (networkSelectorVisible){
-            // hide
+          if (networkSelectorVisible) {
             networkSelectorVisible = false;
-            networkSelector.hide(200);
-          } else{
-            // show
+            networkSelector.hide();
+          } else {
+            // Lazily build the DOM for the selector the first time it is toggled.
+            if (networkSelector === undefined) {
+              buildNetworkSelector();
+              $('body').append(networkSelector);
+            }
+
             networkSelectorVisible = true;
-            networkSelector.show(200);
+            networkSelector.show();
           }
         }
 
@@ -180,14 +193,14 @@
          * Doesn't update the DOM, just updates our internal model.
          */
         var setOption = exports.setOption = function(option, enabled){
-          $("#network-prot-warning").html("Updated settings will be applied when you refresh your browser or load a new Shiny application.");
+          $("#ss-net-prot-warning").html("Updated settings will be applied when you refresh your browser or load a new Shiny application.");
           if (enabled && $.inArray(option, whitelist) === -1){
             whitelist.push(option);
           }
           if (!enabled && $.inArray(option, whitelist >= 0)){
             // Don't remove if it's the last one, and recheck
             if (whitelist.length === 1){
-              $("#network-prot-warning").html("You must leave at least one method selected.");
+              $("#ss-net-prot-warning").html("You must leave at least one method selected.");
               $("#ss-net-opt-" + option).prop('checked', true);
             } else{
               whitelist.splice($.inArray(option, whitelist), 1);  
@@ -196,9 +209,10 @@
           store["shiny.whitelist"] = JSON.stringify(whitelist);
         }
 
-        exports.multiplexer = new MultiplexClient(
-          new SockJS(sockjsUrl,null,{protocols_whitelist: whitelist})
-        );
+        var conn = new SockJS(sockjsUrl,
+          null,{protocols_whitelist: whitelist});
+
+        exports.multiplexer = new MultiplexClient(conn);
 
         Shiny.createSocket = function() {
           return exports.multiplexer.open("");
@@ -209,20 +223,19 @@
           if (message.alert) alert(message.alert);
           if (message.console && console.log) console.log(message.console);
         };
-
       })();
     }
   });
 
   function debug(msg) {
     if (window.console && exports.debugging){
-      console.log(msg);
+      console.log(new Date() + ": " + msg);
     }
   }
 
   function log(msg) {
     if (window.console){
-      console.log(msg);
+      console.log(new Date() + ": " + msg);
     }
   }
 
@@ -244,9 +257,12 @@
     // Channels that need to be opened when the SockJS connection's open
     // event is received
     this._pendingChannels = [];
+    // A list of functions that fire when our connection goes away.
+    this.onclose = []
 
     var self = this;
     this._conn.onopen = function() {
+      log("Connection opened. " + window.location.href);
       var channel;
       while ((channel = self._pendingChannels.shift())) {
         // Be sure to check readyState so we don't open connections for
@@ -258,7 +274,8 @@
         }
       }
     };
-    this._conn.onclose = function() {
+    this._conn.onclose = function(e) {
+      log("Connection closed. Info: " + JSON.stringify(e));
       debug("SockJS connection closed");
       // If the SockJS connection is terminated from the other end (or due
       // to loss of connectivity or whatever) then we can notify all the
@@ -267,6 +284,9 @@
         if (self._channels.hasOwnProperty(key)) {
           self._channels[key]._destroy();
         }
+      }
+      for (var i = 0; i < self.onclose.length; i++) {
+        self.onclose[i]();
       }
     };
     this._conn.onmessage = function(e) {

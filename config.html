@@ -24,10 +24,10 @@
               </tr>
               
                 <tr>
-                  <td>user</td>
+                  <td>users</td>
                   <td>String</td>
-                  <td>required</td>
-                  <td>The username that should be used to run the app</td>
+                  <td>multiple</td>
+                  <td>The username that should be used to run the app. If using home_dirs, this can also be the special keyword <code>:HOME_USER:</code> which will instruct <code>home_dirs</code> to run as the user in whose home directory the application exists. If using a special keyword like <code>:HOME_USER:</code>, you can specify additional usernames afterwards which will be used when this directive is applied to hosting models other than <code>home_dirs</code>.</td>
                   <td></td>
                 </tr>
               
@@ -98,7 +98,7 @@
             <label>Applies to:</label> Top-level<br/>
             <label>Inheritable:</label> Yes<br/>
             
-              <label>Child directives:</label> <code><a href="#listen">listen</a></code>, <code><a href="#server_name">server_name</a></code>, <code><a href="#location">location</a></code><br/>
+              <label>Child directives:</label> <code><a href="#listen">listen</a></code>, <code><a href="#server_name">server_name</a></code><br/>
             
           </p>
         </li>
@@ -189,7 +189,7 @@
       
         <li>
           <h3 class="code"><a name="location"></a>location</h3>
-          <p class="desc">Creates a scope that configures the given URL as a website (<a class="code" href="#site_dir">site_dir</a>), specific application (<a class="code" href="#app_dir">app_dir</a>), autouser root (<a class="code" href="#user_apps">user_apps</a>), or redirect to a different URL (<a class="code" href="#redirect">redirect</a>).</p>
+          <p class="desc">Creates a scope that configures the given URL as a website (<a class="code" href="#site_dir">site_dir</a>), specific application (<a class="code" href="#app_dir">app_dir</a>), autouser root (<a class="code" href="#user_apps">user_apps</a>), autouser root with <a class="code" href="#run_as">run_as</a> support (<a class="code" href="#user_dirs">user_dirs</a>), or redirect to a different URL (<a class="code" href="#redirect">redirect</a>).</p>
           
             <table class="params">
               <colgroup>
@@ -219,10 +219,10 @@
           
 
           <p>
-            <label>Applies to:</label> <code><a href="#server">server</a></code><br/>
+            <label>Applies to:</label> <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
             
-              <label>Child directives:</label> <code><a href="#run_as">run_as</a></code>, <code><a href="#site_dir">site_dir</a></code>, <code><a href="#directory_index">directory_index</a></code>, <code><a href="#user_apps">user_apps</a></code>, <code><a href="#app_dir">app_dir</a></code>, <code><a href="#redirect">redirect</a></code>, <code><a href="#log_dir">log_dir</a></code>, <code><a href="#members_of">members_of</a></code>, <code><a href="#google_analytics_id">google_analytics_id</a></code>, <code><a href="#application">application</a></code><br/>
+              <label>Child directives:</label> <code><a href="#run_as">run_as</a></code>, <code><a href="#location">location</a></code>, <code><a href="#site_dir">site_dir</a></code>, <code><a href="#directory_index">directory_index</a></code>, <code><a href="#user_apps">user_apps</a></code>, <code><a href="#user_dirs">user_dirs</a></code>, <code><a href="#app_dir">app_dir</a></code>, <code><a href="#redirect">redirect</a></code>, <code><a href="#log_dir">log_dir</a></code>, <code><a href="#members_of">members_of</a></code>, <code><a href="#google_analytics_id">google_analytics_id</a></code>, <code><a href="#application">application</a></code>, <code><a href="#template_dir">template_dir</a></code><br/>
             
           </p>
         </li>
@@ -305,7 +305,45 @@
       
         <li>
           <h3 class="code"><a name="user_apps"></a>user_apps</h3>
-          <p class="desc">Configures the enclosing location scope to be an autouser root, meaning that applications will be served up from users' ~/ShinyApps directories.</p>
+          <p class="desc">DEREPCATED! This directive has been deprecated in favor of <a class="code" href="#user_dirs">user_dirs</a>, which offers more flexibility with regards to the <a class="code" href="#run_as">run_as</a> configuration. Configures the enclosing location scope to be an autouser root, meaning that applications will be served up from users' ~/ShinyApps directories and all Shiny processes will run as the user in whose directory the application is found.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>enabled</td>
+                  <td>Boolean</td>
+                  <td>optional</td>
+                  <td>Whether this location should serve up all users' ~/ShinyApps directories</td>
+                  <td>true</td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="user_dirs"></a>user_dirs</h3>
+          <p class="desc">Configures the enclosing location scope to be an autouser root, meaning that applications will be served up from users' ~/ShinyApps directories. This directive does respect an affiliated run_as setting, meaning that the applications will be executed as whichever user is configured in the applicable run_as setting. Note that many distributions, by default, will prohibit users from being able to access each other's home directories.</p>
           
             <table class="params">
               <colgroup>
@@ -473,7 +511,7 @@
       
         <li>
           <h3 class="code"><a name="members_of"></a>members_of</h3>
-          <p class="desc">Restricts a <a class="code" href="#user_apps">user_apps</a> (autouser) scope to require membership in one or more groups (or, if no arguments are passed, lifts group restrictions from a <a class="code" href="#members_of">members_of</a> directive in a parent scope).</p>
+          <p class="desc">Restricts a <a class="code" href="#user_apps">user_apps</a> or <a class="code" href="#user_dirs">user_dirs</a> (autouser) scope to require membership in one or more groups (or, if no arguments are passed, lifts group restrictions from a <a class="code" href="#members_of">members_of</a> directive in a parent scope).</p>
           
             <table class="params">
               <colgroup>
@@ -543,46 +581,6 @@
           <p>
             <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
             <label>Inheritable:</label> Yes<br/>
-            
-          </p>
-        </li>
-      
-        <li>
-          <h3 class="code"><a name="application"></a>application</h3>
-          <p class="desc">Defines the parameters for an application. The values defined in the global configuration file will be used as defaults, and individual applications can override those defaults by placing a file named '.shiny_app.conf' in the base directory of an application.</p>
-          
-            <table class="params">
-              <colgroup>
-                <col style="width: 105px"></col>
-                <col style="width: 90px"></col>
-                <col style="width: 90px"></col>
-                <col></col>
-                <col style="width: 90px"></col>
-              </colgroup>
-              <tr>
-                <th>Parameter</th>
-                <th>Data type</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Default</th>
-              </tr>
-              
-                <tr>
-                  <td>appDir</td>
-                  <td>String</td>
-                  <td>required</td>
-                  <td>Specify the application by its app directory.</td>
-                  <td></td>
-                </tr>
-              
-            </table>
-          
-
-          <p>
-            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
-            <label>Inheritable:</label> Yes<br/>
-            
-              <label>Child directives:</label> <code><a href="#app_init_timeout">app_init_timeout</a></code>, <code><a href="#app_idle_timeout">app_idle_timeout</a></code>, <code><a href="#simple_scheduler">simple_scheduler</a></code><br/>
             
           </p>
         </li>
@@ -687,7 +685,7 @@
                   <td>maxRequests</td>
                   <td>Integer</td>
                   <td>optional</td>
-                  <td>The maximum number of requests to assign to this scheduler before it should start returning rejecting incoming traffic using a '503 - Service Unavailable' message. Once this threshold is hit, users attempting to initialize a new sessio will receive 503 errors.</td>
+                  <td>The maximum number of requests to assign to this scheduler before it should start returning rejecting incoming traffic using a '503 - Service Unavailable' message. Once this threshold is hit, users attempting to initialize a new session will receive 503 errors.</td>
                   <td>100</td>
                 </tr>
               
@@ -727,6 +725,160 @@
                   <td>optional</td>
                   <td>Whether or not this is enabled. Default is true.</td>
                   <td>true</td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> Top-level<br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="application"></a>application</h3>
+          <p class="desc">DEPRECATED. This setting is deprecated and no longer enforced in Shiny Server. It will be ignored.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>empty</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> <code><a href="#location">location</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+              <label>Child directives:</label> <code><a href="#app_init_timeout">app_init_timeout</a></code>, <code><a href="#app_idle_timeout">app_idle_timeout</a></code>, <code><a href="#simple_scheduler">simple_scheduler</a></code><br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="template_dir"></a>template_dir</h3>
+          <p class="desc">A directory containing custom templates to be used when generating pages in Shiny Server.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>dir</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td>The directory containing HTML templates.</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> Top-level, <code><a href="#server">server</a></code>, <code><a href="#location">location</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="disable_websockets"></a>disable_websockets</h3>
+          <p class="desc">Disable WebSockets on connections to the server. Some networks will not reliably support WebSockets, so this setting can be used to force Shiny Server to fall back to another protocol to communicate with the server. This is equivalent to adding 'websocket' to <code>disabled_protocols</code></p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>val</td>
+                  <td>Boolean</td>
+                  <td>optional</td>
+                  <td>Whether or not WebSockets should be disabled.</td>
+                  <td>true</td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> Top-level<br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="disable_protocols"></a>disable_protocols</h3>
+          <p class="desc">Disable some of the SockJS protocols used to establish a connection between your users and your server. Some network configurations cause problems with particular protocols; this option allows you to disable those.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>names</td>
+                  <td>String</td>
+                  <td>multiple</td>
+                  <td>The protocol(s) to disable. Available protocols are: 'websocket', 'xdr-streaming', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xdr-polling', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'</td>
+                  <td></td>
                 </tr>
               
             </table>
