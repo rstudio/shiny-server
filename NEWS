@@ -1,5 +1,12 @@
 shiny-server 1.4.0
 --------------------------------------------------------------------------------
+* Added `disabled_protocols` to allow administrators to disable arbitrary 
+  SockJS protocols.
+
+* Capture Upstart failures to start Shiny Server successfully.
+
+* Various bug fixes around RHEL/CentOS 7 installers.
+
 * Bug fix: Load fonts over HTTPS.
 
 * Bug fix: Fix installer locale issue for Ubuntu 14.04.
