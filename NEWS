@@ -1,5 +1,7 @@
 shiny-server 1.4.0
 --------------------------------------------------------------------------------
+* Added support for Red Hat Enterprise Linux 7 and Ubuntu 15.04.
+
 * Added `disabled_protocols` to allow administrators to disable arbitrary 
   SockJS protocols.
 
@@ -10,8 +12,6 @@ shiny-server 1.4.0
 * Bug fix: Load fonts over HTTPS.
 
 * Bug fix: Fix installer locale issue for Ubuntu 14.04.
-
-* Added support for Red Hat Enterprise Linux 7.
 
 * Bug fix: RH6 uses a statically linked Pandoc.
 
