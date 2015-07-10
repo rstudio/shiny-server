@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Shiny Server v1.3.0 Configuration Reference</title>
+  <title>Shiny Server v1.4.0 Configuration Reference</title>
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
   <style type="text/css">
@@ -176,7 +176,7 @@ code > span.er { font-weight: bold; }
 </head>
 <body>
 <header>
-<h1 class="title">Shiny Server Professional v1.3.0 Administrator's Guide</h1>
+<h1 class="title">Shiny Server Professional v1.4.0 Administrator's Guide</h1>
 </header>
 <nav id="TOC">
 <ul>
@@ -191,8 +191,9 @@ code > span.er { font-weight: bold; }
 <li><a href="#r-installation-location"><span class="toc-section-number">1.3.5</span> R Installation Location</a></li>
 </ul></li>
 <li><a href="#stopping-and-starting"><span class="toc-section-number">1.4</span> Stopping and Starting</a><ul>
-<li><a href="#upstart"><span class="toc-section-number">1.4.1</span> Upstart</a></li>
-<li><a href="#init.d"><span class="toc-section-number">1.4.2</span> init.d</a></li>
+<li><a href="#systemd-redhat-7-ubuntu-15.04-sles-12"><span class="toc-section-number">1.4.1</span> systemd (RedHat 7, Ubuntu 15.04+, SLES 12+)</a></li>
+<li><a href="#upstart-ubuntu-12.04-through-14.10"><span class="toc-section-number">1.4.2</span> Upstart (Ubuntu 12.04 through 14.10)</a></li>
+<li><a href="#init.d-redhat-5-and-6-sles-11"><span class="toc-section-number">1.4.3</span> init.d (RedHat 5 and 6, SLES 11)</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#server-management"><span class="toc-section-number">2</span> Server Management</a><ul>
@@ -266,14 +267,16 @@ code > span.er { font-weight: bold; }
 <li><a href="#default-pam-configuration"><span class="toc-section-number">4.5.2</span> Default PAM Configuration</a></li>
 </ul></li>
 <li><a href="#ldap-and-active-directory"><span class="toc-section-number">4.6</span> LDAP and Active Directory</a><ul>
-<li><a href="#user_bind_template"><span class="toc-section-number">4.6.1</span> <code class="pro">user_bind_template</code></a></li>
-<li><a href="#group_search_base"><span class="toc-section-number">4.6.2</span> <code class="pro">group_search_base</code></a></li>
-<li><a href="#group_filter"><span class="toc-section-number">4.6.3</span> <code class="pro">group_filter</code></a></li>
-<li><a href="#group_name_attribute"><span class="toc-section-number">4.6.4</span> <code class="pro">group_name_attribute</code></a></li>
-<li><a href="#trusted_ca"><span class="toc-section-number">4.6.5</span> <code class="pro">trusted_ca</code></a></li>
-<li><a href="#check_ssl_ca"><span class="toc-section-number">4.6.6</span> <code class="pro">check_ssl_ca</code></a></li>
-<li><a href="#user_filter"><span class="toc-section-number">4.6.7</span> <code class="pro">user_filter</code></a></li>
-<li><a href="#user_search_base"><span class="toc-section-number">4.6.8</span> <code class="pro">user_search_base</code></a></li>
+<li><a href="#base_bind"><span class="toc-section-number">4.6.1</span> <code class="pro">base_bind</code></a></li>
+<li><a href="#securing-the-ldap-password"><span class="toc-section-number">4.6.2</span> Securing the LDAP password</a></li>
+<li><a href="#user_bind_template"><span class="toc-section-number">4.6.3</span> <code class="pro">user_bind_template</code></a></li>
+<li><a href="#group_search_base"><span class="toc-section-number">4.6.4</span> <code class="pro">group_search_base</code></a></li>
+<li><a href="#group_filter"><span class="toc-section-number">4.6.5</span> <code class="pro">group_filter</code></a></li>
+<li><a href="#group_name_attribute"><span class="toc-section-number">4.6.6</span> <code class="pro">group_name_attribute</code></a></li>
+<li><a href="#trusted_ca"><span class="toc-section-number">4.6.7</span> <code class="pro">trusted_ca</code></a></li>
+<li><a href="#check_ssl_ca"><span class="toc-section-number">4.6.8</span> <code class="pro">check_ssl_ca</code></a></li>
+<li><a href="#user_filter"><span class="toc-section-number">4.6.9</span> <code class="pro">user_filter</code></a></li>
+<li><a href="#user_search_base"><span class="toc-section-number">4.6.10</span> <code class="pro">user_search_base</code></a></li>
 </ul></li>
 <li><a href="#required-users-groups"><span class="toc-section-number">4.7</span> Required Users &amp; Groups</a><ul>
 <li><a href="#user-authentication"><span class="toc-section-number">4.7.1</span> User Authentication</a></li>
@@ -297,7 +300,6 @@ code > span.er { font-weight: bold; }
 <li><a href="#licensing-activation"><span class="toc-section-number">6</span> Licensing &amp; Activation</a><ul>
 <li><a href="#product-activation"><span class="toc-section-number">6.1</span> Product Activation</a><ul>
 <li><a href="#activation-basics"><span class="toc-section-number">6.1.1</span> Activation Basics</a></li>
-<li><a href="#virtual-machines"><span class="toc-section-number">6.1.2</span> Virtual Machines</a></li>
 </ul></li>
 <li><a href="#connectivity-requirements"><span class="toc-section-number">6.2</span> Connectivity Requirements</a><ul>
 <li><a href="#proxy-servers"><span class="toc-section-number">6.2.1</span> Proxy Servers</a></li>
@@ -325,6 +327,7 @@ code > span.er { font-weight: bold; }
 <li><a href="#how-do-i-translate-my-application-settings-to-nested-locations"><span class="toc-section-number">7.4.4</span> How Do I Translate My 'application' Settings to Nested 'location's?</a></li>
 <li><a href="#when-i-open-a-lot-of-shiny-docs-at-once-in-firefox-why-do-some-not-open"><span class="toc-section-number">7.4.5</span> When I open a lot of Shiny Docs at once in Firefox, why do some not open?</a></li>
 <li><a href="#can-i-bulk-import-in-flat-file-authentication"><span class="toc-section-number">7.4.6</span> Can I Bulk-Import in Flat-File Authentication?</a></li>
+<li><a href="#how-can-i-set-the-trusted_ca-for-my-ldap-server-over-ssl"><span class="toc-section-number">7.4.7</span> How Can I Set The trusted_ca For My LDAP Server Over SSL?</a></li>
 </ul></li>
 </ul></li>
 </ul>
@@ -385,16 +388,16 @@ code > span.er { font-weight: bold; }
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny is installed, you can begin the installation of Shiny Server. You should have been provided with a <code>.deb</code> installer for Shiny Server. If you only have a link to this file, you can use <code>wget</code> to download the file to the current directory. You will need to first install the <code>gdebi-core</code> package to install Shiny Server and its dependencies. Once the <code>.deb</code> file is available locally, run the following commands to complete the installation of Shiny Server.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">sudo</span> apt-get install gdebi-core
-<span class="kw">sudo</span> gdebi shiny-server-1.3.0.deb</code></pre>
+<span class="kw">sudo</span> gdebi shiny-server-1.4.0.deb</code></pre>
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="redhatcentos-5.4"><span class="header-section-number">1.3.2</span> RedHat/CentOS (5.4+)</h3>
 <p><strong>Prerequisites</strong></p>
-<p>Shiny Server recommends an installation of R version 3.0 or higher. Shiny Server has several dependencies on packages (including R itself) found in the Extra Packages for Enterprise Linux (EPEL) repository. If you don't already have this repository available you should add it to your system using the instructions found here: <a href="https://fedoraproject.org/wiki/EPEL">https://fedoraproject.org/wiki/EPEL</a></p>
+<p>Shiny Server recommends an installation of R version 3.0 or higher. Shiny Server has several dependencies on packages (including R itself) found in the Extra Packages for Enterprise Linux (EPEL) repository. If you don't already have this repository available you should add it to your system using the instructions found here: <a href="https://fedoraproject.org/wiki/EPEL">https://fedoraproject.org/wiki/EPEL</a>. On some distributions of RedHat/CentOS, the R package references dependencies that are not available by default. In this case, you may need to edit the <code>/etc/yum.repos.d/redhat.repo</code> file to enable the <code>rhel-6-server-optional-rpms</code> (by setting <code>enabled = 1</code>) before you can install the R package.</p>
 <p>After enabling EPEL you should then ensure that you have installed the version of R available from EPEL. You can do this using the following command:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install R  </code></pre>
 <p>At this point, follow the instructions in <a href="#install-shiny">Install Shiny</a> to setup the necessary packages in R.</p>
 <p>Once Shiny has been installed, you can begin the installation of Shiny Server. You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). You can install this rpm file using <code>yum</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory. You can install this RPM file using <code>yum</code>.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-1.3.0.rpm</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> yum install --nogpgcheck shiny-server-1.4.0.rpm</code></pre>
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="suse-linux-enterprise-server-11"><span class="header-section-number">1.3.3</span> SUSE Linux Enterprise Server (11+)</h3>
 <p><strong>Prerequisites</strong></p>
@@ -410,7 +413,7 @@ $ <span class="kw">sudo</span> ln -f -s /usr/lib64/libcrypto.so.0.9.8 /usr/lib64
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> zypper install python-devel-26</code></pre>
 <p><strong>Installation</strong></p>
 <p>You should have been provided with an RPM file which contains Shiny Server and all of its dependencies (other than R and Shiny). Note that the CentOS 5 RPM of Shiny Server is the one that's compatible with SLES, so know that there's not a problem if you see that branding on your file. You can install this RPM file using <code>zypper</code>. If you have only a link to the RPM file, you can use <code>wget</code> to download the file to the current directory. You can install this RPM file using <code>zypper</code>.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> zypper install shiny-server-1.3.0.rpm</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> zypper install shiny-server-1.4.0.rpm</code></pre>
 <p>During the installation <code>zypper</code> will prompt to ensure that you still want to install even without the <code>libffi</code> dependency. The prompt will look like this:</p>
 <pre><code>Problem: nothing provides libffi needed by shiny-server
 Solution 1: do not install shiny-server
@@ -430,7 +433,24 @@ Choose from above solutions by number or cancel [1/2/c] (c): 2</code></pre>
 <p>If instead you choose to tell Shiny Server the exact executable to run (which is necessary if the executable is not named <code>R</code> on your system), you'll need to define a new environment variable named <code>R</code>. You can do this by adding a line that looks something like <code>env R=/usr/local/bin/R-3-0-1</code> for Upstart, or <code>export R=/usr/local/bin/R-3-0-1</code> for init.d.</p>
 <h2 id="stopping-and-starting"><span class="header-section-number">1.4</span> Stopping and Starting</h2>
 <p>The installer will automatically deploy the necessary scripts to ensure that Shiny Server is started automatically on boot. When possible, we use the Upstart system to manage the <code>shiny-server</code> service. If Upstart is not available, we will deploy an <code>init.d</code> script to automatically start and stop the service.</p>
-<h3 id="upstart"><span class="header-section-number">1.4.1</span> Upstart</h3>
+<h3 id="systemd-redhat-7-ubuntu-15.04-sles-12"><span class="header-section-number">1.4.1</span> systemd (RedHat 7, Ubuntu 15.04+, SLES 12+)</h3>
+<p>systemd is a management and configuration platform for Linux. The newest versions of most major Linux distributions have adopted systemd as their default init system.</p>
+<p>The Shiny Server installer will automatically install a systemd service called shiny-server, which will cause the <code>shiny-server</code> program to be started and stopped automatically when the machine boots up and shuts down. The shiny-server service will also be launched automatically when the installer has successfully installed the program.</p>
+<p>To manually start or stop the server, you can use the following commands.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> systemctl start shiny-server</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> systemctl stop shiny-server</code></pre>
+<p>You can restart the server with:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> systemctl restart shiny-server</code></pre>
+<p>This command will shutdown all running Shiny processes, disconnect all open connections, and re-initialize the server.</p>
+<p>If you wish to keep the server and all Shiny processes running without interruption, but reload the configuration, you can use the systemctl command to send a <code>SIGHUP</code> signal:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> systemctl kill -s HUP --kill-who=main shiny-server</code></pre>
+<p>This will cause the server to re-initialize but will not interrupt the current processes or any of the open connections to the server.</p>
+<p>You can check the status of the shiny-server service using:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> systemctl status shiny-server</code></pre>
+<p>And finally, you can use the <code>enable</code>/<code>disable</code> commands to control whether Shiny Server should be run automatically at boot time:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> systemctl enable shiny-server</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> systemctl disable shiny-server</code></pre>
+<h3 id="upstart-ubuntu-12.04-through-14.10"><span class="header-section-number">1.4.2</span> Upstart (Ubuntu 12.04 through 14.10)</h3>
 <p>Upstart is a system used to automatically start, stop and manage services. The installer will automatically deploy an Upstart script to <code>/etc/init/shiny-server.conf</code>. This script will initialize <code>shiny-server</code> as soon as the network is activated on the machine and stop when the machine is being shut down.</p>
 <p>The Upstart script will also ensure that <code>shiny-server</code> is respawned if the process is terminated unexpectedly. However, in the event that there is an issue which will consistently prevent Shiny Server from being able to start (such as a bad configuration file), Upstart will give up on restarting the service after approximately 5 failed attempts within a few seconds. For this reason, you may see multiple repetitions of a bad Shiny Server startup attempt before it transitions to the <code>stopped</code> state.</p>
 <p>To start or stop the server, run the following commands, respectively.</p>
@@ -438,14 +458,14 @@ Choose from above solutions by number or cancel [1/2/c] (c): 2</code></pre>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> stop shiny-server</code></pre>
 <p>To restart the server you can run:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> restart shiny-server</code></pre>
-<p>This command will shutdown all running Shiny processes, disconnecting all open connections and will re-initialize the server. Note that <code>restart</code> <em>will not</em> reread the Upstart definition at <code>/etc/init/shiny-server.conf</code>. So if you have changed, for instance, some environment variables in that file. You will need to <code>stop</code> and <code>start</code> to have those changes take effect.</p>
+<p>This command will shutdown all running Shiny processes, disconnect all open connections, and re-initialize the server. Note that <code>restart</code> <em>will not</em> reread the Upstart definition at <code>/etc/init/shiny-server.conf</code>. So if you have changed, for instance, some environment variables in that file, you will need to <code>stop</code> and <code>start</code> to have those changes take effect.</p>
 <p>If you wish to keep the server and all Shiny processes running without interruption, but reload the configuration, you can use the <code>reload</code> command as in:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> reload shiny-server</code></pre>
 <p>This will cause the server to re-initialize but will not interrupt the current processes or any of the open connections to the server.</p>
 <p><strong>Known Bug:</strong> Due to a bug in the version of Upstart which comes with Ubuntu 13.04, <code>reload</code> will not behave as expected on that platform and should not be used.</p>
 <p>To check the status or retrieve the Process ID associated with <code>shiny-server</code>, run the following:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">status</span> shiny-server</code></pre>
-<h3 id="init.d"><span class="header-section-number">1.4.2</span> init.d</h3>
+<h3 id="init.d-redhat-5-and-6-sles-11"><span class="header-section-number">1.4.3</span> init.d (RedHat 5 and 6, SLES 11)</h3>
 <p>On some older Operating Systems (such as RedHat 5) the Upstart system may not be available. These systems will require the use of a script in <code>/etc/init.d/</code> to start and manage the <code>shiny-server</code> daemon. This script does not have the capability to automatically restart the <code>shiny-server</code> daemon if it terminates unexpectedly. The installer uses <code>chkconfig</code> to ensure that <code>shiny-server</code> will start automatically on boot.</p>
 <p>To start or stop the server, use the following commands, respectively:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /sbin/service shiny-server start</code></pre>
@@ -617,7 +637,7 @@ and then enter and verify the password you wish to use for this user.
 <p>By default, the <code>shiny-server</code> process will be started as the <code>root</code> user, then will spawn R processes according to the corresponding <code>run_as</code> setting. You can, however, run the <code>shiny-server</code> process as a non-privileged user such as the <code>shiny</code> user if none of the limitations above are violated.</p>
 <p>Shiny Server Professional leverages PAM to spawn sessions for users. See the section on <a href="#pam-sessions">PAM Sessions</a> to find more details about how you can use PAM to tailor constraints on the Shiny processes that Shiny Server spawns.</p>
 <p>For Shiny Server Pro, if it detects that it is running as root but has no need to (i.e. none of the criteria above were met), then it will drop its privileges and run as an unprivileged user; note that, for security reasons, that change is irreversible. This means that once Shiny Server drops its privileges, it wouldn't be able to regain them should a new configuration be loaded that requires such privileges.</p>
-<p>By default, if <code>shiny-server</code> detects that it doesn't need to run with <code>root</code> privileges, it will attempt to run as an unprivileged user to be more secure. It will determine which user to run as by inspecting the <code>run_as</code> directives in your configuration file -- if there is only one user which we will be running Shiny as (and the aforementioned constraints are satisfied), the entire Shiny Server process will just run as that user. The default configuration sets <code>run_as</code> to <code>shiny</code>, so the process will run as the <code>shiny</code> user. While the process will run as the <code>shiny</code> user (or whatever other user you're running as), it may not behave in exactly the same way as interactively logging in as that user. In particular, the supplemental groups in which the user is a member will not be set.</p>
+<p>By default, if <code>shiny-server</code> detects that it doesn't need to run with <code>root</code> privileges, it will attempt to run as an unprivileged user to be more secure. It will determine which user to run as by inspecting the <code>run_as</code> directives in your configuration file -- if there is only one user which we will be running Shiny as (and the aforementioned constraints are satisfied), the entire Shiny Server process will just run as that user. The default configuration sets <code>run_as</code> to <code>shiny</code>, so the process will run as the <code>shiny</code> user. While the process will run as the <code>shiny</code> user (or whatever other user you're running as), it may not behave in exactly the same way as interactively logging in as that user. In particular, the supplemental groups will not be set for the user.</p>
 <p>Be aware that upon installing Shiny Server, permissions on the file system are set to enable the <code>shiny</code> user to read and write from various directories as is necessary to allow Shiny Server to run as the <code>shiny</code> user. Running Shiny Server as another user will require that you adjust the permissions to grant this other user the necessary privileges to run Shiny Server. In particular, ensure the user has write privileges on these paths (recursively):</p>
 <ul>
 <li><code>/var/lib/shiny-server/</code> (or whatever custom <code>SHINY_DATA_DIR</code> setting you're using)</li>
@@ -1023,9 +1043,22 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <li>JSONP Polling</li>
 </ol>
 <p>Each of these will be tried by the client in order until a successful connection to Shiny Server. If you would like to omit one or more of these protocols from the list for whatever reason, you can currently do so only from the client (we hope to make a server-side configuration available in a future release of Shiny Server).</p>
-<p>To change the available protocols, you can open any Shiny Application and press the keyboard shortcut: <code>Ctrl+Alt+Shift+A</code> (or, from a Mac: <code>control+option+shift+A</code>). This will bring up a window that will allow you to select or deselect any of the above protocols. After confirming your changes these settings will be saved in your browser for future visits to this server. These settings will take effect upon loading any Shiny application hosted on this domain and will last until you explicitly change them again.</p>
+<p>To change the available protocols from the client, you can open any Shiny Application and press the keyboard shortcut: <code>Ctrl+Alt+Shift+A</code> (or, from a Mac: <code>control+option+shift+A</code>). This will bring up a window that will allow you to select or deselect any of the above protocols. After confirming your changes these settings will be saved in your browser for future visits to this server. These settings will take effect upon loading any Shiny application hosted on this domain and will last until you explicitly change them again; they will only have an effect on the browser in which this action was performed.</p>
 <h3 id="disabling-websockets-on-the-server"><span class="header-section-number">3.9.1</span> Disabling WebSockets on the Server</h3>
-<p>Most modern networks will work well with WebSockets. If however, you find that WebSockets are unreliable on your network or your users' networks, you can disable them from the server using the <code>disable_websockets</code> setting. Currently this setting must be applied across the configuration file globally if it is present.</p>
+<p>Shiny Server uses SockJS to facilitate communication between the browser and the server. On most networks, SockJS will be able to resolve a functioning protocol that will allow it to reliably communicate between the browser and Shiny Server. Some environments, however, will perform some sort of filtering or proxying that hinders one or more of the available protocols. Older networking equipment will likely not function well with WebSockets, for instance.</p>
+<p>Most users will not need to worry about what protocol their network will support, as SockJS will gracefully determine the best protocol when trying to establish the connection. However, some environments have found consistent problems with having particular protocols enabled and find that a particular protocol or set of protocols are most reiable in their environment. In this case, you can use the <code>disable_protocols</code> setting to disable any of the available protocols.</p>
+<p>For instance, if you find that WebSockets and XDR polling are problematic on your networking equipment, you could add the following configuration to disable them:</p>
+<pre><code>disable_protocols websocket xdr-polling;</code></pre>
+<p>The protocol names to be used when disabling are as follows:</p>
+<pre><code>websocket
+xdr-streaming
+xhr-streaming
+iframe-eventsource
+iframe-htmlfile
+xdr-polling
+xhr-polling
+iframe-xhr-polling
+jsonp-polling</code></pre>
 <h1 id="authentication-security" class="pro"><span class="header-section-number">4</span> Authentication &amp; Security</h1>
 <h2 id="authentication-overview" class="pro"><span class="header-section-number">4.1</span> Authentication Overview</h2>
 <p>Shiny Server Professional offers the ability to authenticate individual users. By specifying authentication requirements on particular <code>server</code>s or <code>location</code>s, the administrator can control the set of applications particular users are allowed to access.</p>
@@ -1175,7 +1208,34 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <p>It begins with the protocol to be used when contacting the LDAP server -- either <code>ldap://</code> (for unencrypted LDAP) or <code>ldaps://</code> (LDAP over an encrypted SSL tunnel). We do not currently support StartTLS. If your LDAP server supports <code>ldaps://</code>, this option is more secure and ensures the username and passwords aren't being transmitted between Shiny Server and your LDAP server in plain text. Next, the hostname or IP of the LDAP server should follow the protocol. Bear in mind that the given hostname or IP <em>must</em> match the hostname associated with the SSL certificate if using <code>ldaps://</code>. If using a non-standard port (anything other than 389 for <code>ldap://</code> or 636 for <code>ldaps://</code>), you can follow the hostname with a colon and the port number which should be used. Following the hostname/port should be a forward slash then the root DIT of the directory to use.</p>
 <p>There are a variety of settings which will be used to guide Shiny Server Pro's interaction with your LDAP server. These will all be defined inside of an <code>auth_ldap</code> or <code>auth_active_dir</code> setting and are described below. Be aware that the primary difference between <code>auth_ldap</code> and <code>auth_active_dir</code> is the default values assigned to these settings. If any of these settings are not specified, the default values will be used.</p>
 <p>Some of the settings may include dynamic values which will be listed under the &quot;Variables Available&quot; section in each. These variables are enclosed in curly braces (&quot;{&quot; and &quot;}&quot;) and will be replaced with their value before being used.</p>
-<h3 id="user_bind_template"><span class="header-section-number">4.6.1</span> <code class="pro">user_bind_template</code></h3>
+<h3 id="base_bind"><span class="header-section-number">4.6.1</span> <code class="pro">base_bind</code></h3>
+<p>By default, the <code>auth_ldap</code> and <code>auth_active_dir</code> directives instruct Shiny Server Pro to use single-bind LDAP authentication for username and password validation. <a href="http://wiki.go-redrock.com/wiki/LDAP">Double-bind LDAP authentication</a> is used when the <code>base_bind</code> directive is defined. This directive specifies a user DN and password for the initial LDAP bind operation. The authenticated connection allows Shiny Server Pro to search for a DN associated with the user attempting login. The discovered DN is subsequently provided to a second bind operation.</p>
+<pre><code>base_bind &lt;user-dn&gt; &lt;password-or-filepath&gt;;</code></pre>
+<p>The <code>user_filter</code> directive is used during the user DN search and must be defined whenever using <code>base_bind</code> with <code>auth_ldap</code>. The <code>auth_active_dir</code> directive provides a default value to <code>user_filter</code> but <code>auth_ldap</code> does not.</p>
+<p><strong>Variables Available</strong></p>
+<ul>
+<li><code>{root}</code> -- The root DIT provided to the parent <code>auth_ldap</code> or <code>auth_active_dir</code> setting.</li>
+</ul>
+<p>Here is an example <code>auth_ldap</code> specification using a <code>searcher</code> account during double-bind LDAP authentication with the required <code>user_filter</code> directive.</p>
+<pre><code>auth_ldap ldap://ldap.example.org/dc=example,dc=org {
+  base_bind &quot;uid=searcher,ou=People,{root}&quot; &quot;password-for-searcher&quot;;
+  user_filter &quot;uid={username}&quot;;
+}</code></pre>
+<h3 id="securing-the-ldap-password" class="pro"><span class="header-section-number">4.6.2</span> Securing the LDAP password</h3>
+<p>In our earlier example, we specified the password as plain text in the Shiny Server Pro configuration file. We could alternatively use a fully-qualified file path containing only the LDAP password as in the following example:</p>
+<pre><code>auth_ldap ldap://ldap.example.org/dc=example,dc=org {
+  base_bind &quot;uid=searcher,ou=People,{root}&quot; &quot;/etc/shiny-server/ldap-base-bind-password.txt&quot;;
+  user_filter &quot;uid={username}&quot;
+}</code></pre>
+<p>In this case, Shiny Server Pro reads the LDAP password from the file <code>/etc/shiny-server/ldap-base-bind-password.txt</code>. Shiny Server Pro will retain <code>root</code> privileges when using a file to contain the LDAP password. This allows you to tighten the permissions around the file containing the LDAP password to only allow the <code>root</code> user to read it.</p>
+<p>For example, we could secure the above file using:</p>
+<pre><code># Change the file to be owned by the root user. {.pro}
+chown root:root /etc/shiny-server/ldap-base-bind-password.txt
+
+# Set the permissions so that only root can read the file. {.pro}
+chmod 600 /etc/shiny-server/ldap-base-bind-password.txt</code></pre>
+<p>This prevents the LDAP password from Shiny applications or other users who are allowed to login to the server. If you expect that many users or untrusted users may be logging into or deploying apps on the server on which Shiny Server Pro is installed, we strongly recommend that you use this configuration to ensure the privacy of your LDAP password.</p>
+<h3 id="user_bind_template"><span class="header-section-number">4.6.3</span> <code class="pro">user_bind_template</code></h3>
 <p>Shiny Server Pro will transform the username entered at the login screen before attempting to &quot;bind&quot; (authenticate) to the LDAP server using this template. In general (notable exception being Active Directory), this pattern should map the given username to the user's DN in the LDAP database. In systems where that may not be possible (such as Active Directory), you can use the [<code>user_filter</code>] setting to lookup the user's DN given their username. In either case, this setting should manipulate the given username into the username used to perform the LDAP <code>bind</code> operation.</p>
 <p><strong>Variables Available</strong></p>
 <ul>
@@ -1187,14 +1247,14 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <li>For <code>auth_ldap</code> -- <code>uid={username},ou=People,{root}</code></li>
 <li>For <code>auth_active_dir</code> -- <code>{username}@example.org</code> (where &quot;example.org&quot; is the domain name you provided as the second argument to <code>auth_active_dir</code>).</li>
 </ul>
-<h3 id="group_search_base"><span class="header-section-number">4.6.2</span> <code class="pro">group_search_base</code></h3>
+<h3 id="group_search_base"><span class="header-section-number">4.6.4</span> <code class="pro">group_search_base</code></h3>
 <p>Defines the subtree in which groups are stored. This will be used as the root of all LDAP queries which attempt to find the groups of which a user is a member. The given value will be followed by a comma and the root DIT given in the <code>auth_ldap</code> or <code>auth_active_dir</code> parent setting. If configured to use an empty string as the base, then the unmodified root DIT will be used as the group search base.</p>
 <p><strong>Default Value</strong></p>
 <ul>
 <li>For <code>auth_ldap</code> -- <code>ou=Groups</code></li>
 <li>For <code>auth_active_dir</code> -- <code>cn=Users</code></li>
 </ul>
-<h3 id="group_filter"><span class="header-section-number">4.6.3</span> <code class="pro">group_filter</code></h3>
+<h3 id="group_filter"><span class="header-section-number">4.6.5</span> <code class="pro">group_filter</code></h3>
 <p>The LDAP query to use in determining a user's group membership. The query should return all groups of which the given user is a member</p>
 <p>The default for <code>auth_ldap</code> checks the <code>uniqueMember</code> field -- a setting from the <code>groupOfUniqueMembers</code> LDAP class. If you're using the <code>posixGroup</code> LDAP class to store your group memberships, you should likely set this value to <code>memberUid={username}</code>.</p>
 <p><strong>Variables Available</strong></p>
@@ -1208,21 +1268,21 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <li>For <code>auth_ldap</code> -- <code>uniqueMember={username}</code></li>
 <li>For <code>auth_active_dir</code> -- <code>member:1.2.840.113556.1.4.1941:={userDN}</code></li>
 </ul>
-<h3 id="group_name_attribute"><span class="header-section-number">4.6.4</span> <code class="pro">group_name_attribute</code></h3>
+<h3 id="group_name_attribute"><span class="header-section-number">4.6.6</span> <code class="pro">group_name_attribute</code></h3>
 <p>The attribute of the LDAP group object in which the group name is stored. This field will be compared to the entries in the <code>required_group</code> setting to determine whether or not a user should be granted access to a Shiny application.</p>
 <p><strong>Default Value</strong></p>
 <p><code>cn</code></p>
-<h3 id="trusted_ca"><span class="header-section-number">4.6.5</span> <code class="pro">trusted_ca</code></h3>
-<p>By default, Shiny Server Pro trusts many standard SSL Certificate Authorities (CAs) (such as Verisign). If your organization uses a non-trusted Certificate Authority to sign its SSL certificates, you will need to explicitly tell Shiny Server Pro to trust this CA's certificate. You can do this by placing the CA's certificate (in PEM format) in a file on your machine and pointing this setting to that file.</p>
+<h3 id="trusted_ca"><span class="header-section-number">4.6.7</span> <code class="pro">trusted_ca</code></h3>
+<p>By default, Shiny Server Pro trusts many standard SSL Certificate Authorities (CAs) (such as Verisign). If your organization uses a non-trusted Certificate Authority to sign its SSL certificates, you will need to explicitly tell Shiny Server Pro to trust this CA's certificate. You can do this by placing the CA's certificate (in PEM format) in a file on your machine and pointing this setting to that file. You can add multiple trusted CAs (space-delimited) if you desire.</p>
 <p>If this value is provided, the standard list of trusted CAs will be overridden with the provided certificate.</p>
 <p><strong>Default Value</strong></p>
 <p>None.</p>
-<h3 id="check_ssl_ca"><span class="header-section-number">4.6.6</span> <code class="pro">check_ssl_ca</code></h3>
+<h3 id="check_ssl_ca"><span class="header-section-number">4.6.8</span> <code class="pro">check_ssl_ca</code></h3>
 <p>When using LDAP over SSL (<code>ldaps://</code>), Shiny Server Pro will check that the SSL certificate was signed by a recognized Certificate Authority (CA) (though this can be modified using the <code>trusted_ca</code> setting). <code>check_ssl_ca</code> can be used to disable the checking of CAs entirely. By default, this option will be 'true' to enable SSL CA validation.</p>
 <p>Disabling these checks is necessary if your LDAP server uses a self-signed certificate, for instance. Otherwise, this setting should typically be left enabled as disabling it will largely defeat the security gained by using SSL.</p>
 <p><strong>Default Value</strong></p>
 <p><code>true</code></p>
-<h3 id="user_filter"><span class="header-section-number">4.6.7</span> <code class="pro">user_filter</code></h3>
+<h3 id="user_filter"><span class="header-section-number">4.6.9</span> <code class="pro">user_filter</code></h3>
 <p>Some systems (notably many Active Directory implementations) do not use the username as a part of the user's DN. In such systems, It may be necessary to perform an extra LDAP query after binding to determine the user's DN based on their username before group membership can be determined. This setting stores the LDAP filter used to find the user object which matches the entered username.</p>
 <p>Using the default provided for <code>auth_active_dir</code> (<code>userPrincipalName={userBind}</code>), as an example. Shiny Server Pro will attempt to bind to the LDAP server using the given username (after being manipulated as defined in <code>user_bind_template</code>) and password. If successful, it will then search for an object whose attribute <code>userPrincipalName</code> matches the username manipulated by <code>user_bind_template</code>. If found, the returned object's DN will be made available to the <code>group_filter</code> as the <code>{userDN}</code> variable.</p>
 <p><strong>Default Value</strong></p>
@@ -1230,7 +1290,7 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
 <li>For <code>auth_ldap</code> -- N/A</li>
 <li>For <code>auth_active_dir</code> -- <code>userPrincipalName={userBind}</code></li>
 </ul>
-<h3 id="user_search_base"><span class="header-section-number">4.6.8</span> <code class="pro">user_search_base</code></h3>
+<h3 id="user_search_base"><span class="header-section-number">4.6.10</span> <code class="pro">user_search_base</code></h3>
 <p>Defines the subtree in which users are stored. This will only be used if <code>user_filter</code> is not empty, as that is the only time that Shiny Server Pro would need to search for a user. If provided, this will be used as the root of the LDAP queries used to lookup a user by his or her username. The given value will be followed by a comma and the root DIT given in the <code>auth_ldap</code> or <code>auth_active_dir</code> parent setting. If configured to use an empty string as the base, then the unmodified root DIT will be used as the user search base.</p>
 <p><strong>Default Value</strong></p>
 <ul>
@@ -1375,8 +1435,6 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
 <p>Note that you need to reload or restart the server for licensing changes to take effect.</p>
 <p>If you want to move your license of Shiny Server Professional to another system you should first deactivate it on the system you are moving from. For example:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager deactivate</code></pre>
-<h3 id="virtual-machines" class="pro"><span class="header-section-number">6.1.2</span> Virtual Machines</h3>
-<p>By default Shiny Server Professional cannot be activated on virtual machines (this is because virtual machines confound the hardware signature used by the underlying activation mechanism). However, it is possible to activate on a virtual machine by contacting RStudio customer support and requesting that your product key allow VM activations.</p>
 <h2 id="connectivity-requirements" class="pro"><span class="header-section-number">6.2</span> Connectivity Requirements</h2>
 <p>In order to activate or deactivate Shiny Server Professional internet connectivity is required for communication with the licensing server. If your server is behind an internet proxy or not connected to the internet at all this section describes what's required to successfully activate.</p>
 <h3 id="proxy-servers" class="pro"><span class="header-section-number">6.2.1</span> Proxy Servers</h3>
@@ -2791,7 +2849,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
             <label>Applies to:</label> Top-level<br/>
             <label>Inheritable:</label> Yes<br/>
             
-              <label>Child directives:</label> <code><a href="#ldap_timeout">ldap_timeout</a></code>, <code><a href="#user_bind_template">user_bind_template</a></code>, <code><a href="#trusted_ca">trusted_ca</a></code>, <code><a href="#check_ssl_ca">check_ssl_ca</a></code>, <code><a href="#user_filter">user_filter</a></code>, <code><a href="#user_search_base">user_search_base</a></code>, <code><a href="#group_search_base">group_search_base</a></code>, <code><a href="#group_filter">group_filter</a></code>, <code><a href="#group_name_attribute">group_name_attribute</a></code><br/>
+              <label>Child directives:</label> <code><a href="#ldap_timeout">ldap_timeout</a></code>, <code><a href="#base_bind">base_bind</a></code>, <code><a href="#user_bind_template">user_bind_template</a></code>, <code><a href="#trusted_ca">trusted_ca</a></code>, <code><a href="#check_ssl_ca">check_ssl_ca</a></code>, <code><a href="#user_filter">user_filter</a></code>, <code><a href="#user_search_base">user_search_base</a></code>, <code><a href="#group_search_base">group_search_base</a></code>, <code><a href="#group_filter">group_filter</a></code>, <code><a href="#group_name_attribute">group_name_attribute</a></code><br/>
             
           </p>
         </li>
@@ -2821,6 +2879,52 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
                   <td>Integer</td>
                   <td>required</td>
                   <td>The number of seconds to wait for an LDAP query or connections before labeling it a failure. If 0, will never timeout.</td>
+                  <td></td>
+                </tr>
+              
+            </table>
+          
+
+          <p>
+            <label>Applies to:</label> <code><a href="#auth_ldap">auth_ldap</a></code>, <code><a href="#auth_active_dir">auth_active_dir</a></code><br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="base_bind"></a>base_bind</h3>
+          <p class="desc">Define credentials used to perform the initial LDAP bind request for double-bind authentication. If not provided, single-bind authentication is performed.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>user</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td>Defines a DN used during the initial LDAP bind request. The {{root}} variable will be automatically substituted by the root DIT (as provided in the parent <a class="code" href="#auth_ldap">auth_ldap</a> or <a class="code" href="#auth_active_dir">auth_active_dir</a> directive) before attempting to bind to the LDAP server.</td>
+                  <td></td>
+                </tr>
+              
+                <tr>
+                  <td>password</td>
+                  <td>String</td>
+                  <td>required</td>
+                  <td>The password used during the initial LDAP bind request. The password may be specified as plaintext or as an absolute path to the file storing the secret. If using a file path, Shiny Server will retain root privileges under the assumption that the file is only readable by the root user.</td>
                   <td></td>
                 </tr>
               
@@ -2895,7 +2999,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
                 <tr>
                   <td>certificate</td>
                   <td>String</td>
-                  <td>required</td>
+                  <td>multiple</td>
                   <td>The path to the CA certificate to be trusted in PEM format.</td>
                   <td></td>
                 </tr>
@@ -3332,7 +3436,7 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
       
         <li>
           <h3 class="code"><a name="disable_websockets"></a>disable_websockets</h3>
-          <p class="desc">Disable WebSockets on connections to the server. Some networks will not reliably support WebSockets, so this setting can be used to force Shiny Server to fall back to another protocol to communicate with the server.</p>
+          <p class="desc">Disable WebSockets on connections to the server. Some networks will not reliably support WebSockets, so this setting can be used to force Shiny Server to fall back to another protocol to communicate with the server. This is equivalent to adding 'websocket' to <code>disabled_protocols</code></p>
           
             <table class="params">
               <colgroup>
@@ -3373,6 +3477,44 @@ $ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;
           <p class="desc">If present, RRD logging will be disabled. Note that having RRD is a prerequisite for enabling the <a class="code" href="#admin">admin</a> interface. While this option is present, no data will be logged to be viewed in the Admin interface in the future, either.</p>
           
             <p class="noparams">This directive has no parameters.</p>
+          
+
+          <p>
+            <label>Applies to:</label> Top-level<br/>
+            <label>Inheritable:</label> Yes<br/>
+            
+          </p>
+        </li>
+      
+        <li>
+          <h3 class="code"><a name="disable_protocols"></a>disable_protocols</h3>
+          <p class="desc">Disable some of the SockJS protocols used to establish a connection between your users and your server. Some network configurations cause problems with particular protocols; this option allows you to disable those.</p>
+          
+            <table class="params">
+              <colgroup>
+                <col style="width: 105px"></col>
+                <col style="width: 90px"></col>
+                <col style="width: 90px"></col>
+                <col></col>
+                <col style="width: 90px"></col>
+              </colgroup>
+              <tr>
+                <th>Parameter</th>
+                <th>Data type</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+              </tr>
+              
+                <tr>
+                  <td>names</td>
+                  <td>String</td>
+                  <td>multiple</td>
+                  <td>The protocol(s) to disable. Available protocols are: 'websocket', 'xdr-streaming', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xdr-polling', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'</td>
+                  <td></td>
+                </tr>
+              
+            </table>
           
 
           <p>
@@ -3536,5 +3678,18 @@ TODO:
 <li>In a model like the one used above, the passwords won't be stored in your shell's history, but they will be available in the system's process table. The <code>echo</code> command above (and the password associated with it) will likely be accessible by any other user on the system while that command is executing.</li>
 </ol>
 <p>Be sure to fully understand the security implications of the above script before using it, especially if using it on an unsecured or multi-user server.</p>
+<h3 id="how-can-i-set-the-trusted_ca-for-my-ldap-server-over-ssl" class="pro"><span class="header-section-number">7.4.7</span> How Can I Set The trusted_ca For My LDAP Server Over SSL?</h3>
+<p>The easiest way to confirm an SSL connection is to use the <code>openssl</code> tool to try to connect to your LDAP server. If you don't already have the SSL certificates for your server, you can even download them using this tool. If you run</p>
+<pre><code>openssl s_client -connect &lt;LDAP server address&gt;:&lt;port&gt; -showcerts</code></pre>
+<p>(the default LDAPS port is 636, by the way), you should get a flurry of output.</p>
+<p>If you look through this output (in particular at the last few lines) you should see a &quot;result&quot;; if there's a problem it may say something like <code>Verify return code: 19 (self signed certificate in certificate chain)</code> which reveals that there's an issue with trusting the SSL connection between you and your LDAPS server. In the case of an error like the one above, you likely just need to instruct your client to trust a particular Certificate Authority (CA) that the <code>openssl</code> tool doesn't trust by default. Once you retrieve the CA certificate for your organization (which should also be the last certificate returned by the command above if you're actually connected to the right server), you can tell <code>openssl</code> to trust that CA by using a command in the format of</p>
+<pre><code>openssl s_client -connect &lt;server-address&gt;:&lt;port&gt; -CAfile &lt;file.pem&gt;</code></pre>
+<p>Assuming that the certificate matches the CA you provide (and everything is in the right format), you should get a line of output from <code>openssl</code> that says <code>Verify return code: 0 (ok)</code>. Once you see that, you know you have your CA certificate in the right format.</p>
+<p>There is one important check that the <code>openssl</code> tools doesn't perform that you should confirm before trying to use the certificate in Shiny Server Pro. You'll need to confirm that the hostname you're using matches the SSL certificate. You can do that manually or using <code>curl</code> by running <code>curl --cacert &lt;file.pem&gt; ldaps://&lt;server-address&gt;:&lt;port&gt;/</code>. If you see some LDAP output (perhaps starting with <code>DN:</code>) and no errors, then things are working properly and you have the right hostname.</p>
+<p>Once you have the CA certificate working in the above tests, then you're ready to apply it to Shiny Server Pro. The CA certificate should be in PEM format and <em>only include one certificate per file</em>. You can add these file references using the <code>trusted_ca</code> setting in your Shiny Server Pro configuration as follows:</p>
+<pre><code>auth_ldap ... {
+  trusted_ca /etc/ssl/ca1.pem /etc/ssl/ca2.pem;
+}</code></pre>
+<p>This would include two CA certificates that Shiny Server Pro should trust. Shiny Server Pro should now be able to successfully connect to your LDAPS server when you attempt to authenticate users.</p>
 </body>
 </html>
