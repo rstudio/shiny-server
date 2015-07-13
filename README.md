@@ -1,6 +1,6 @@
 # Shiny Server
 
-Shiny Server is a server program that makes [Shiny](http://rstudio.com/shiny) applications available over the web.
+Shiny Server is a server program that makes [Shiny](https://rstudio.com/shiny) applications available over the web.
 
 ## Features
 
@@ -15,7 +15,7 @@ Shiny Server is a server program that makes [Shiny](http://rstudio.com/shiny) ap
 
 At this time, Shiny Server can be run on Linux servers with explicit support for Ubuntu 12.04 or greater (64 bit) and CentOS/RHEL 5 (64 bit) or greater. If you are using one of these distributions, please download the pre-packaged installers from RStudio:
 
-> [Download Shiny Server Installers](http://rstudio.com/shiny/server/). 
+> [Download Shiny Server Installers](https://www.rstudio.com/products/shiny/shiny-server/). 
 
 These installers will provide a majority of the prerequisite software and will provision all the necessary directories for you.
 
@@ -35,10 +35,10 @@ Now start a web browser and point it to `http://<hostname>:3838/APP_NAME/`
 
 **If the browser is not able to connect to the server, configure your server's firewall to allow inbound TCP connections on port 3838.**
 
-To customize any of the above, or to explore the other ways Shiny Server can host Shiny apps, see the [Shiny Server Configuration Reference](http://rstudio.github.io/shiny-server/latest/#configuration-settings) for details on the various ways Shiny Server can be configured.
+To customize any of the above, or to explore the other ways Shiny Server can host Shiny apps, see the [Shiny Server Configuration Reference](https://rstudio.github.io/shiny-server/latest/#configuration-settings) for details on the various ways Shiny Server can be configured.
 
 ## Documentation & Contact & Support
 
-See [the Administrator's Guide to Shiny Server](http://rstudio.github.io/shiny-server/latest/) for more complete documentation regarding the setup and management of Shiny Server.
+See [the Administrator's Guide to Shiny Server](https://rstudio.github.io/shiny-server/latest/) for more complete documentation regarding the setup and management of Shiny Server.
 
 Please direct questions to the [shiny-discuss](https://groups.google.com/group/shiny-discuss) mailing list. If you're interested in Professional Support, please look at our commercial Shiny Server Professional product.
