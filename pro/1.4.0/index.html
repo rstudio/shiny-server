@@ -192,8 +192,8 @@ code > span.er { font-weight: bold; }
 </ul></li>
 <li><a href="#stopping-and-starting"><span class="toc-section-number">1.4</span> Stopping and Starting</a><ul>
 <li><a href="#systemd-redhat-7-ubuntu-15.04-sles-12"><span class="toc-section-number">1.4.1</span> systemd (RedHat 7, Ubuntu 15.04+, SLES 12+)</a></li>
-<li><a href="#upstart-ubuntu-12.04-through-14.10"><span class="toc-section-number">1.4.2</span> Upstart (Ubuntu 12.04 through 14.10)</a></li>
-<li><a href="#init.d-redhat-5-and-6-sles-11"><span class="toc-section-number">1.4.3</span> init.d (RedHat 5 and 6, SLES 11)</a></li>
+<li><a href="#upstart-ubuntu-12.04-through-14.10-redhat-6"><span class="toc-section-number">1.4.2</span> Upstart (Ubuntu 12.04 through 14.10, RedHat 6)</a></li>
+<li><a href="#init.d-redhat-5-sles-11"><span class="toc-section-number">1.4.3</span> init.d (RedHat 5, SLES 11)</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#server-management"><span class="toc-section-number">2</span> Server Management</a><ul>
@@ -265,6 +265,7 @@ code > span.er { font-weight: bold; }
 <li><a href="#pam-authentication"><span class="toc-section-number">4.5</span> PAM Authentication</a><ul>
 <li><a href="#pam-basics"><span class="toc-section-number">4.5.1</span> PAM Basics</a></li>
 <li><a href="#default-pam-configuration"><span class="toc-section-number">4.5.2</span> Default PAM Configuration</a></li>
+<li><a href="#pam-and-kerberos"><span class="toc-section-number">4.5.3</span> PAM and Kerberos</a></li>
 </ul></li>
 <li><a href="#ldap-and-active-directory"><span class="toc-section-number">4.6</span> LDAP and Active Directory</a><ul>
 <li><a href="#base_bind"><span class="toc-section-number">4.6.1</span> <code class="pro">base_bind</code></a></li>
@@ -359,8 +360,11 @@ code > span.er { font-weight: bold; }
 <ul>
 <li>RedHat Enterprise Linux (and CentOS) 5.4+</li>
 <li>RedHat Enterprise Linux (and CentOS) 6.0+</li>
+<li>RedHat Enterprise Linux (and CentOS) 7.0+</li>
 <li>Ubuntu 12.04</li>
 <li>Ubuntu 13.04</li>
+<li>Ubuntu 14.04</li>
+<li>Ubuntu 15.04</li>
 <li>SUSE Linux Enterprise 11 SP1 and higher</li>
 </ul>
 <p>We currently only support the x86-64 architecture. As described in the <a href="#installation">Installation</a> section, you will install R and the Shiny package prior to installing Shiny Server. Root privileges will be required both in the installation process and also at runtime.</p>
@@ -422,9 +426,25 @@ Choose from above solutions by number or cancel [1/2/c] (c): 2</code></pre>
 <p>The <code>libffi</code> dependency is not required on SLES so it is safe to install without it. You should enter &quot;2&quot; (ignore the dependencies) at this prompt and continue with the installation.</p>
 <p>This will install Shiny Server into <code>/opt/shiny-server/</code>, with the main executable in <code>/opt/shiny-server/bin/shiny-server</code> and also create a new <code>shiny</code> user. The rest of this guide will document the intricacies of how you can configure and manage Shiny Server. If you're just looking to get up and running quickly, we recommend you look at the <a href="#quick-start">Quick Start</a> section in the appendix which will walk you through the process of installing and configuring a Shiny application.</p>
 <h3 id="install-shiny"><span class="header-section-number">1.3.4</span> Install Shiny</h3>
-<p>Before Shiny Server can be installed, the Shiny package must be installed in the system library; you typically need <code>sudo</code> privileges to install to this library. Shiny Server currently requires Shiny version 0.7.0 or later. The following command will download and install the <code>shiny</code> package from CRAN in the system library.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - \
-  <span class="kw">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;shiny&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></code></pre>
+<p>Before Shiny Server can be installed, the Shiny package must be installed in the system library; you typically need <code>sudo</code> privileges to install to this library.</p>
+<p><strong>Setup the Server for Secure Package Installation</strong></p>
+<p>R packages can be installed securely using an HTTPS CRAN mirror, or insecurely using an HTTP mirror. Beginning with R version 3.2.2, HTTPS is the default preference when installing packages, but older versions of R default to insecure HTTP. You can change this behavior in older versions of R by setting the <code>download.file.method</code> option in your <code>.Rprofile</code>. See <a href="https://stat.ethz.ch/R-manual/R-devel/library/base/html/Startup.html">R Startup Files</a> for details on where these files are located.</p>
+<p>You should add the following line to <code>Rprofile.site</code> to affect how all users install packages, or the <code>~/.Rprofile</code> file for individual users who will be running Shiny applications in Shiny Server.</p>
+<p><em>For R 3.2</em></p>
+<pre><code>options(download.file.method = &quot;libcurl&quot;)</code></pre>
+<p><em>For R 3.1 and earlier</em></p>
+<pre><code>options(download.file.method = &quot;wget&quot;)</code></pre>
+<p>You could alternatively use <code>curl</code> instead of <code>wget</code>, if <code>wget</code> is not available on your server.</p>
+<p>You'll also want to specify a secure default CRAN mirror in this same file. You can do that using the following code:</p>
+<pre><code>local({
+  r &lt;- getOptions(&quot;repos&quot;)
+  r[&quot;CRAN&quot;] &lt;- &quot;https://cran.rstudio.com/&quot;
+  options(repos=r)
+})</code></pre>
+<p><strong>Install The Shiny Package</strong></p>
+<p>Shiny Server currently requires Shiny version 0.7.0 or later. The following command will download and install the <code>shiny</code> package from CRAN in the system library.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> su - -c <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;shiny&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></code></pre>
+<p>If you have not set a default CRAN repository (as described in the section above) you may need to specify the <code>repos</code> parameter from which to download <code>shiny</code> and its dependencies.</p>
 <p>Once this command completes, you can continue with the installation of Shiny Server.</p>
 <h3 id="r-installation-location"><span class="header-section-number">1.3.5</span> R Installation Location</h3>
 <p>Shiny Server expects that R is available as an executable named <code>R</code> and is in the <code>PATH</code> of the user which you run <code>shiny-server</code> as. Note that on some CentOS systems, the <code>PATH</code> will be overridden by the startup script to <code>/sbin:/usr/sbin:/bin:/usr/bin</code>. On such systems, if <code>R</code> is not available in one of these locations (regardless of the user's <code>PATH</code>), you'll need to adjust the startup script.</p>
@@ -450,7 +470,7 @@ Choose from above solutions by number or cancel [1/2/c] (c): 2</code></pre>
 <p>And finally, you can use the <code>enable</code>/<code>disable</code> commands to control whether Shiny Server should be run automatically at boot time:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> systemctl enable shiny-server</code></pre>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> systemctl disable shiny-server</code></pre>
-<h3 id="upstart-ubuntu-12.04-through-14.10"><span class="header-section-number">1.4.2</span> Upstart (Ubuntu 12.04 through 14.10)</h3>
+<h3 id="upstart-ubuntu-12.04-through-14.10-redhat-6"><span class="header-section-number">1.4.2</span> Upstart (Ubuntu 12.04 through 14.10, RedHat 6)</h3>
 <p>Upstart is a system used to automatically start, stop and manage services. The installer will automatically deploy an Upstart script to <code>/etc/init/shiny-server.conf</code>. This script will initialize <code>shiny-server</code> as soon as the network is activated on the machine and stop when the machine is being shut down.</p>
 <p>The Upstart script will also ensure that <code>shiny-server</code> is respawned if the process is terminated unexpectedly. However, in the event that there is an issue which will consistently prevent Shiny Server from being able to start (such as a bad configuration file), Upstart will give up on restarting the service after approximately 5 failed attempts within a few seconds. For this reason, you may see multiple repetitions of a bad Shiny Server startup attempt before it transitions to the <code>stopped</code> state.</p>
 <p>To start or stop the server, run the following commands, respectively.</p>
@@ -465,7 +485,7 @@ Choose from above solutions by number or cancel [1/2/c] (c): 2</code></pre>
 <p><strong>Known Bug:</strong> Due to a bug in the version of Upstart which comes with Ubuntu 13.04, <code>reload</code> will not behave as expected on that platform and should not be used.</p>
 <p>To check the status or retrieve the Process ID associated with <code>shiny-server</code>, run the following:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">status</span> shiny-server</code></pre>
-<h3 id="init.d-redhat-5-and-6-sles-11"><span class="header-section-number">1.4.3</span> init.d (RedHat 5 and 6, SLES 11)</h3>
+<h3 id="init.d-redhat-5-sles-11"><span class="header-section-number">1.4.3</span> init.d (RedHat 5, SLES 11)</h3>
 <p>On some older Operating Systems (such as RedHat 5) the Upstart system may not be available. These systems will require the use of a script in <code>/etc/init.d/</code> to start and manage the <code>shiny-server</code> daemon. This script does not have the capability to automatically restart the <code>shiny-server</code> daemon if it terminates unexpectedly. The installer uses <code>chkconfig</code> to ensure that <code>shiny-server</code> will start automatically on boot.</p>
 <p>To start or stop the server, use the following commands, respectively:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /sbin/service shiny-server start</code></pre>
@@ -933,7 +953,31 @@ $ <span class="kw">cp</span> /opt/shiny-server/templates/error.html /etc/shiny-s
   <span class="kw">...</span></code></pre>
 <h2 id="environment-variable-settings"><span class="header-section-number">2.12</span> Environment Variable Settings</h2>
 <p>We strive to expose most settings through the configuration file described previously. However, there are some settings that we don't include in the configuration file which some users may still wish to change. Where possible, we'll allow users to configure these settings using environment variables. Some of these environment variables will later be promoted to configuration directives, but will be documented here until that time.</p>
-<p>Typically, it is best to define these environment variables in the startup script used to run Shiny Server (often either <code>/etc/init.d/shiny-server</code> or <code>/etc/init/shiny-server.conf</code>, depending on whether or not you're using Upstart).</p>
+<p>Typically, it is best to define these environment variables in the startup script used to run Shiny Server. This varies depending on what Linux distribution and version you are running.</p>
+<h4 id="systemd-redhat-7-ubuntu-15.04-sles-12-1"><span class="header-section-number">2.12.0.1</span> systemd (RedHat 7, Ubuntu 15.04+, SLES 12+)</h4>
+<p>File to change:</p>
+<pre><code>/etc/systemd/system/shiny-server.service</code></pre>
+<p>How to define the environment variable:</p>
+<pre><code>[Service]
+Environment=&quot;SHINY_LOG_LEVEL=TRACE&quot;</code></pre>
+<p>Commands to run for the changes to take effect:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> systemctl stop shiny-server
+$ <span class="kw">sudo</span> systemctl daemon-reload 
+$ <span class="kw">sudo</span> systemctl start shiny-server</code></pre>
+<h4 id="upstart-ubuntu-12.04-through-14.10-and-redhat-6"><span class="header-section-number">2.12.0.2</span> Upstart (Ubuntu 12.04 through 14.10 and RedHat 6)</h4>
+<p>File to change:</p>
+<pre><code>/etc/init/shiny-server.conf</code></pre>
+<p>How to define the environment variable:</p>
+<pre><code>env SHINY_LOG_LEVEL=TRACE</code></pre>
+<p>Commands to run for the changes to take effect:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> restart shiny-server</code></pre>
+<h4 id="init.d-redhat-5-sles-11-1"><span class="header-section-number">2.12.0.3</span> init.d (RedHat 5, SLES 11)</h4>
+<p>File to change:</p>
+<pre><code>/etc/init.d/shiny-server</code></pre>
+<p>How to define the environment variable:</p>
+<pre><code>export SHINY_LOG_LEVEL=TRACE</code></pre>
+<p>Commands to run for the changes to take effect:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /sbin/service shiny-server restart</code></pre>
 <h3 id="shiny_log_level"><span class="header-section-number">2.12.1</span> <code>SHINY_LOG_LEVEL</code></h3>
 <p>Defines the verbosity of logging which will be used by Shiny Server. Valid options -- in level of increasing verbosity -- are <code>TRACE</code>, <code>DEBUG</code>, <code>INFO</code>, <code>WARN</code>, and <code>ERROR</code>. More verbose levels of logging (such as <code>TRACE</code>) may be helpful when debugging an issue or trying to understand exactly what Shiny Server is doing, but will likely be far too much information for a system with even moderate load.</p>
 <p>The default if this environment variable is not found is to use <code>INFO</code>.</p>
@@ -1182,6 +1226,22 @@ jsonp-polling</code></pre>
 <span class="kw">account</span>   required       pam_unix.so</code></pre>
 <p>This default PAM profile may not reflect the authentication behavior that you want for Shiny Server. In that case, some customization may be required. If you've already set up another PAM profile (e.g. <code>/etc/pam.d/login</code>) with the desired behavior then it may be enough to simply copy that profile over the Shiny Server one. For example:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> cp /etc/pam.d/login /etc/pam.d/shiny-server</code></pre>
+<h3 id="pam-and-kerberos"><span class="header-section-number">4.5.3</span> PAM and Kerberos</h3>
+<p>Shiny Server Professional supports integration with Kerberos for seamless authentication to other applications via Kerberos tickets. To enable this feature you need to have the following defined in your <code>/etc/shiny-server/shiny-server.conf</code> file:</p>
+<pre><code>run_as :AUTH_USER:;
+auth_pam true;
+pam_sessions_profile shiny-session;</code></pre>
+<p>This assumes you are using a file named <code>shiny-session</code> for the pam.d session profile, but the name could be anything as long as it matches your actual filename.</p>
+<p>You also need to customize your Shiny Server pam.d files: <code>shiny-server</code> and <code>shiny-session</code>. We provide a very simple example of these files here that uses <code>pam_krb5.so</code> as a guide.</p>
+<p><em>/etc/pam.d/shiny-server</em></p>
+<pre><code>auth       sufficient     pam_krb5.so 
+account    required       pam_krb5.so 
+session    requisite      pam_krb5.so </code></pre>
+<p><em>/etc/pam.d/shiny-session</em></p>
+<pre><code>auth        required      pam_krb5.so 
+account     [default=bad success=ok user_unknown=ignore] pam_krb5.so 
+password    sufficient    pam_krb5.so use_authtok 
+session     requisite     pam_krb5.so </code></pre>
 <h2 id="ldap-and-active-directory" class="pro"><span class="header-section-number">4.6</span> LDAP and Active Directory</h2>
 <p>Lightweight Directory Access Protocol (LDAP) is a popular protocol for storing and validating user information in an enterprise. LDAP can store information about users and their group memberships which Shiny Server Pro is able to query using user's username and password. Fundamentally, the LDAP protocol simply describes a framework for storing hierarchical data and can be configured in a multitude of ways. Active Directory is one popular directory service which implements LDAP and encourages a certain model for storing data, while other vendors of LDAP systems often have their own distinct default configurations. A holistic overview of LDAP is outside of the scope of this document, so if you lack a solid background in LDAP you might benefit from consulting with an LDAP administrator in your organization to configure these settings.</p>
 <p>An LDAP configuration in Shiny Server Pro might look like this:</p>
@@ -1431,7 +1491,7 @@ load-average: #load-average#</code></pre>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager status</code></pre>
 <p>After purchasing a license to Shiny Server Professional you'll receive a product key that can be used to activate the license on a given system. You can perform the activation as follows:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager activate <span class="kw">&lt;</span>product-key<span class="kw">&gt;</span>
-$ <span class="kw">sudo</span> reload shiny-server  <span class="co"># or &quot;sudo /sbin/service shiny-server reload&quot;</span></code></pre>
+$ <span class="kw">sudo</span> restart shiny-server  <span class="co"># or &quot;sudo /sbin/service shiny-server restart&quot; or &quot;sudo systemctl restart shiny-server&quot;</span></code></pre>
 <p>Note that you need to reload or restart the server for licensing changes to take effect.</p>
 <p>If you want to move your license of Shiny Server Professional to another system you should first deactivate it on the system you are moving from. For example:</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">sudo</span> /opt/shiny-server/bin/license-manager deactivate</code></pre>
