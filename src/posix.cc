@@ -19,19 +19,22 @@
 #include <pwd.h>
 #include <grp.h>
 #include <fcntl.h>
+#include <string>
 
 using namespace node;
 using namespace v8;
 
-Handle<Value> GetPwNam(const Arguments& args) {
-  HandleScope scope;
+void GetPwNam(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
 
   if (args.Length() < 1) {
-    return ThrowException(Exception::Error(
-          String::New("getpwnam requires 1 argument")));
+    isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate, "getpwnam requires 1 argument")));
+    return;
   }
 
-  String::Utf8Value pwnam(args[0]);
+  String::Utf8Value pwnam(args[0]->ToString());
 
   int err = 0;
   struct passwd pwd;
@@ -44,30 +47,35 @@ Handle<Value> GetPwNam(const Arguments& args) {
 
   errno = 0;
   if ((err = getpwnam_r(*pwnam, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
-    if (errno == 0)
-      return scope.Close(Null());
+    if (errno == 0) {
+      args.GetReturnValue().Set(Null(isolate));
+      return;
+    }
     else
-      return ThrowException(ErrnoException(errno, "getpwnam_r"));
+      isolate->ThrowException(UVException(isolate, errno, "getpwnam_r"));
+      return;
   }
 
-  Local<Object> userInfo = Object::New();
-  userInfo->Set(String::NewSymbol("name"), String::New(pwd.pw_name));
-  userInfo->Set(String::NewSymbol("passwd"), String::New(pwd.pw_passwd));
-  userInfo->Set(String::NewSymbol("uid"), Number::New(pwd.pw_uid));
-  userInfo->Set(String::NewSymbol("gid"), Number::New(pwd.pw_gid));
-  userInfo->Set(String::NewSymbol("gecos"), String::New(pwd.pw_gecos));
-  userInfo->Set(String::NewSymbol("home"), String::New(pwd.pw_dir));
-  userInfo->Set(String::NewSymbol("shell"), String::New(pwd.pw_shell));
+  Local<Object> userInfo = Object::New(isolate);
+  userInfo->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, pwd.pw_name));
+  userInfo->Set(String::NewFromUtf8(isolate, "passwd"), String::NewFromUtf8(isolate, pwd.pw_passwd));
+  userInfo->Set(String::NewFromUtf8(isolate, "uid"), Number::New(isolate, pwd.pw_uid));
+  userInfo->Set(String::NewFromUtf8(isolate, "gid"), Number::New(isolate, pwd.pw_gid));
+  userInfo->Set(String::NewFromUtf8(isolate, "gecos"), String::NewFromUtf8(isolate, pwd.pw_gecos));
+  userInfo->Set(String::NewFromUtf8(isolate, "home"), String::NewFromUtf8(isolate, pwd.pw_dir));
+  userInfo->Set(String::NewFromUtf8(isolate, "shell"), String::NewFromUtf8(isolate, pwd.pw_shell));
 
-  return scope.Close(userInfo);
+  args.GetReturnValue().Set(userInfo);
 }
 
-Handle<Value> GetPwUid(const Arguments& args) {
-  HandleScope scope;
+void GetPwUid(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
 
   if (args.Length() < 1) {
-    return ThrowException(Exception::Error(
-          String::New("getpwuid requires 1 argument")));
+    isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate, "getpwuid requires 1 argument")));
+    return;
   }
 
   uid_t pwuid = args[0]->IntegerValue();
@@ -84,30 +92,37 @@ Handle<Value> GetPwUid(const Arguments& args) {
 
   errno = 0;
   if ((err = getpwuid_r(pwuid, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
-    if (errno == 0)
-      return scope.Close(Null());
-    else
-      return ThrowException(ErrnoException(errno, "getpwuid_r"));
+    if (errno == 0) {
+      args.GetReturnValue().Set(Null(isolate));
+      return;
+    }
+    else {
+      isolate->ThrowException(UVException(isolate, errno, "getpwuid_r"));
+      return;
+    }
   }
 
-  Local<Object> userInfo = Object::New();
-  userInfo->Set(String::NewSymbol("name"), String::New(pwd.pw_name));
-  userInfo->Set(String::NewSymbol("passwd"), String::New(pwd.pw_passwd));
-  userInfo->Set(String::NewSymbol("uid"), Number::New(pwd.pw_uid));
-  userInfo->Set(String::NewSymbol("gid"), Number::New(pwd.pw_gid));
-  userInfo->Set(String::NewSymbol("gecos"), String::New(pwd.pw_gecos));
-  userInfo->Set(String::NewSymbol("home"), String::New(pwd.pw_dir));
-  userInfo->Set(String::NewSymbol("shell"), String::New(pwd.pw_shell));
+  Local<Object> userInfo = Object::New(isolate);
+  userInfo->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, pwd.pw_name));
+  userInfo->Set(String::NewFromUtf8(isolate, "passwd"), String::NewFromUtf8(isolate, pwd.pw_passwd));
+  userInfo->Set(String::NewFromUtf8(isolate, "uid"), Number::New(isolate, pwd.pw_uid));
+  userInfo->Set(String::NewFromUtf8(isolate, "gid"), Number::New(isolate, pwd.pw_gid));
+  userInfo->Set(String::NewFromUtf8(isolate, "gecos"), String::NewFromUtf8(isolate, pwd.pw_gecos));
+  userInfo->Set(String::NewFromUtf8(isolate, "home"), String::NewFromUtf8(isolate, pwd.pw_dir));
+  userInfo->Set(String::NewFromUtf8(isolate, "shell"), String::NewFromUtf8(isolate, pwd.pw_shell));
 
-  return scope.Close(userInfo);
+  args.GetReturnValue().Set(userInfo);
+  return;
 }
 
-Handle<Value> GetGroupList(const Arguments& args) {
-  HandleScope scope;
+void GetGroupList(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
 
   if (args.Length() < 1) {
-    return ThrowException(Exception::Error(
-          String::New("getgrouplist requires 1 argument")));
+    isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate, "getgrouplist requires 1 argument")));
+    return;
   }
 
   String::Utf8Value name(args[0]);
@@ -129,10 +144,14 @@ Handle<Value> GetGroupList(const Arguments& args) {
 
   errno = 0;
   if ((err = getpwnam_r(*name, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
-    if (errno == 0)
-      return scope.Close(Null());
-    else
-      return ThrowException(ErrnoException(errno, "getpwnam_r"));
+    if (errno == 0) {
+      args.GetReturnValue().Set(Null(isolate));
+      return;
+    }
+    else {
+      isolate->ThrowException(UVException(isolate, errno, "getpwnam_r"));
+      return;
+    }
   }
 
   int ngrp = 64;
@@ -150,27 +169,32 @@ Handle<Value> GetGroupList(const Arguments& args) {
 #ifndef __linux__
     } else if (err != 0) {
       // On BSD, return value is 0 on success
-      return ThrowException(Exception::Error(String::New("Unexpected error calling getgrouplist")));
+      isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Unexpected error calling getgrouplist")));
+      return;
 #endif
     }
     else {
-      Local<Array> groupList = Array::New();
+      Local<Array> groupList = Array::New(isolate);
       for (int j = 0; j < ngrp; j++) {
-        groupList->Set(j, Integer::New(groups[j]));
+        groupList->Set(j, Integer::New(isolate, groups[j]));
       }
-      return scope.Close(groupList);
+      args.GetReturnValue().Set(groupList);
+      return;
     }
   }
 
-  return ThrowException(Exception::Error(String::New("Unexpected getgrouplist behavior")));
+  isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Unexpected getgrouplist behavior")));
+  return;
 }
 
-Handle<Value> GetGrNam(const Arguments& args) {
-  HandleScope scope;
+void GetGrNam(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
 
   if (args.Length() < 1) {
-    return ThrowException(Exception::Error(
-          String::New("getgrouplist requires 1 argument")));
+    isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate, "getgrouplist requires 1 argument")));
+    return;
   }
 
   String::Utf8Value name(args[0]);
@@ -178,33 +202,40 @@ Handle<Value> GetGrNam(const Arguments& args) {
   errno = 0;
   struct group * group = getgrnam(*name);
   if (!group) {
-    if (errno == 0)
-      return scope.Close(Null());
-    else
-      return ThrowException(ErrnoException(errno, "getgrnam"));
+    if (errno == 0) {
+      args.GetReturnValue().Set(Null(isolate));
+      return;
+    }
+    else {
+      isolate->ThrowException(UVException(isolate, errno, "getgrnam"));
+      return;
+    }
   }
 
-  Local<Object> groupInfo = Object::New();
-  groupInfo->Set(String::NewSymbol("name"), String::New(group->gr_name));
-  groupInfo->Set(String::NewSymbol("passwd"), String::New(group->gr_passwd));
-  groupInfo->Set(String::NewSymbol("gid"), Integer::New(group->gr_gid));
-  Local<Array> members = Array::New();
-  groupInfo->Set(String::NewSymbol("members"), members);
+  Local<Object> groupInfo = Object::New(isolate);
+  groupInfo->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, group->gr_name));
+  groupInfo->Set(String::NewFromUtf8(isolate, "passwd"), String::NewFromUtf8(isolate, group->gr_passwd));
+  groupInfo->Set(String::NewFromUtf8(isolate, "gid"), Integer::New(isolate, group->gr_gid));
+  Local<Array> members = Array::New(isolate);
+  groupInfo->Set(String::NewFromUtf8(isolate, "members"), members);
   for (int i = 0; group->gr_mem[i]; i++) {
-    members->Set(members->Length(), String::New(group->gr_mem[i]));
+    members->Set(members->Length(), String::NewFromUtf8(isolate, group->gr_mem[i]));
   }
 
-  return scope.Close(groupInfo);
+  args.GetReturnValue().Set(groupInfo);
+  return;
 }
 
-Handle<Value> AcquireRecordLock(const Arguments& args) {
-  HandleScope scope;
+void AcquireRecordLock(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
 
   // Args: fd, lockType, whence, start, len
 
   if (args.Length() < 5) {
-    return ThrowException(Exception::Error(
-          String::New("acquireRecordLock requires 5 arguments")));
+    isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate, "acquireRecordLock requires 5 arguments")));
+    return;
   }
 
   int fd = args[0]->IntegerValue();
@@ -221,25 +252,23 @@ Handle<Value> AcquireRecordLock(const Arguments& args) {
 
   if (-1 == fcntl(fd, F_SETLK, &flk)) {
     if (errno == EACCES || errno == EAGAIN) {
-      return scope.Close(Boolean::New(false));
+      args.GetReturnValue().Set(Boolean::New(isolate, false));
+      return;
     } else {
-      return ThrowException(ErrnoException(errno, "acquireRecordLock"));
+      isolate->ThrowException(UVException(isolate, errno, "acquireRecordLock"));
+      return;
     }
   } else {
-    return scope.Close(Boolean::New(true));
+    args.GetReturnValue().Set(Boolean::New(isolate, true));
+    return;
   }
 }
 
-void Initialize(Handle<Object> target) {
-  target->Set(String::NewSymbol("getpwnam"),
-      FunctionTemplate::New(GetPwNam)->GetFunction());
-  target->Set(String::NewSymbol("getpwuid"),
-      FunctionTemplate::New(GetPwUid)->GetFunction());
-  target->Set(String::NewSymbol("getgrouplist"),
-      FunctionTemplate::New(GetGroupList)->GetFunction());
-  target->Set(String::NewSymbol("getgrnam"),
-      FunctionTemplate::New(GetGrNam)->GetFunction());
-  target->Set(String::NewSymbol("acquireRecordLock"),
-      FunctionTemplate::New(AcquireRecordLock)->GetFunction());
+void Initialize(Handle<Object> exports) {
+  NODE_SET_METHOD(exports, "getpwnam", GetPwNam);
+  NODE_SET_METHOD(exports, "getpwuid", GetPwUid);
+  NODE_SET_METHOD(exports, "getgrouplist", GetGroupList);
+  NODE_SET_METHOD(exports, "getgrnam", GetGrNam);
+  NODE_SET_METHOD(exports, "acquireRecordLock", AcquireRecordLock);
 }
 NODE_MODULE(posix, Initialize)
