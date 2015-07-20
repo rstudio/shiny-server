@@ -369,7 +369,7 @@ HttpProxy.prototype.proxyRequest = function (req, res, buffer) {
       if (!flushed) {
         req.pause();
         reverseProxy.once('drain', function () {
-          try { req.resume() }
+          try { if (req) req.resume() }
           catch (er) { console.error("req.resume error: %s", er.message) }
         });
 
