@@ -1,7 +1,7 @@
 project(node)
 
-set(NODEJS_VERSION 2.3.4)
-set(NODEJS_SHA1 97639c34ebb951a4655ce8b903fa38a3f0135396)
+set(NODEJS_VERSION 0.12.7)
+set(NODEJS_SHA1 6d59007212a964c7a4defc5520aedacdbcb008e1)
 
 include(ExternalProject)
 
@@ -25,7 +25,7 @@ get_filename_component(NODE_PREFIX
 # show "shiny-server" for our process.
 ExternalProject_Add(
   node
-  URL https://iojs.org/dist/v${NODEJS_VERSION}/iojs-v${NODEJS_VERSION}.tar.gz
+  URL http://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}.tar.gz
   URL_HASH SHA1=${NODEJS_SHA1}
   DOWNLOAD_DIR download
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}
