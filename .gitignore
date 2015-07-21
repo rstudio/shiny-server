@@ -8,3 +8,4 @@ external/node/node-*
 ext/
 src/launcher.h
 .vagrant
+packaging/fake_python

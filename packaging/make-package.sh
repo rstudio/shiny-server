@@ -16,6 +16,13 @@ then
 	fi
 fi
 
+if [ "$PYTHON" != "python" ]
+then
+	mkdir -p $(realpath .)/fake_python
+	ln -s $(which $PYTHON) ./fake_python/python
+	export PATH=$(realpath .)/fake_python:$PATH
+fi
+
 GENERATOR="$1"
 if [ "$GENERATOR" == "" ]
 then
