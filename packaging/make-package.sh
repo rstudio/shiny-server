@@ -59,7 +59,7 @@ PATH=$DIR/../bin:$PATH
 mkdir -p build
 cd build
 "$CMAKE" -DCMAKE_INSTALL_PREFIX=/opt -DPYTHON="$PYTHON" ../..
-make
+make VERBOSE=1
 
 # START: building in project root --------------------------
 pushd ../..
