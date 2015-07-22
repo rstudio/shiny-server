@@ -18,9 +18,9 @@ fi
 
 if [ "$PYTHON" != "python" ]
 then
-	mkdir -p $(realpath .)/fake_python
+	mkdir -p $(readlink --canonicalize .)/fake_python
 	ln -s $(which $PYTHON) ./fake_python/python
-	export PATH=$(realpath .)/fake_python:$PATH
+	export PATH=$(readlink --canonicalize  .)/fake_python:$PATH
 fi
 
 GENERATOR="$1"
