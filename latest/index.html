@@ -437,7 +437,7 @@ Choose from above solutions by number or cancel [1/2/c] (c): 2</code></pre>
 <p>You could alternatively use <code>curl</code> instead of <code>wget</code>, if <code>wget</code> is not available on your server.</p>
 <p>You'll also want to specify a secure default CRAN mirror in this same file. You can do that using the following code:</p>
 <pre><code>local({
-  r &lt;- getOptions(&quot;repos&quot;)
+  r &lt;- getOption(&quot;repos&quot;)
   r[&quot;CRAN&quot;] &lt;- &quot;https://cran.rstudio.com/&quot;
   options(repos=r)
 })</code></pre>
