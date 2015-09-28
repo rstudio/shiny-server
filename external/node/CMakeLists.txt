@@ -1,7 +1,7 @@
 project(node)
 
-set(NODEJS_VERSION 0.12.7)
-set(NODEJS_SHA1 6d59007212a964c7a4defc5520aedacdbcb008e1)
+set(NODEJS_VERSION 4.1.1)
+set(NODEJS_SHA1 1cf3bb6bc823df2f0f28a603e70d95936a3faee0)
 
 include(ExternalProject)
 
