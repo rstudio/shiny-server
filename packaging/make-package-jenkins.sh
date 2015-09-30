@@ -6,7 +6,7 @@ set -e
 
 cd "$(dirname $0)"
 
-if (scl -l | grep -q devtoolset-2);
+if (which scl && scl -l | grep -q devtoolset-2);
 then
 	scl enable devtoolset-2 ./make-package.sh "$@"
 else
