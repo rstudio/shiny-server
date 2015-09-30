@@ -10,6 +10,6 @@ if (which scl && scl -l | grep -q devtoolset-2);
 then
 	scl enable devtoolset-2 ./make-package.sh "$@"
 else
-	./make-package.sh "$@"
+	CC=gcc-4.8 CXX=g++-4.8 ./make-package.sh "$@"
 fi
 
