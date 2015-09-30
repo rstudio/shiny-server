@@ -19,7 +19,7 @@ fi
 if [ "$PYTHON" != "python" ]
 then
 	mkdir -p $(readlink --canonicalize .)/fake_python
-	ln -s $(which $PYTHON) ./fake_python/python
+	ln -sf $(which $PYTHON) ./fake_python/python
 	export PATH=$(readlink --canonicalize  .)/fake_python:$PATH
 fi
 
