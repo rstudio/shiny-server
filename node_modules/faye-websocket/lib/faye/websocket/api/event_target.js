@@ -26,4 +26,3 @@ var EventTarget = {
 };
 
 module.exports = EventTarget;
-

@@ -1,4 +1,5 @@
 #include <node.h>
+#include <v8.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
@@ -10,8 +11,10 @@
 using namespace node;
 using namespace v8;
 
-static Handle<Value> GetGroups(const Arguments& args) {
-  HandleScope scope;
+void GetGroups(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
+
   gid_t *groupList;
   int ngroups = 0, i = 0;
 
@@ -23,21 +26,24 @@ static Handle<Value> GetGroups(const Arguments& args) {
   ngroups = getgroups(ngroups, groupList);
   assert(ngroups != -1);
 
-  Local<Array> groupsArray = Array::New(ngroups);
+  Local<Array> groupsArray = Array::New(isolate, ngroups);
 
   for (i = 0; i < ngroups; i++) {
-    groupsArray->Set(i, Integer::New(groupList[i]));
+    groupsArray->Set(i, Integer::New(isolate, groupList[i]));
   }
 
-  return scope.Close(groupsArray);
+  args.GetReturnValue().Set(groupsArray);
+  return;
 }
 
-static Handle<Value> InitGroups(const Arguments& args) {
-  HandleScope scope;
+void InitGroups(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
 
   if (args.Length() < 1) {
-    return ThrowException(Exception::Error(
-          String::New("initgroups requires 1 argument")));
+    isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate, "initgroups requires 1 argument")));
+    return;
   }
 
   int err = 0, bufsize = 0;
@@ -50,28 +56,37 @@ static Handle<Value> InitGroups(const Arguments& args) {
   errno = 0;
   if ((err = getpwnam_r(*pwnam, &pwd, buffer, bufsize, &pwdp)) ||
       pwdp == NULL) {
-    if (errno == 0)
-      return ThrowException(Exception::Error(
-        String::New("initgroups user does not exist")));
-    else
-      return ThrowException(ErrnoException(errno, "getpwnam_r"));
+    if (errno == 0) {
+      isolate->ThrowException(Exception::Error(
+        String::NewFromUtf8(isolate, "initgroups user does not exist")));
+      return;
+    }
+    else {
+      isolate->ThrowException(UVException(isolate, errno, "getpwnam_r"));
+      return;
+    }
   }
 
   gid = pwd.pw_gid;
   if (args.Length() > 1 && args[1]->IsTrue()) {
-    if ((err = setgid(gid)) == -1)
-      return ThrowException(ErrnoException(errno, "setgid"));
+    if ((err = setgid(gid)) == -1) {
+      isolate->ThrowException(UVException(isolate, errno, "setgid"));
+      return;
+    }
   }
 
-  if ((err = initgroups(*pwnam, gid)) == -1)
-    return ThrowException(ErrnoException(errno, "initgroups"));
+  if ((err = initgroups(*pwnam, gid)) == -1) {
+    isolate->ThrowException(UVException(isolate, errno, "initgroups"));
+    return;
+  }
 
-  return Undefined();
+  args.GetReturnValue().Set(Undefined(isolate));
+  return;
 }
 
-extern "C" void init (Handle<Object> target) {
-  target->Set(String::NewSymbol("initgroups"), FunctionTemplate::New(InitGroups)->GetFunction());
-  target->Set(String::NewSymbol("getgroups"), FunctionTemplate::New(GetGroups)->GetFunction());
+void Initialize(Handle<Object> exports) {
+  NODE_SET_METHOD(exports, "initgroups", InitGroups);
+  NODE_SET_METHOD(exports, "getgroups", GetGroups);
 }
 
-NODE_MODULE(unixgroups, init);
+NODE_MODULE(unixgroups, Initialize);

@@ -16,6 +16,13 @@ then
 	fi
 fi
 
+if [ "$PYTHON" != "python" ]
+then
+	mkdir -p $(readlink --canonicalize .)/fake_python
+	ln -sf $(which $PYTHON) ./fake_python/python
+	export PATH=$(readlink --canonicalize  .)/fake_python:$PATH
+fi
+
 GENERATOR="$1"
 if [ "$GENERATOR" == "" ]
 then
