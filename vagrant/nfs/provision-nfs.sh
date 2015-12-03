@@ -4,7 +4,7 @@
 useradd -r -m shiny
 mkdir /home/shiny/ShinyApps/
 chown -R shiny:shiny /home/shiny
-chmod 700 -R /home/shiny
+chmod 755 -R /home/shiny
 
 # install NFS server and export user home directories
 apt-get install -y nfs-kernel-server
