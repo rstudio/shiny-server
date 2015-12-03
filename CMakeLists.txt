@@ -45,6 +45,7 @@ install(DIRECTORY assets
                   manual.test
                   node_modules
                   R
+                  scripts
                   templates
                   test
                   tools

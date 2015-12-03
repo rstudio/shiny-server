@@ -22,8 +22,16 @@ local({
   SHINY_SERVER_VERSION=input[5],
   WORKER_ID=input[6],
   SHINY_MODE=input[7],
-  RSTUDIO_PANDOC=input[8])
+  RSTUDIO_PANDOC=input[8],
+  LOG_FILE=input[9])
   close(fd)
+
+  if (!identical(Sys.getenv('LOG_FILE'), "")){
+    # Redirect stderr to the given path.
+    message("Redirecting to ", Sys.getenv("LOG_FILE"))
+    errFile <- file(Sys.getenv('LOG_FILE'), "a")
+    sink(errFile, type="message")
+  }
 
   MIN_R_VERSION <- "2.15.1"
   MIN_SHINY_VERSION <- "0.7.0"
