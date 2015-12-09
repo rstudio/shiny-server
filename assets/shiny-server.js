@@ -7,7 +7,7 @@
       (function() {
         var loc = location.pathname;
         loc = loc.replace(/\/$/, '');
-        var sockjsUrl = loc + "/__sockjs__/";
+        var sockjsUrl = loc + "/__sockjs__/" + 'i=1234';
 
         exports.url = sockjsUrl;
 
@@ -23,7 +23,14 @@
           // relative difference between the above two dirs, we need to add 
           // something to each, like `/whatever/`, then we'd get '../b'.
           // This is why we append `__sockjs__` to each path before comparing.
-          function getRelativePath(from, to) {
+          function getRelativePath(from, to, includeLast) {
+
+						// The last element would otherwise get trimmed off, if you want it,
+            // add some garbage to the end that can be trimmed.
+            if (includeLast){
+              to += '/a';
+            }
+
             function trim(arr) {
               var start = 0;
               for (; start < arr.length; start++) {
@@ -64,7 +71,7 @@
           Shiny.createSocket = function() {
             try {
               if (window.parent.ShinyServer && window.parent.ShinyServer.multiplexer) {
-                var relURL = getRelativePath(window.parent.ShinyServer.url, sockjsUrl);
+                var relURL = getRelativePath(window.parent.ShinyServer.url, sockjsUrl, true);
                 return window.parent.ShinyServer.multiplexer.open(relURL);
               }
               log("Couldn't get multiplexer: multiplexer not found in parent");
