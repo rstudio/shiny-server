@@ -258,7 +258,9 @@
     // event is received
     this._pendingChannels = [];
     // A list of functions that fire when our connection goes away.
-    this.onclose = []
+    this.onclose = [];
+		// The ID assigned to this connection if we need to reconnect.
+		this._robustId = null;
 
     var self = this;
     this._conn.onopen = function() {
@@ -290,7 +292,7 @@
       }
     };
     this._conn.onmessage = function(e) {
-      var msg = parseMultiplexData(e.data);
+      var msg = self._parseMultiplexData(e.data);
       if (!msg) {
         log("Invalid multiplex packet received from server");
         self._conn.close();
@@ -312,6 +314,47 @@
         channel.onmessage({data: payload});
       }
     };
+		this._parseMultiplexData = function(msg) {
+			try {
+				var m = /^(\d+)\|(m|o|c|i)\|([\s\S]*)$/m.exec(msg);
+				if (!m)
+					return null;
+				msg = {
+					id: m[1],
+					method: m[2],
+					payload: m[3]
+				};
+
+				switch (msg.method) {
+					case 'm':
+						break;
+					case 'i':
+						self._robustId = msg.payload;
+						break;
+					case 'o':
+						if (msg.payload.length === 0)
+							return null;
+						break;
+					case 'c':
+						try {
+							msg.payload = JSON.parse(msg.payload);
+						} catch(e) {
+							return null;
+						}
+						break;
+					default:
+						return null;
+				}
+
+				return msg;
+
+			} catch(e) {
+				if (console && console.log)
+					console.log('Error parsing multiplex data: ' + e);
+				return null;
+			}
+		}
+
   }
   MultiplexClient.prototype.open = function(url) {
     var channel = new MultiplexClientChannel(this, this._nextId++ + "",
@@ -348,6 +391,7 @@
 
   function MultiplexClientChannel(owner, id, conn, url) {
     this._owner = owner;
+		this._robustId = null;
     this.id = id;
     this.conn = conn;
     this.url = url;
@@ -403,41 +447,5 @@
   }
   function formatCloseEvent(id, code, reason) {
     return id + '|c|' + JSON.stringify({code: code, reason: reason});
-  }
-  function parseMultiplexData(msg) {
-    try {
-      var m = /^(\d+)\|(m|o|c)\|([\s\S]*)$/m.exec(msg);
-      if (!m)
-        return null;
-      msg = {
-        id: m[1],
-        method: m[2],
-        payload: m[3]
-      }
-
-      switch (msg.method) {
-        case 'm':
-          break;
-        case 'o':
-          if (msg.payload.length === 0)
-            return null;
-          break;
-        case 'c':
-          try {
-            msg.payload = JSON.parse(msg.payload);
-          } catch(e) {
-            return null;
-          }
-          break;
-        default:
-          return null;
-      }
-
-      return msg;
-
-    } catch(e) {
-      logger.debug('Error parsing multiplex data: ' + e);
-      return null;
-    }
   }
 })(jQuery);
