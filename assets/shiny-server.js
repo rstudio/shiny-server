@@ -277,12 +277,14 @@
     this._pendingChannels = [];
     // A list of functions that fire when our connection goes away.
     this.onclose = [];
+    // The function to call to clean up any reconnect dialogs that might be open.
+    this._clearReconnect = function(){};
 
     var self = this;
 	
     this.getConn = function(){
       return self._conn;
-    }
+    };
 
     // The underlying SockJS connection. At this point it is not likely to
     // be opened yet.
@@ -291,6 +293,7 @@
 console.log("SETTING GLOBAL!");
 window.conn = self._conn;
       log("Connection opened. " + window.location.href);
+      self._clearReconnect();
       var channel;
       while ((channel = self._pendingChannels.shift())) {
         // Be sure to check readyState so we don't open connections for
@@ -303,17 +306,58 @@ window.conn = self._conn;
       }
     };
 
+    // @param reconnect If true, show the reconnecting dialog. If false, show 
+    // disconnected
+    this.startDisconnect = function(disconnectCB){
+      $('body').addClass('reconnecting');
+
+      var timeout = 15;
+      var reconnectingContent = '<button type="button" id="ss-reconnect-btn" class="ss-dialog-button">Reconnect ('+timeout+')</button><span class="ss-dialog-text">Trouble connecting to server</span>';
+      $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
+      $('#ss-reconnect-btn').click(function(){
+        $('ss-reconnect-btn').prop('disabled', true);
+        log("Attempting to reopen.");
+        self._openConnection();
+      });
+
+      var countdown = setInterval(function(){
+        timeout--;
+        $('#ss-reconnect-btn').html('Reconnect (' + timeout + ')');
+        if (timeout <= 0){
+          clearInterval(countdown);
+          self._doClose();
+          $('body').removeClass('reconnecting');
+
+          $('#ss-connect-dialog').html('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
+          $('#ss-reload-button').click(function(){
+            location.reload();
+          });
+        }
+      }, 1000);
+
+      self._clearReconnect = function(){
+        clearInterval(countdown);
+        $('body').removeClass('reconnecting');
+        $('#ss-connect-dialog').remove();
+        $('#ss-gray-out').remove();
+        self._clearReconnect = function() {};
+      };
+    };
+
     this.onConnClose = function(e) {
       log("Connection closed. Info: " + JSON.stringify(e));
       debug("SockJS connection closed");
 
-			// Try to reopen.
-      log("Attempting to reopen.");
+      //TODO: if this feature is enabled
       //FIXME: this should be only on unclean closes, and ones not initiated by 
       // the server intentionally.
-      self._openConnection();
-return;
+      self.startDisconnect();
+      return;
 
+      self._doClose();
+    }
+
+    this._doClose = function(){
       // If the SockJS connection is terminated from the other end (or due
       // to loss of connectivity or whatever) then we can notify all the
       // active channels that they are closed too.
@@ -402,7 +446,7 @@ return;
 					console.log('Error parsing multiplex data: ' + e);
 				return null;
 			}
-		}
+		};
 
   }
   MultiplexClient.prototype.open = function(url) {
