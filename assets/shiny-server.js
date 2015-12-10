@@ -1,5 +1,16 @@
 
 (function( $ ) {
+  function generateId(size){
+		var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		var id = '';
+		for (var i=0; i < size; i++) {
+			var rnum = Math.floor(Math.random() * chars.length);
+			id += chars.substring(rnum,rnum+1);
+		}
+		return id;
+  }
+  var robustId = generateId(18);
+
   var exports = window.ShinyServer = window.ShinyServer || {};
   exports.debugging = false;
   $(function() {
@@ -7,7 +18,7 @@
       (function() {
         var loc = location.pathname;
         loc = loc.replace(/\/$/, '');
-        var sockjsUrl = loc + "/__sockjs__/" + 'i=1234';
+        var sockjsUrl = loc + "/__sockjs__/i=" + robustId;
 
         exports.url = sockjsUrl;
 
@@ -216,10 +227,7 @@
           store["shiny.whitelist"] = JSON.stringify(whitelist);
         }
 
-        var conn = new SockJS(sockjsUrl,
-          null,{protocols_whitelist: whitelist});
-
-        exports.multiplexer = new MultiplexClient(conn);
+        exports.multiplexer = new MultiplexClient(sockjsUrl, whitelist);
 
         Shiny.createSocket = function() {
           return exports.multiplexer.open("");
@@ -251,10 +259,13 @@
   // closed when all of the channels close. This means you can't start with
   // zero channels, open a channel, close that channel, and then open
   // another channel.
-  function MultiplexClient(conn) {
-    // The underlying SockJS connection. At this point it is not likely to
-    // be opened yet.
-    this._conn = conn;
+  function MultiplexClient(sockjsUrl, whitelist) {
+		// The URL target for our SockJS connection(s)
+		this._sockjsUrl = sockjsUrl;
+		// The whitelisted SockJS protocols
+		this._whitelist = whitelist;
+		// Placeholder for our SockJS connection, once we open it.
+    this._conn = null;
     // A table of all active channels.
     // Key: id, value: MultiplexClientChannel
     this._channels = {};
@@ -266,11 +277,19 @@
     this._pendingChannels = [];
     // A list of functions that fire when our connection goes away.
     this.onclose = [];
-		// The ID assigned to this connection if we need to reconnect.
-		this._robustId = null;
 
     var self = this;
-    this._conn.onopen = function() {
+	
+    this.getConn = function(){
+      return self._conn;
+    }
+
+    // The underlying SockJS connection. At this point it is not likely to
+    // be opened yet.
+    this.onConnOpen = function() {
+//FIXME:::
+console.log("SETTING GLOBAL!");
+window.conn = self._conn;
       log("Connection opened. " + window.location.href);
       var channel;
       while ((channel = self._pendingChannels.shift())) {
@@ -283,9 +302,18 @@
         }
       }
     };
-    this._conn.onclose = function(e) {
+
+    this.onConnClose = function(e) {
       log("Connection closed. Info: " + JSON.stringify(e));
       debug("SockJS connection closed");
+
+			// Try to reopen.
+      log("Attempting to reopen.");
+      //FIXME: this should be only on unclean closes, and ones not initiated by 
+      // the server intentionally.
+      self._openConnection();
+return;
+
       // If the SockJS connection is terminated from the other end (or due
       // to loss of connectivity or whatever) then we can notify all the
       // active channels that they are closed too.
@@ -298,7 +326,7 @@
         self.onclose[i]();
       }
     };
-    this._conn.onmessage = function(e) {
+    this.onConnMessage = function(e) {
       var msg = self._parseMultiplexData(e.data);
       if (!msg) {
         log("Invalid multiplex packet received from server");
@@ -321,6 +349,23 @@
         channel.onmessage({data: payload});
       }
     };
+
+    // Open a new SockJS connection and assign it.
+    this._openConnection = function(){
+      var conn = new SockJS(self._sockjsUrl,
+        null,{protocols_whitelist: self._whitelist});
+      conn.onopen = self.onConnOpen;
+      conn.onclose = self.onConnClose;
+      conn.onmessage = self.onConnMessage;
+
+      self._conn = conn;
+    };
+
+    // Open a connection now.
+		this._openConnection();
+
+
+
 		this._parseMultiplexData = function(msg) {
 			try {
 				var m = /^(\d+)\|(m|o|c|i)\|([\s\S]*)$/m.exec(msg);
@@ -334,9 +379,6 @@
 
 				switch (msg.method) {
 					case 'm':
-						break;
-					case 'i':
-						self._robustId = msg.payload;
 						break;
 					case 'o':
 						if (msg.payload.length === 0)
@@ -365,7 +407,7 @@
   }
   MultiplexClient.prototype.open = function(url) {
     var channel = new MultiplexClientChannel(this, this._nextId++ + "",
-                                             this._conn, url);
+                                             url);
     this._channels[channel.id] = channel;
     this._channelCount++;
 
@@ -396,11 +438,9 @@
     }
   };
 
-  function MultiplexClientChannel(owner, id, conn, url) {
+  function MultiplexClientChannel(owner, id, url) {
     this._owner = owner;
-		this._robustId = null;
     this.id = id;
-    this.conn = conn;
     this.url = url;
     this.readyState = 0;
     this.onopen = function() {};
@@ -413,22 +453,22 @@
 
     //var relURL = getRelativePath(parentURL, this.url)
     
-    this.conn.send(formatOpenEvent(this.id, this.url));
+    this._owner.getConn().send(formatOpenEvent(this.id, this.url));
     this.onopen();
   };
   MultiplexClientChannel.prototype.send = function(data) {
     if (this.readyState === 0)
       throw new Error("Invalid state: can't send when readyState is 0");
     if (this.readyState === 1)
-      this.conn.send(formatMessage(this.id, data));
+      this._owner.getConn().send(formatMessage(this.id, data));
   };
   MultiplexClientChannel.prototype.close = function(code, reason) {
     if (this.readyState >= 2)
       return;
     debug("Close channel " + this.id);
-    if (this.conn.readyState === 1) {
+    if (this._owner.getConn().readyState === 1) {
       // Is the underlying connection open? Send a close message.
-      this.conn.send(formatCloseEvent(this.id, code, reason));
+      this._owner.getConn().send(formatCloseEvent(this.id, code, reason));
     }
     this._destroy(code, reason);
   };
