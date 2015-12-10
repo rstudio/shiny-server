@@ -286,6 +286,8 @@
     // No an updated value like readyState, but rather a Boolean which will be set
     // true when the server has indicated that this connection can't ever be resumed.
     this._diconnected = false;
+    // True when the re/disconnect dialog is visible
+    this._disconnectDialog = false;
 
     var self = this;
 
@@ -301,9 +303,6 @@
     // be opened yet.
     this.onConnOpen = function() {
       self._first = false;
-//FIXME:::
-console.log("SETTING GLOBAL!");
-window.conn = self._conn;
       log("Connection opened. " + window.location.href);
       self._clearReconnect();
       var channel;
@@ -327,12 +326,14 @@ window.conn = self._conn;
     // @param reconnect If true, show the reconnecting dialog. If false, show 
     // disconnected
     this.startDisconnect = function(){
+      self._disconnectDialog = true;
       $('body').addClass('reconnecting');
 
       var timeout = 15;
       var reconnectingContent = '<button type="button" id="ss-reconnect-btn" class="ss-dialog-button">Reconnect ('+timeout+')</button><span class="ss-dialog-text">Trouble connecting to server</span>';
       $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
       $('#ss-reconnect-btn').click(function(){
+        timeout = 15;
         $('ss-reconnect-btn').prop('disabled', true);
         log("Attempting to reopen.");
         self._openConnection();
@@ -359,6 +360,7 @@ window.conn = self._conn;
       }
 
       self._clearReconnect = function(){
+        self._disconnectDialog = false;
         clearInterval(countdown);
         $('body').removeClass('reconnecting');
         $('#ss-connect-dialog').remove();
@@ -370,6 +372,13 @@ window.conn = self._conn;
     this.onConnClose = function(e) {
       log("Connection closed. Info: " + JSON.stringify(e));
       debug("SockJS connection closed");
+
+      if (self._disconnectDialog){
+        // This was a failed attempt to reconnect
+        alert(e.reason);
+        $('#ss-reconnect-button').prop('disabled', false);
+        return;
+      }
 
       // If the server intentionally closed the connection, don't attempt to come back.
       if (e && e.wasClean === true){
