@@ -371,12 +371,16 @@ window.conn = self._conn;
       log("Connection closed. Info: " + JSON.stringify(e));
       debug("SockJS connection closed");
 
-      //TODO: if this feature is enabled
-      //FIXME: this should be only on unclean closes, and ones not initiated by 
+      // If the server intentionally closed the connection, don't attempt to come back.
+      if (e && e.wasClean === true){
+        self._disconnected = true;
+      }
+
       // the server intentionally.
       self.startDisconnect();
       return;
 
+      //TODO: if this feature isn't enabled
       self._doClose();
     };
 
