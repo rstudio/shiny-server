@@ -289,6 +289,8 @@
     // True when the re/disconnect dialog is visible
     this._disconnectDialog = false;
 
+    this._autoReconnect = {{{reconnect}}};
+
     var self = this;
 
     this.send = function(msg){
@@ -385,12 +387,13 @@
         self._disconnected = true;
       }
 
-      // the server intentionally.
-      self.startDisconnect();
-      return;
-
-      //TODO: if this feature isn't enabled
-      self._doClose();
+      if (self._autoReconnect) {
+        // the server intentionally.
+        self.startDisconnect();
+      } else {
+        self._doClose();
+        $('<div id="ss-gray-out"></div>').appendTo('body');
+      }
     };
 
     this._doClose = function(){
