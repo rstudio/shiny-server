@@ -279,11 +279,17 @@
     this.onclose = [];
     // The function to call to clean up any reconnect dialogs that might be open.
     this._clearReconnect = function(){};
+    // Backlog of messages we need to send when we have a connection.
+    this._buffer = [];
 
     var self = this;
-	
-    this.getConn = function(){
-      return self._conn;
+
+    this.send = function(msg){
+      if (this._conn.readyState === 1){
+        this._conn.send(msg);
+      } else {
+        this._buffer.push(msg);
+      }
     };
 
     // The underlying SockJS connection. At this point it is not likely to
@@ -303,6 +309,12 @@ window.conn = self._conn;
         } else {
           debug("NOT opening channel " + channel.id);
         }
+      }
+      
+      // Send any buffered messages.
+      var msg;
+      while ((msg = self._buffer.pop())){
+        self._conn.send(msg);
       }
     };
 
@@ -497,14 +509,14 @@ window.conn = self._conn;
 
     //var relURL = getRelativePath(parentURL, this.url)
     
-    this._owner.getConn().send(formatOpenEvent(this.id, this.url));
+    this._owner.send(formatOpenEvent(this.id, this.url));
     this.onopen();
   };
   MultiplexClientChannel.prototype.send = function(data) {
     if (this.readyState === 0)
       throw new Error("Invalid state: can't send when readyState is 0");
     if (this.readyState === 1)
-      this._owner.getConn().send(formatMessage(this.id, data));
+      this._owner.send(formatMessage(this.id, data));
   };
   MultiplexClientChannel.prototype.close = function(code, reason) {
     if (this.readyState >= 2)
@@ -512,7 +524,7 @@ window.conn = self._conn;
     debug("Close channel " + this.id);
     if (this._owner.getConn().readyState === 1) {
       // Is the underlying connection open? Send a close message.
-      this._owner.getConn().send(formatCloseEvent(this.id, code, reason));
+      this._owner.send(formatCloseEvent(this.id, code, reason));
     }
     this._destroy(code, reason);
   };
@@ -528,7 +540,7 @@ window.conn = self._conn;
         self.onclose();
       }, 0);
     }
-  }
+  };
 
   function formatMessage(id, message) {
     return id + '|m|' + message;
