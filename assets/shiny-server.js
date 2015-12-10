@@ -18,7 +18,7 @@
       (function() {
         var loc = location.pathname;
         loc = loc.replace(/\/$/, '');
-        var sockjsUrl = loc + "/__sockjs__/i=" + robustId;
+        var sockjsUrl = loc + "/__sockjs__/n=" + robustId;
 
         exports.url = sockjsUrl;
 
@@ -281,6 +281,11 @@
     this._clearReconnect = function(){};
     // Backlog of messages we need to send when we have a connection.
     this._buffer = [];
+    // Whether or not this is our first connection.
+    this._first = true;
+    // No an updated value like readyState, but rather a Boolean which will be set
+    // true when the server has indicated that this connection can't ever be resumed.
+    this._diconnected = false;
 
     var self = this;
 
@@ -295,6 +300,7 @@
     // The underlying SockJS connection. At this point it is not likely to
     // be opened yet.
     this.onConnOpen = function() {
+      self._first = false;
 //FIXME:::
 console.log("SETTING GLOBAL!");
 window.conn = self._conn;
@@ -320,7 +326,7 @@ window.conn = self._conn;
 
     // @param reconnect If true, show the reconnecting dialog. If false, show 
     // disconnected
-    this.startDisconnect = function(disconnectCB){
+    this.startDisconnect = function(){
       $('body').addClass('reconnecting');
 
       var timeout = 15;
@@ -334,8 +340,13 @@ window.conn = self._conn;
 
       var countdown = setInterval(function(){
         timeout--;
+        updateDialog(timeout);
+      }, 1000);
+      updateDialog(timeout); //Update immediately
+
+      function updateDialog(timeout){
         $('#ss-reconnect-btn').html('Reconnect (' + timeout + ')');
-        if (timeout <= 0){
+        if (timeout <= 0 || self._disconnected){
           clearInterval(countdown);
           self._doClose();
           $('body').removeClass('reconnecting');
@@ -345,7 +356,7 @@ window.conn = self._conn;
             location.reload();
           });
         }
-      }, 1000);
+      }
 
       self._clearReconnect = function(){
         clearInterval(countdown);
@@ -367,7 +378,7 @@ window.conn = self._conn;
       return;
 
       self._doClose();
-    }
+    };
 
     this._doClose = function(){
       // If the SockJS connection is terminated from the other end (or due
@@ -408,7 +419,12 @@ window.conn = self._conn;
 
     // Open a new SockJS connection and assign it.
     this._openConnection = function(){
-      var conn = new SockJS(self._sockjsUrl,
+      var url = self._sockjsUrl;
+      if (!self._first){
+        // Communicate to the server that we're intending to re-use an existing ID.
+        url = url.replace(/\/n=/, '/o=');
+      }
+      var conn = new SockJS(url,
         null,{protocols_whitelist: self._whitelist});
       conn.onopen = self.onConnOpen;
       conn.onclose = self.onConnClose;
@@ -420,11 +436,9 @@ window.conn = self._conn;
     // Open a connection now.
 		this._openConnection();
 
-
-
 		this._parseMultiplexData = function(msg) {
 			try {
-				var m = /^(\d+)\|(m|o|c|i)\|([\s\S]*)$/m.exec(msg);
+				var m = /^(\d+)\|(m|o|c|r)\|([\s\S]*)$/m.exec(msg);
 				if (!m)
 					return null;
 				msg = {
@@ -447,6 +461,12 @@ window.conn = self._conn;
 							return null;
 						}
 						break;
+          case 'r':
+            self._disconnected = true;
+            if (msg.payload.length > 0){
+              alert(msg.payload);
+            }
+            break;
 					default:
 						return null;
 				}
