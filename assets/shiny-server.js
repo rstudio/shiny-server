@@ -335,7 +335,6 @@
       var reconnectingContent = '<button type="button" id="ss-reconnect-btn" class="ss-dialog-button">Reconnect ('+timeout+')</button><span class="ss-dialog-text">Trouble connecting to server</span>';
       $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
       $('#ss-reconnect-btn').click(function(){
-        timeout = 15;
         $('ss-reconnect-btn').prop('disabled', true);
         log("Attempting to reopen.");
         self._openConnection();
