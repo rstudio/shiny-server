@@ -313,7 +313,7 @@ window.conn = self._conn;
       
       // Send any buffered messages.
       var msg;
-      while ((msg = self._buffer.pop())){
+      while ((msg = self._buffer.shift())){
         self._conn.send(msg);
       }
     };
