@@ -1,13 +1,13 @@
 
 (function( $ ) {
   function generateId(size){
-		var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-		var id = '';
-		for (var i=0; i < size; i++) {
-			var rnum = Math.floor(Math.random() * chars.length);
-			id += chars.substring(rnum,rnum+1);
-		}
-		return id;
+    var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    var id = '';
+    for (var i=0; i < size; i++) {
+      var rnum = Math.floor(Math.random() * chars.length);
+      id += chars.substring(rnum,rnum+1);
+    }
+    return id;
   }
   var robustId = generateId(18);
 
@@ -36,7 +36,7 @@
           // This is why we append `__sockjs__` to each path before comparing.
           function getRelativePath(from, to, includeLast) {
 
-						// The last element would otherwise get trimmed off, if you want it,
+            // The last element would otherwise get trimmed off, if you want it,
             // add some garbage to the end that can be trimmed.
             if (includeLast){
               to += '/a';
@@ -134,7 +134,7 @@
             });
           }
         } 
-  
+
         if (!whitelist){
           whitelist = availableOptions;
         }
@@ -260,11 +260,11 @@
   // zero channels, open a channel, close that channel, and then open
   // another channel.
   function MultiplexClient(sockjsUrl, whitelist) {
-		// The URL target for our SockJS connection(s)
-		this._sockjsUrl = sockjsUrl;
-		// The whitelisted SockJS protocols
-		this._whitelist = whitelist;
-		// Placeholder for our SockJS connection, once we open it.
+    // The URL target for our SockJS connection(s)
+    this._sockjsUrl = sockjsUrl;
+    // The whitelisted SockJS protocols
+    this._whitelist = whitelist;
+    // Placeholder for our SockJS connection, once we open it.
     this._conn = null;
     // A table of all active channels.
     // Key: id, value: MultiplexClientChannel
@@ -317,7 +317,7 @@
           debug("NOT opening channel " + channel.id);
         }
       }
-      
+
       // Send any buffered messages.
       var msg;
       while ((msg = self._buffer.shift())){
@@ -543,7 +543,7 @@
     this.readyState = 1;
 
     //var relURL = getRelativePath(parentURL, this.url)
-    
+
     this._owner.send(formatOpenEvent(this.id, this.url));
     this.onopen();
   };
