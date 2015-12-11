@@ -327,9 +327,9 @@
 
     // @param reconnect If true, show the reconnecting dialog. If false, show 
     // disconnected
-    this.startDisconnect = function(){
+    this.startReconnect = function(){
       self._disconnectDialog = true;
-      $('body').addClass('reconnecting');
+      $('body').addClass('ss-reconnecting');
 
       var timeout = 15;
       var reconnectingContent = '<button type="button" id="ss-reconnect-btn" class="ss-dialog-button">Reconnect ('+timeout+')</button><span class="ss-dialog-text">Trouble connecting to server</span>';
@@ -351,7 +351,7 @@
         if (timeout <= 0 || self._disconnected){
           clearInterval(countdown);
           self._doClose();
-          $('body').removeClass('reconnecting');
+          $('body').removeClass('ss-reconnecting');
 
           $('#ss-connect-dialog').html('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
           $('#ss-reload-button').click(function(){
@@ -363,7 +363,7 @@
       self._clearReconnect = function(){
         self._disconnectDialog = false;
         clearInterval(countdown);
-        $('body').removeClass('reconnecting');
+        $('body').removeClass('ss-reconnecting');
         $('#ss-connect-dialog').remove();
         $('#ss-gray-out').remove();
         self._clearReconnect = function() {};
@@ -374,6 +374,8 @@
       log("Connection closed. Info: " + JSON.stringify(e));
       debug("SockJS connection closed");
 
+      // SockJS fires a close event if a SockJS connection was not able to
+      // successfully connect. i.e. it can't reach the server.
       if (self._disconnectDialog){
         // This was a failed attempt to reconnect
         alert(e.reason);
@@ -387,8 +389,7 @@
       }
 
       if (self._autoReconnect) {
-        // the server intentionally.
-        self.startDisconnect();
+        self.startReconnect();
       } else {
         self._doClose();
         $('<div id="ss-gray-out"></div>').appendTo('body');
@@ -429,6 +430,11 @@
         self._conn.close();
       } else if (method === "m") {
         channel.onmessage({data: payload});
+      } else if (method === "r") {
+        self._disconnected = true;
+        if (msg.payload.length > 0){
+          alert(msg.payload);
+        }
       }
     };
 
@@ -477,10 +483,6 @@
             }
             break;
           case 'r':
-            self._disconnected = true;
-            if (msg.payload.length > 0){
-              alert(msg.payload);
-            }
             break;
           default:
             return null;
@@ -489,8 +491,7 @@
         return msg;
 
       } catch(e) {
-        if (console && console.log)
-          console.log('Error parsing multiplex data: ' + e);
+        log('Error parsing multiplex data: ' + e);
         return null;
       }
     };
