@@ -449,51 +449,51 @@
     };
 
     // Open a connection now.
-		this._openConnection();
+    this._openConnection();
 
-		this._parseMultiplexData = function(msg) {
-			try {
-				var m = /^(\d+)\|(m|o|c|r)\|([\s\S]*)$/m.exec(msg);
-				if (!m)
-					return null;
-				msg = {
-					id: m[1],
-					method: m[2],
-					payload: m[3]
-				};
+    this._parseMultiplexData = function(msg) {
+      try {
+        var m = /^(\d+)\|(m|o|c|r)\|([\s\S]*)$/m.exec(msg);
+        if (!m)
+          return null;
+        msg = {
+          id: m[1],
+          method: m[2],
+          payload: m[3]
+        };
 
-				switch (msg.method) {
-					case 'm':
-						break;
-					case 'o':
-						if (msg.payload.length === 0)
-							return null;
-						break;
-					case 'c':
-						try {
-							msg.payload = JSON.parse(msg.payload);
-						} catch(e) {
-							return null;
-						}
-						break;
+        switch (msg.method) {
+          case 'm':
+            break;
+          case 'o':
+            if (msg.payload.length === 0)
+              return null;
+            break;
+          case 'c':
+            try {
+              msg.payload = JSON.parse(msg.payload);
+            } catch(e) {
+              return null;
+            }
+            break;
           case 'r':
             self._disconnected = true;
             if (msg.payload.length > 0){
               alert(msg.payload);
             }
             break;
-					default:
-						return null;
-				}
+          default:
+            return null;
+        }
 
-				return msg;
+        return msg;
 
-			} catch(e) {
-				if (console && console.log)
-					console.log('Error parsing multiplex data: ' + e);
-				return null;
-			}
-		};
+      } catch(e) {
+        if (console && console.log)
+          console.log('Error parsing multiplex data: ' + e);
+        return null;
+      }
+    };
 
   }
   MultiplexClient.prototype.open = function(url) {
