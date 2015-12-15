@@ -148,7 +148,7 @@
         // Has the side-effect of defining values for both "networkSelector"
         // and "networkOptions".
         function buildNetworkSelector() {
-          networkSelector = $('<div style="top: 50%; left: 50%; position: absolute;">' + 
+          networkSelector = $('<div style="top: 50%; left: 50%; position: absolute; z-index: 99999;">' + 
                            '<div style="position: relative; width: 300px; margin-left: -150px; padding: .5em 1em 0 1em; height: 400px; margin-top: -190px; background-color: #FAFAFA; border: 1px solid #CCC; font.size: 1.2em;">'+
                            '<h3>Select Network Methods</h3>' +
                            '<div id="ss-net-opts"></div>' + 
