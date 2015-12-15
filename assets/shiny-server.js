@@ -1,5 +1,16 @@
 
 (function( $ ) {
+  function generateId(size){
+    var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    var id = '';
+    for (var i=0; i < size; i++) {
+      var rnum = Math.floor(Math.random() * chars.length);
+      id += chars.substring(rnum,rnum+1);
+    }
+    return id;
+  }
+  var robustId = generateId(18);
+
   var exports = window.ShinyServer = window.ShinyServer || {};
   exports.debugging = false;
   $(function() {
@@ -7,7 +18,7 @@
       (function() {
         var loc = location.pathname;
         loc = loc.replace(/\/$/, '');
-        var sockjsUrl = loc + "/__sockjs__/";
+        var sockjsUrl = loc + "/__sockjs__/n=" + robustId;
 
         exports.url = sockjsUrl;
 
@@ -23,7 +34,14 @@
           // relative difference between the above two dirs, we need to add 
           // something to each, like `/whatever/`, then we'd get '../b'.
           // This is why we append `__sockjs__` to each path before comparing.
-          function getRelativePath(from, to) {
+          function getRelativePath(from, to, includeLast) {
+
+            // The last element would otherwise get trimmed off, if you want it,
+            // add some garbage to the end that can be trimmed.
+            if (includeLast){
+              to += '/a';
+            }
+
             function trim(arr) {
               var start = 0;
               for (; start < arr.length; start++) {
@@ -64,7 +82,7 @@
           Shiny.createSocket = function() {
             try {
               if (window.parent.ShinyServer && window.parent.ShinyServer.multiplexer) {
-                var relURL = getRelativePath(window.parent.ShinyServer.url, sockjsUrl);
+                var relURL = getRelativePath(window.parent.ShinyServer.url, sockjsUrl, true);
                 return window.parent.ShinyServer.multiplexer.open(relURL);
               }
               log("Couldn't get multiplexer: multiplexer not found in parent");
@@ -116,7 +134,7 @@
             });
           }
         } 
-  
+
         if (!whitelist){
           whitelist = availableOptions;
         }
@@ -130,7 +148,7 @@
         // Has the side-effect of defining values for both "networkSelector"
         // and "networkOptions".
         function buildNetworkSelector() {
-          networkSelector = $('<div style="top: 50%; left: 50%; position: absolute;">' + 
+          networkSelector = $('<div style="top: 50%; left: 50%; position: absolute; z-index: 99999;">' + 
                            '<div style="position: relative; width: 300px; margin-left: -150px; padding: .5em 1em 0 1em; height: 400px; margin-top: -190px; background-color: #FAFAFA; border: 1px solid #CCC; font.size: 1.2em;">'+
                            '<h3>Select Network Methods</h3>' +
                            '<div id="ss-net-opts"></div>' + 
@@ -209,10 +227,7 @@
           store["shiny.whitelist"] = JSON.stringify(whitelist);
         }
 
-        var conn = new SockJS(sockjsUrl,
-          null,{protocols_whitelist: whitelist});
-
-        exports.multiplexer = new MultiplexClient(conn);
+        exports.multiplexer = new MultiplexClient(sockjsUrl, whitelist);
 
         Shiny.createSocket = function() {
           return exports.multiplexer.open("");
@@ -244,10 +259,13 @@
   // closed when all of the channels close. This means you can't start with
   // zero channels, open a channel, close that channel, and then open
   // another channel.
-  function MultiplexClient(conn) {
-    // The underlying SockJS connection. At this point it is not likely to
-    // be opened yet.
-    this._conn = conn;
+  function MultiplexClient(sockjsUrl, whitelist) {
+    // The URL target for our SockJS connection(s)
+    this._sockjsUrl = sockjsUrl;
+    // The whitelisted SockJS protocols
+    this._whitelist = whitelist;
+    // Placeholder for our SockJS connection, once we open it.
+    this._conn = null;
     // A table of all active channels.
     // Key: id, value: MultiplexClientChannel
     this._channels = {};
@@ -258,11 +276,37 @@
     // event is received
     this._pendingChannels = [];
     // A list of functions that fire when our connection goes away.
-    this.onclose = []
+    this.onclose = [];
+    // The function to call to clean up any reconnect dialogs that might be open.
+    this._clearReconnect = function(){};
+    // Backlog of messages we need to send when we have a connection.
+    this._buffer = [];
+    // Whether or not this is our first connection.
+    this._first = true;
+    // No an updated value like readyState, but rather a Boolean which will be set
+    // true when the server has indicated that this connection can't ever be resumed.
+    this._diconnected = false;
+    // True when the re/disconnect dialog is visible
+    this._disconnectDialog = false;
+
+    this._autoReconnect = {{{reconnect}}};
 
     var self = this;
-    this._conn.onopen = function() {
+
+    this.send = function(msg){
+      if (this._conn.readyState === 1){
+        this._conn.send(msg);
+      } else {
+        this._buffer.push(msg);
+      }
+    };
+
+    // The underlying SockJS connection. At this point it is not likely to
+    // be opened yet.
+    this.onConnOpen = function() {
+      self._first = false;
       log("Connection opened. " + window.location.href);
+      self._clearReconnect();
       var channel;
       while ((channel = self._pendingChannels.shift())) {
         // Be sure to check readyState so we don't open connections for
@@ -273,10 +317,86 @@
           debug("NOT opening channel " + channel.id);
         }
       }
+
+      // Send any buffered messages.
+      var msg;
+      while ((msg = self._buffer.shift())){
+        self._conn.send(msg);
+      }
     };
-    this._conn.onclose = function(e) {
+
+    // @param reconnect If true, show the reconnecting dialog. If false, show 
+    // disconnected
+    this.startReconnect = function(){
+      self._disconnectDialog = true;
+      $('body').addClass('ss-reconnecting');
+
+      var timeout = 15;
+      var reconnectingContent = '<button type="button" id="ss-reconnect-btn" class="ss-dialog-button">Reconnect ('+timeout+')</button><span class="ss-dialog-text">Trouble connecting to server</span>';
+      $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
+      $('#ss-reconnect-btn').click(function(){
+        $('ss-reconnect-btn').prop('disabled', true);
+        log("Attempting to reopen.");
+        self._openConnection();
+      });
+
+      var countdown = setInterval(function(){
+        timeout--;
+        updateDialog(timeout);
+      }, 1000);
+      updateDialog(timeout); //Update immediately
+
+      function updateDialog(timeout){
+        $('#ss-reconnect-btn').html('Reconnect (' + timeout + ')');
+        if (timeout <= 0 || self._disconnected){
+          clearInterval(countdown);
+          self._doClose();
+          $('body').removeClass('ss-reconnecting');
+
+          $('#ss-connect-dialog').html('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
+          $('#ss-reload-button').click(function(){
+            location.reload();
+          });
+        }
+      }
+
+      self._clearReconnect = function(){
+        self._disconnectDialog = false;
+        clearInterval(countdown);
+        $('body').removeClass('ss-reconnecting');
+        $('#ss-connect-dialog').remove();
+        $('#ss-gray-out').remove();
+        self._clearReconnect = function() {};
+      };
+    };
+
+    this.onConnClose = function(e) {
       log("Connection closed. Info: " + JSON.stringify(e));
       debug("SockJS connection closed");
+
+      // SockJS fires a close event if a SockJS connection was not able to
+      // successfully connect. i.e. it can't reach the server.
+      if (self._disconnectDialog){
+        // This was a failed attempt to reconnect
+        alert(e.reason);
+        $('#ss-reconnect-button').prop('disabled', false);
+        return;
+      }
+
+      // If the server intentionally closed the connection, don't attempt to come back.
+      if (e && e.wasClean === true){
+        self._disconnected = true;
+      }
+
+      if (self._autoReconnect) {
+        self.startReconnect();
+      } else {
+        self._doClose();
+        $('<div id="ss-gray-out"></div>').appendTo('body');
+      }
+    };
+
+    this._doClose = function(){
       // If the SockJS connection is terminated from the other end (or due
       // to loss of connectivity or whatever) then we can notify all the
       // active channels that they are closed too.
@@ -289,8 +409,8 @@
         self.onclose[i]();
       }
     };
-    this._conn.onmessage = function(e) {
-      var msg = parseMultiplexData(e.data);
+    this.onConnMessage = function(e) {
+      var msg = self._parseMultiplexData(e.data);
       if (!msg) {
         log("Invalid multiplex packet received from server");
         self._conn.close();
@@ -310,12 +430,76 @@
         self._conn.close();
       } else if (method === "m") {
         channel.onmessage({data: payload});
+      } else if (method === "r") {
+        self._disconnected = true;
+        if (msg.payload.length > 0){
+          alert(msg.payload);
+        }
       }
     };
+
+    // Open a new SockJS connection and assign it.
+    this._openConnection = function(){
+      var url = self._sockjsUrl;
+      if (!self._first){
+        // Communicate to the server that we're intending to re-use an existing ID.
+        url = url.replace(/\/n=/, '/o=');
+      }
+      var conn = new SockJS(url,
+        null,{protocols_whitelist: self._whitelist});
+      conn.onopen = self.onConnOpen;
+      conn.onclose = self.onConnClose;
+      conn.onmessage = self.onConnMessage;
+
+      self._conn = conn;
+    };
+
+    // Open a connection now.
+    this._openConnection();
+
+    this._parseMultiplexData = function(msg) {
+      try {
+        var m = /^(\d+)\|(m|o|c|r)\|([\s\S]*)$/m.exec(msg);
+        if (!m)
+          return null;
+        msg = {
+          id: m[1],
+          method: m[2],
+          payload: m[3]
+        };
+
+        switch (msg.method) {
+          case 'm':
+            break;
+          case 'o':
+            if (msg.payload.length === 0)
+              return null;
+            break;
+          case 'c':
+            try {
+              msg.payload = JSON.parse(msg.payload);
+            } catch(e) {
+              return null;
+            }
+            break;
+          case 'r':
+            break;
+          default:
+            return null;
+        }
+
+        return msg;
+
+      } catch(e) {
+        log('Error parsing multiplex data: ' + e);
+        return null;
+      }
+    };
+
   }
   MultiplexClient.prototype.open = function(url) {
     var channel = new MultiplexClientChannel(this, this._nextId++ + "",
-                                             this._conn, url);
+                                             url);
     this._channels[channel.id] = channel;
     this._channelCount++;
 
@@ -346,10 +530,9 @@
     }
   };
 
-  function MultiplexClientChannel(owner, id, conn, url) {
+  function MultiplexClientChannel(owner, id, url) {
     this._owner = owner;
     this.id = id;
-    this.conn = conn;
     this.url = url;
     this.readyState = 0;
     this.onopen = function() {};
@@ -361,23 +544,23 @@
     this.readyState = 1;
 
     //var relURL = getRelativePath(parentURL, this.url)
-    
-    this.conn.send(formatOpenEvent(this.id, this.url));
+
+    this._owner.send(formatOpenEvent(this.id, this.url));
     this.onopen();
   };
   MultiplexClientChannel.prototype.send = function(data) {
     if (this.readyState === 0)
       throw new Error("Invalid state: can't send when readyState is 0");
     if (this.readyState === 1)
-      this.conn.send(formatMessage(this.id, data));
+      this._owner.send(formatMessage(this.id, data));
   };
   MultiplexClientChannel.prototype.close = function(code, reason) {
     if (this.readyState >= 2)
       return;
     debug("Close channel " + this.id);
-    if (this.conn.readyState === 1) {
+    if (this._owner.getConn().readyState === 1) {
       // Is the underlying connection open? Send a close message.
-      this.conn.send(formatCloseEvent(this.id, code, reason));
+      this._owner.send(formatCloseEvent(this.id, code, reason));
     }
     this._destroy(code, reason);
   };
@@ -393,7 +576,7 @@
         self.onclose();
       }, 0);
     }
-  }
+  };
 
   function formatMessage(id, message) {
     return id + '|m|' + message;
@@ -403,41 +586,5 @@
   }
   function formatCloseEvent(id, code, reason) {
     return id + '|c|' + JSON.stringify({code: code, reason: reason});
-  }
-  function parseMultiplexData(msg) {
-    try {
-      var m = /^(\d+)\|(m|o|c)\|([\s\S]*)$/m.exec(msg);
-      if (!m)
-        return null;
-      msg = {
-        id: m[1],
-        method: m[2],
-        payload: m[3]
-      }
-
-      switch (msg.method) {
-        case 'm':
-          break;
-        case 'o':
-          if (msg.payload.length === 0)
-            return null;
-          break;
-        case 'c':
-          try {
-            msg.payload = JSON.parse(msg.payload);
-          } catch(e) {
-            return null;
-          }
-          break;
-        default:
-          return null;
-      }
-
-      return msg;
-
-    } catch(e) {
-      logger.debug('Error parsing multiplex data: ' + e);
-      return null;
-    }
   }
 })(jQuery);
