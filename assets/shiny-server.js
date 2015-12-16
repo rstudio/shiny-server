@@ -325,25 +325,25 @@
       }
     };
 
-    // @param reconnect If true, show the reconnecting dialog. If false, show 
-    // disconnected
     this.startReconnect = function(){
-
+      var dialogMsg = '';
       function setReconnectDialog(msg){
-        $('.ss-dialog-text').html(msg);
+        // Buffer the msg in case this element isn't visible in the DOM now
+        dialogMsg = msg;
+        $('#ss-connect-dialog').html(msg);
       }
 
       // Schedule the display of the disconnect window
       self._disconnectTimer = setTimeout(function(){
         debug('Displaying disconnect screen.');
         $('body').addClass('ss-reconnecting');
-        var reconnectingContent = '<span class="ss-dialog-text">Trouble connecting to server</span>';
-        $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
-      }, 3000);
+        $('<div id="ss-connect-dialog">'+dialogMsg+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
+      }, 3500);
 
       var timeout = 15;
       
       function reconnect_p(){
+        setReconnectDialog('Attempting to reconnect...');
         var def = $.Deferred();
 
         log("Attempting to reopen.");
@@ -365,12 +365,19 @@
 
       // @param time The last time a connection attempt was started
       // @param count 0-indexed count of how many reconnect attempts have occured.
-      function scheduleReconnect(time, count, expires) {
+      // @param expires the time when the session is scheduled to expire on 
+      // the server.
+      // @param timer The setTimeout object from a previous caller that was 
+      //   being used to update a dialog. This should be cleared before
+      //   starting a new timer.
+      function scheduleReconnect_p(time, count, expires, timer) {
+        var def = $.Deferred();
+
         if (Date.now() > expires){
           // Shouldn't happen, but if the current time is after the known
           // expiration for this session, give up.
           debug('Overshot session expiration.');
-          return;
+          return def.reject(new Error("Overshot session expiration"));
         }
 
         // Compute delay exponentially.
@@ -395,10 +402,19 @@
           // i.e. we're within 2 seconds of session expiration. Make
           // one last connection attmpt but don't schedule any more.
           debug('Final reconnection attempt');
-          reconnect_p();
-          return;
+          return reconnect_p();
         }
 
+        if (timer){
+          clearTimeout(timer);
+        }
+        var targetTime = Date.now() + delay;
+        function updateMsg() {
+          setReconnectDialog('Disconnected from server. Going to reconnect in ' + Math.ceil((targetTime-Date.now())/1000) + 's');
+        }
+        var msgTimer = setInterval(updateMsg, 500);
+        updateMsg(); // Run immediately
+        debug('Setting countdown timer');
         debug('Scheduling reconnect attempt for ' + delay + 'ms');
         // Schedule the reconnect for some time in the future.
         setTimeout(function(){
@@ -406,11 +422,21 @@
           reconnect_p()
           .then(function(){
             // Able to reconnect.
-            return;
+            return def;
           }, function(){
-            scheduleReconnect(startTime, count+1, expires);
+            scheduleReconnect_p(startTime, count+1, expires, msgTimer)
+            .then(function(c){
+              def.resolve(c);
+            }, function(e){
+              def.reject(e);
+            })
+            .always(function(){
+              clearTimeout(msgTimer);
+            });
           });
         }, delay);
+
+        return def;
       }
 
       // Attempt to reconnect immediately, then start scheduling.
@@ -418,22 +444,18 @@
         var time = Date.now();
         reconnect_p()
         .fail(function(){
-          scheduleReconnect(time, 0, time + 15 * 1000);
-        });
-      }
+          scheduleReconnect_p(time, 0, time + 15 * 1000)
+          .fail(function(){
+            // We were not able to reconnect
+            self._doClose();
+            $('body').removeClass('ss-reconnecting');
 
-      function setReconnectingCountdown(timeout){
-        if (timeout <= 0 || self._disconnected){
-          self._doClose();
-          $('body').removeClass('ss-reconnecting');
-
-          $('#ss-connect-dialog').html('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
-          $('#ss-reload-button').click(function(){
-            location.reload();
+            $('#ss-connect-dialog').html('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
+            $('#ss-reload-button').click(function(){
+              location.reload();
+            });
           });
-          return;
-        }
-        setReconnectDialog('Disconnected. Will attempt to reconnect in ' + timeout + 's');
+        });
       }
     };
 
