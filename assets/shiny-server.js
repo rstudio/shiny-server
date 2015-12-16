@@ -277,8 +277,6 @@
     this._pendingChannels = [];
     // A list of functions that fire when our connection goes away.
     this.onclose = [];
-    // The function to call to clean up any reconnect dialogs that might be open.
-    this._clearReconnect = function(){};
     // Backlog of messages we need to send when we have a connection.
     this._buffer = [];
     // Whether or not this is our first connection.
@@ -306,7 +304,6 @@
     this.onConnOpen = function() {
       self._first = false;
       log("Connection opened. " + window.location.href);
-      self._clearReconnect();
       var channel;
       while ((channel = self._pendingChannels.shift())) {
         // Be sure to check readyState so we don't open connections for
@@ -331,23 +328,36 @@
       self._disconnectDialog = true;
       $('body').addClass('ss-reconnecting');
 
+      var silentTimeout = 3;
       var timeout = 15;
       var reconnectingContent = '<button type="button" id="ss-reconnect-btn" class="ss-dialog-button">Reconnect ('+timeout+')</button><span class="ss-dialog-text">Trouble connecting to server</span>';
       $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
       
-      function reconnect(){
-        $('ss-reconnect-btn').prop('disabled', true);
-        log("Attempting to reopen.");
-        self._openConnection();
-      }
-      $('#ss-reconnect-btn').click(reconnect);
-
       var startCountdown = Date.now();
       var countdown = setInterval(function(){
         var left = timeout - Math.round((Date.now()-startCountdown)/1000);
         updateDialog(left);
       }, 1000);
       updateDialog(timeout); //Update immediately
+
+      function reconnect(){
+        $('ss-reconnect-btn').prop('disabled', true);
+        log("Attempting to reopen.");
+
+        self._openConnection_p()
+        .then(function(){
+          self._disconnectDialog = false;
+          clearInterval(countdown);
+          $('body').removeClass('ss-reconnecting');
+          $('#ss-connect-dialog').remove();
+          $('#ss-gray-out').remove();
+        }, function(err){
+          // This was a failed attempt to reconnect
+          alert(err.reason);
+          $('#ss-reconnect-button').prop('disabled', false);
+        });
+      }
+      $('#ss-reconnect-btn').click(reconnect);
 
       function updateDialog(timeout){
         $('#ss-reconnect-btn').html('Reconnect (' + timeout + ')');
@@ -363,28 +373,10 @@
         }
       }
 
-      self._clearReconnect = function(){
-        self._disconnectDialog = false;
-        clearInterval(countdown);
-        $('body').removeClass('ss-reconnecting');
-        $('#ss-connect-dialog').remove();
-        $('#ss-gray-out').remove();
-        self._clearReconnect = function() {};
-      };
     };
 
     this.onConnClose = function(e) {
       log("Connection closed. Info: " + JSON.stringify(e));
-      debug("SockJS connection closed");
-
-      // SockJS fires a close event if a SockJS connection was not able to
-      // successfully connect. i.e. it can't reach the server.
-      if (self._disconnectDialog){
-        // This was a failed attempt to reconnect
-        alert(e.reason);
-        $('#ss-reconnect-button').prop('disabled', false);
-        return;
-      }
 
       // If the server intentionally closed the connection, don't attempt to come back.
       if (e && e.wasClean === true){
@@ -442,7 +434,9 @@
     };
 
     // Open a new SockJS connection and assign it.
-    this._openConnection = function(){
+    this._openConnection_p = function(){
+      var def = $.Deferred();
+
       var url = self._sockjsUrl;
       if (!self._first){
         // Communicate to the server that we're intending to re-use an existing ID.
@@ -450,15 +444,27 @@
       }
       var conn = new SockJS(url,
         null,{protocols_whitelist: self._whitelist});
-      conn.onopen = self.onConnOpen;
-      conn.onclose = self.onConnClose;
       conn.onmessage = self.onConnMessage;
+      
+      // Temporarily override so we can resolve the promise
+      conn.onopen = function(){
+        // Successful open; restore onClose pass through to real open callback
+        conn.onclose = self.onConnClose;
+        self.onConnOpen.apply(self, arguments);
+        def.resolve(conn);
+      };
+      conn.onclose = function(err){
+        // If we got here, means we didn't get to onopen, so it failed.
+        def.reject(err);
+      };
 
       self._conn = conn;
+
+      return def;
     };
 
     // Open a connection now.
-    this._openConnection();
+    this._openConnection_p().done();
 
     this._parseMultiplexData = function(msg) {
       try {
