@@ -325,23 +325,29 @@
     // @param reconnect If true, show the reconnecting dialog. If false, show 
     // disconnected
     this.startReconnect = function(){
+
+      function setReconnectDialog(msg){
+        $('.ss-dialog-text').html(msg);
+      }
+
       self._disconnectDialog = true;
       $('body').addClass('ss-reconnecting');
 
       var silentTimeout = 3;
       var timeout = 15;
-      var reconnectingContent = '<button type="button" id="ss-reconnect-btn" class="ss-dialog-button">Reconnect ('+timeout+')</button><span class="ss-dialog-text">Trouble connecting to server</span>';
+      var reconnectingContent = '<span class="ss-dialog-text">Trouble connecting to server</span>';
       $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
       
       var startCountdown = Date.now();
       var countdown = setInterval(function(){
         var left = timeout - Math.round((Date.now()-startCountdown)/1000);
-        updateDialog(left);
+        setReconnectingCountdown(left);
       }, 1000);
-      updateDialog(timeout); //Update immediately
+      setReconnectingCountdown(timeout); //Update immediately
 
-      function reconnect(){
-        $('ss-reconnect-btn').prop('disabled', true);
+      function reconnect_p(){
+        var def = $.Deferred();
+
         log("Attempting to reopen.");
 
         self._openConnection_p()
@@ -351,16 +357,55 @@
           $('body').removeClass('ss-reconnecting');
           $('#ss-connect-dialog').remove();
           $('#ss-gray-out').remove();
+          def.resolve();
         }, function(err){
           // This was a failed attempt to reconnect
-          alert(err.reason);
+          log("Unable to reconnect: " + JSON.stringify(err));
           $('#ss-reconnect-button').prop('disabled', false);
+          def.reject();
+        });
+
+        return def;
+      }
+
+      // @param time The last time a connection attempt was started
+      // @param count 0-indexed count of how many reconnect attempts have occured.
+      function scheduleReconnect(time, count) {
+        // Compute delay exponentially.
+        var interval;
+        if (count < 10){
+          interval = 1000 * Math.pow(2, count);
+          interval = Math.min(15 * 1000, interval); // Max of 15s delay.
+        } else { 
+          // The interval may end up being configurable or changed, so we don't cut off
+          // exactly at 2^4, but don't bother computing really large powers.
+          interval = 15 * 1000;
+        }
+        var delay = time - Date.now() + interval;
+
+        // Schedule the reconnect for some time in the future.
+        setTimeout(function(){
+          var startTime = Date.now();
+          reconnect_p()
+          .then(function(){
+            // Able to reconnect.
+            return;
+          }, function(){
+            scheduleReconnect(startTime, count+1);
+          });
+        }, delay);
+      }
+
+      // Attempt to reconnect immediately
+      if (!self._disconnected){
+        var time = Date.now();
+        reconnect_p()
+        .fail(function(){
+          scheduleReconnect(time, 0);
         });
       }
-      $('#ss-reconnect-btn').click(reconnect);
 
-      function updateDialog(timeout){
-        $('#ss-reconnect-btn').html('Reconnect (' + timeout + ')');
+      function setReconnectingCountdown(timeout){
         if (timeout <= 0 || self._disconnected){
           clearInterval(countdown);
           self._doClose();
@@ -370,9 +415,10 @@
           $('#ss-reload-button').click(function(){
             location.reload();
           });
+          return;
         }
+        setReconnectDialog('Disconnected. Will attempt to reconnect in ' + timeout + 's');
       }
-
     };
 
     this.onConnClose = function(e) {
@@ -383,7 +429,7 @@
         self._disconnected = true;
       }
 
-      if (self._autoReconnect) {
+      if (e && e.wasClean === false && self._autoReconnect) {
         self.startReconnect();
       } else {
         self._doClose();
