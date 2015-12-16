@@ -12,7 +12,7 @@
   var robustId = generateId(18);
 
   var exports = window.ShinyServer = window.ShinyServer || {};
-  exports.debugging = true;//FIXME
+  exports.debugging = false;
   $(function() {
     if (typeof(Shiny) != "undefined") {
       (function() {
