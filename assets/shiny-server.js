@@ -12,7 +12,7 @@
   var robustId = generateId(18);
 
   var exports = window.ShinyServer = window.ShinyServer || {};
-  exports.debugging = false;
+  exports.debugging = true;//FIXME
   $(function() {
     if (typeof(Shiny) != "undefined") {
       (function() {
@@ -370,7 +370,14 @@
 
       // @param time The last time a connection attempt was started
       // @param count 0-indexed count of how many reconnect attempts have occured.
-      function scheduleReconnect(time, count) {
+      function scheduleReconnect(time, count, expires) {
+        if (Date.now() > expires){
+          // Shouldn't happen, but if the current time is after the known
+          // expiration for this session, give up.
+          debug('Overshot session expiration.');
+          return;
+        }
+
         // Compute delay exponentially.
         var interval;
         if (count < 10){
@@ -383,6 +390,21 @@
         }
         var delay = time - Date.now() + interval;
 
+        // If the next attempt would be after the session is due to expire, 
+        // schedule one last attempt to connect a couple seconds before the
+        // expiration.
+        if (Date.now() + delay > (expires - 2000)) {
+          delay = expires - Date.now() - 2000;
+        }
+        if (delay < 0){
+          // i.e. we're within 2 seconds of session expiration. Make
+          // one last connection attmpt but don't schedule any more.
+          debug('Final reconnection attempt');
+          reconnect_p();
+          return;
+        }
+
+        debug('Scheduling reconnect attempt for ' + delay + 'ms');
         // Schedule the reconnect for some time in the future.
         setTimeout(function(){
           var startTime = Date.now();
@@ -391,7 +413,7 @@
             // Able to reconnect.
             return;
           }, function(){
-            scheduleReconnect(startTime, count+1);
+            scheduleReconnect(startTime, count+1, expires);
           });
         }, delay);
       }
@@ -401,7 +423,7 @@
         var time = Date.now();
         reconnect_p()
         .fail(function(){
-          scheduleReconnect(time, 0);
+          scheduleReconnect(time, 0, time + 15 * 1000);
         });
       }
 
