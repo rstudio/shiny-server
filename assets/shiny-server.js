@@ -284,8 +284,8 @@
     // No an updated value like readyState, but rather a Boolean which will be set
     // true when the server has indicated that this connection can't ever be resumed.
     this._diconnected = false;
-    // True when the re/disconnect dialog is visible
-    this._disconnectDialog = false;
+    // The timer used to delay the display of the reconnecting dialog.
+    this._disconnectTimer = 0;
 
     this._autoReconnect = {{{reconnect}}};
 
@@ -303,6 +303,9 @@
     // be opened yet.
     this.onConnOpen = function() {
       self._first = false;
+      if (self._disconnectTimer){
+        clearTimeout(self._disconnectTimer);
+      }
       log("Connection opened. " + window.location.href);
       var channel;
       while ((channel = self._pendingChannels.shift())) {
@@ -330,21 +333,16 @@
         $('.ss-dialog-text').html(msg);
       }
 
-      self._disconnectDialog = true;
-      $('body').addClass('ss-reconnecting');
+      // Schedule the display of the disconnect window
+      self._disconnectTimer = setTimeout(function(){
+        debug('Displaying disconnect screen.');
+        $('body').addClass('ss-reconnecting');
+        var reconnectingContent = '<span class="ss-dialog-text">Trouble connecting to server</span>';
+        $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
+      }, 3000);
 
-      var silentTimeout = 3;
       var timeout = 15;
-      var reconnectingContent = '<span class="ss-dialog-text">Trouble connecting to server</span>';
-      $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
       
-      var startCountdown = Date.now();
-      var countdown = setInterval(function(){
-        var left = timeout - Math.round((Date.now()-startCountdown)/1000);
-        setReconnectingCountdown(left);
-      }, 1000);
-      setReconnectingCountdown(timeout); //Update immediately
-
       function reconnect_p(){
         var def = $.Deferred();
 
@@ -352,8 +350,6 @@
 
         self._openConnection_p()
         .then(function(){
-          self._disconnectDialog = false;
-          clearInterval(countdown);
           $('body').removeClass('ss-reconnecting');
           $('#ss-connect-dialog').remove();
           $('#ss-gray-out').remove();
@@ -361,7 +357,6 @@
         }, function(err){
           // This was a failed attempt to reconnect
           log("Unable to reconnect: " + JSON.stringify(err));
-          $('#ss-reconnect-button').prop('disabled', false);
           def.reject();
         });
 
@@ -418,7 +413,7 @@
         }, delay);
       }
 
-      // Attempt to reconnect immediately
+      // Attempt to reconnect immediately, then start scheduling.
       if (!self._disconnected){
         var time = Date.now();
         reconnect_p()
@@ -429,7 +424,6 @@
 
       function setReconnectingCountdown(timeout){
         if (timeout <= 0 || self._disconnected){
-          clearInterval(countdown);
           self._doClose();
           $('body').removeClass('ss-reconnecting');
 
