@@ -334,15 +334,18 @@
       var timeout = 15;
       var reconnectingContent = '<button type="button" id="ss-reconnect-btn" class="ss-dialog-button">Reconnect ('+timeout+')</button><span class="ss-dialog-text">Trouble connecting to server</span>';
       $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
-      $('#ss-reconnect-btn').click(function(){
+      
+      function reconnect(){
         $('ss-reconnect-btn').prop('disabled', true);
         log("Attempting to reopen.");
         self._openConnection();
-      });
+      }
+      $('#ss-reconnect-btn').click(reconnect);
 
+      var startCountdown = Date.now();
       var countdown = setInterval(function(){
-        timeout--;
-        updateDialog(timeout);
+        var left = timeout - Math.round((Date.now()-startCountdown)/1000);
+        updateDialog(left);
       }, 1000);
       updateDialog(timeout); //Update immediately
 
