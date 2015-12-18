@@ -277,8 +277,6 @@
     this._pendingChannels = [];
     // A list of functions that fire when our connection goes away.
     this.onclose = [];
-    // The function to call to clean up any reconnect dialogs that might be open.
-    this._clearReconnect = function(){};
     // Backlog of messages we need to send when we have a connection.
     this._buffer = [];
     // Whether or not this is our first connection.
@@ -286,8 +284,8 @@
     // No an updated value like readyState, but rather a Boolean which will be set
     // true when the server has indicated that this connection can't ever be resumed.
     this._diconnected = false;
-    // True when the re/disconnect dialog is visible
-    this._disconnectDialog = false;
+    // The timer used to delay the display of the reconnecting dialog.
+    this._disconnectTimer = null;
 
     this._autoReconnect = {{{reconnect}}};
 
@@ -305,8 +303,11 @@
     // be opened yet.
     this.onConnOpen = function() {
       self._first = false;
+      if (self._disconnectTimer){
+        clearTimeout(self._disconnectTimer);
+        self._disconnectTimer = null;
+      }
       log("Connection opened. " + window.location.href);
-      self._clearReconnect();
       var channel;
       while ((channel = self._pendingChannels.shift())) {
         // Be sure to check readyState so we don't open connections for
@@ -325,70 +326,141 @@
       }
     };
 
-    // @param reconnect If true, show the reconnecting dialog. If false, show 
-    // disconnected
     this.startReconnect = function(){
-      self._disconnectDialog = true;
-      $('body').addClass('ss-reconnecting');
-
-      var timeout = 15;
-      var reconnectingContent = '<button type="button" id="ss-reconnect-btn" class="ss-dialog-button">Reconnect ('+timeout+')</button><span class="ss-dialog-text">Trouble connecting to server</span>';
-      $('<div id="ss-connect-dialog">'+reconnectingContent+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
-      $('#ss-reconnect-btn').click(function(){
-        $('ss-reconnect-btn').prop('disabled', true);
-        log("Attempting to reopen.");
-        self._openConnection();
-      });
-
-      var countdown = setInterval(function(){
-        timeout--;
-        updateDialog(timeout);
-      }, 1000);
-      updateDialog(timeout); //Update immediately
-
-      function updateDialog(timeout){
-        $('#ss-reconnect-btn').html('Reconnect (' + timeout + ')');
-        if (timeout <= 0 || self._disconnected){
-          clearInterval(countdown);
-          self._doClose();
-          $('body').removeClass('ss-reconnecting');
-
-          $('#ss-connect-dialog').html('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
-          $('#ss-reload-button').click(function(){
-            location.reload();
-          });
-        }
+      var dialogMsg = '';
+      function setReconnectDialog(msg){
+        // Buffer the msg in case this element isn't visible in the DOM now
+        dialogMsg = msg;
+        $('#ss-connect-dialog').html(msg);
       }
 
-      self._clearReconnect = function(){
-        self._disconnectDialog = false;
-        clearInterval(countdown);
-        $('body').removeClass('ss-reconnecting');
-        $('#ss-connect-dialog').remove();
-        $('#ss-gray-out').remove();
-        self._clearReconnect = function() {};
-      };
+      // Schedule the display of the disconnect window
+      self._disconnectTimer = setTimeout(function(){
+        debug('Displaying disconnect screen.');
+        $('body').addClass('ss-reconnecting');
+        $('<div id="ss-connect-dialog">'+dialogMsg+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
+      }, 3500);
+
+      var timeout = 15;
+      
+      function reconnect_p(){
+        setReconnectDialog('Attempting to reconnect...');
+        var def = $.Deferred();
+
+        log("Attempting to reopen.");
+
+        self._openConnection_p()
+        .then(function(){
+          $('body').removeClass('ss-reconnecting');
+          $('#ss-connect-dialog').remove();
+          $('#ss-gray-out').remove();
+          def.resolve();
+        }, function(err){
+          // This was a failed attempt to reconnect
+          log("Unable to reconnect: " + JSON.stringify(err));
+          def.reject();
+        });
+
+        return def;
+      }
+
+      // @param time The last time a connection attempt was started
+      // @param count 0-indexed count of how many reconnect attempts have occured.
+      // @param expires the time when the session is scheduled to expire on 
+      // the server.
+      function scheduleReconnect_p(time, count, expires) {
+        var def = $.Deferred();
+
+        if (Date.now() > expires){
+          // Shouldn't happen, but if the current time is after the known
+          // expiration for this session, give up.
+          debug('Overshot session expiration.');
+          return def.reject(new Error("Overshot session expiration"));
+        }
+
+        // Compute delay exponentially.
+        var interval;
+        if (count < 10){
+          interval = 1000 * Math.pow(2, count);
+          interval = Math.min(15 * 1000, interval); // Max of 15s delay.
+        } else { 
+          // The interval may end up being configurable or changed, so we don't cut off
+          // exactly at 2^4, but don't bother computing really large powers.
+          interval = 15 * 1000;
+        }
+        var delay = time - Date.now() + interval;
+
+        // If the next attempt would be after the session is due to expire, 
+        // schedule one last attempt to connect a couple seconds before the
+        // expiration.
+        if (Date.now() + delay > (expires - 2000)) {
+          delay = expires - Date.now() - 2000;
+        }
+        if (delay < 0){
+          // i.e. we're within 2 seconds of session expiration. Make
+          // one last connection attmpt but don't schedule any more.
+          debug('Final reconnection attempt');
+          return reconnect_p();
+        }
+
+        var targetTime = Date.now() + delay;
+        function updateMsg() {
+          setReconnectDialog('Disconnected from server. Going to reconnect in ' + Math.ceil((targetTime-Date.now())/1000) + 's');
+        }
+        var msgTimer = setInterval(updateMsg, 500);
+        updateMsg(); // Run immediately
+        debug('Setting countdown timer');
+        debug('Scheduling reconnect attempt for ' + delay + 'ms');
+        // Schedule the reconnect for some time in the future.
+        setTimeout(function(){
+          clearTimeout(msgTimer);
+          var startTime = Date.now();
+          reconnect_p()
+          .then(function(c){
+            // Able to reconnect.
+            def.resolve(c);
+          }, function(){
+            scheduleReconnect_p(startTime, count+1, expires)
+            .then(function(c){
+              def.resolve(c);
+            }, function(e){
+              def.reject(e);
+            });
+          });
+        }, delay);
+
+        return def;
+      }
+
+      // Attempt to reconnect immediately, then start scheduling.
+      if (!self._disconnected){
+        var time = Date.now();
+        reconnect_p()
+        .fail(function(){
+          scheduleReconnect_p(time, 0, time + 15 * 1000)
+          .fail(function(){
+            // We were not able to reconnect
+            self._doClose();
+            $('body').removeClass('ss-reconnecting');
+
+            $('#ss-connect-dialog').html('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
+            $('#ss-reload-button').click(function(){
+              location.reload();
+            });
+          });
+        });
+      }
     };
 
     this.onConnClose = function(e) {
       log("Connection closed. Info: " + JSON.stringify(e));
-      debug("SockJS connection closed");
-
-      // SockJS fires a close event if a SockJS connection was not able to
-      // successfully connect. i.e. it can't reach the server.
-      if (self._disconnectDialog){
-        // This was a failed attempt to reconnect
-        alert(e.reason);
-        $('#ss-reconnect-button').prop('disabled', false);
-        return;
-      }
 
       // If the server intentionally closed the connection, don't attempt to come back.
       if (e && e.wasClean === true){
         self._disconnected = true;
       }
 
-      if (self._autoReconnect) {
+      if (e && e.wasClean === false && self._autoReconnect) {
         self.startReconnect();
       } else {
         self._doClose();
@@ -439,7 +511,9 @@
     };
 
     // Open a new SockJS connection and assign it.
-    this._openConnection = function(){
+    this._openConnection_p = function(){
+      var def = $.Deferred();
+
       var url = self._sockjsUrl;
       if (!self._first){
         // Communicate to the server that we're intending to re-use an existing ID.
@@ -447,15 +521,27 @@
       }
       var conn = new SockJS(url,
         null,{protocols_whitelist: self._whitelist});
-      conn.onopen = self.onConnOpen;
-      conn.onclose = self.onConnClose;
       conn.onmessage = self.onConnMessage;
+      
+      // Temporarily override so we can resolve the promise
+      conn.onopen = function(){
+        // Successful open; restore onClose pass through to real open callback
+        conn.onclose = self.onConnClose;
+        self.onConnOpen.apply(self, arguments);
+        def.resolve(conn);
+      };
+      conn.onclose = function(err){
+        // If we got here, means we didn't get to onopen, so it failed.
+        def.reject(err);
+      };
 
       self._conn = conn;
+
+      return def;
     };
 
     // Open a connection now.
-    this._openConnection();
+    this._openConnection_p().done();
 
     this._parseMultiplexData = function(msg) {
       try {
