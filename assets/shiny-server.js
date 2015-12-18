@@ -403,17 +403,7 @@
           return reconnect_p();
         }
 
-        var targetTime = Date.now() + delay;
-        function updateMsg() {
-          setReconnectDialog('Disconnected from server. Going to reconnect in ' + Math.ceil((targetTime-Date.now())/1000) + 's');
-        }
-        var msgTimer = setInterval(updateMsg, 500);
-        updateMsg(); // Run immediately
-        debug('Setting countdown timer');
-        debug('Scheduling reconnect attempt for ' + delay + 'ms');
-        // Schedule the reconnect for some time in the future.
-        setTimeout(function(){
-          clearTimeout(msgTimer);
+        function doRecon(){
           var startTime = Date.now();
           reconnect_p()
           .then(function(c){
@@ -427,7 +417,20 @@
               def.reject(e);
             });
           });
-        }, delay);
+        }
+
+        var reconTimeout = null;
+        setReconnectDialog('<button id="ss-reconnect-btn" type="button" class="ss-dialog-button">Reconnect Now</button>Trouble connecting to server.');
+        $('#ss-reconnect-btn').click(function(){
+          debug('Trying to reconnect now.');
+          // Short-circuit the wait.
+          clearTimeout(reconTimeout);
+          doRecon();
+        });
+        debug('Setting countdown timer');
+        debug('Scheduling reconnect attempt for ' + delay + 'ms');
+        // Schedule the reconnect for some time in the future.
+        reconTimeout = setTimeout(doRecon, delay);
 
         return def;
       }
@@ -442,7 +445,6 @@
             // We were not able to reconnect
             self._doClose();
             $('body').removeClass('ss-reconnecting');
-
             $('#ss-connect-dialog').html('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
             $('#ss-reload-button').click(function(){
               location.reload();
