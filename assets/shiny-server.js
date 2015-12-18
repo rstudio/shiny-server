@@ -285,7 +285,7 @@
     // true when the server has indicated that this connection can't ever be resumed.
     this._diconnected = false;
     // The timer used to delay the display of the reconnecting dialog.
-    this._disconnectTimer = 0;
+    this._disconnectTimer = null;
 
     this._autoReconnect = {{{reconnect}}};
 
@@ -305,6 +305,7 @@
       self._first = false;
       if (self._disconnectTimer){
         clearTimeout(self._disconnectTimer);
+        self._disconnectTimer = null;
       }
       log("Connection opened. " + window.location.href);
       var channel;
@@ -367,10 +368,7 @@
       // @param count 0-indexed count of how many reconnect attempts have occured.
       // @param expires the time when the session is scheduled to expire on 
       // the server.
-      // @param timer The setTimeout object from a previous caller that was 
-      //   being used to update a dialog. This should be cleared before
-      //   starting a new timer.
-      function scheduleReconnect_p(time, count, expires, timer) {
+      function scheduleReconnect_p(time, count, expires) {
         var def = $.Deferred();
 
         if (Date.now() > expires){
@@ -405,9 +403,6 @@
           return reconnect_p();
         }
 
-        if (timer){
-          clearTimeout(timer);
-        }
         var targetTime = Date.now() + delay;
         function updateMsg() {
           setReconnectDialog('Disconnected from server. Going to reconnect in ' + Math.ceil((targetTime-Date.now())/1000) + 's');
@@ -418,20 +413,18 @@
         debug('Scheduling reconnect attempt for ' + delay + 'ms');
         // Schedule the reconnect for some time in the future.
         setTimeout(function(){
+          clearTimeout(msgTimer);
           var startTime = Date.now();
           reconnect_p()
-          .then(function(){
+          .then(function(c){
             // Able to reconnect.
-            return def;
+            def.resolve(c);
           }, function(){
-            scheduleReconnect_p(startTime, count+1, expires, msgTimer)
+            scheduleReconnect_p(startTime, count+1, expires)
             .then(function(c){
               def.resolve(c);
             }, function(e){
               def.reject(e);
-            })
-            .always(function(){
-              clearTimeout(msgTimer);
             });
           });
         }, delay);
