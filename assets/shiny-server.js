@@ -338,7 +338,7 @@
       self._disconnectTimer = setTimeout(function(){
         debug('Displaying disconnect screen.');
         $('body').addClass('ss-reconnecting');
-        $('<div id="ss-connect-dialog">'+dialogMsg+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
+        $('<div id="ss-connect-dialog">'+dialogMsg+'<div class="ss-clearfix"></div></div><div id="ss-overlay"></div>').appendTo('body');
       }, 3500);
 
       var timeout = 15;
@@ -445,7 +445,8 @@
             // We were not able to reconnect
             self._doClose();
             $('body').removeClass('ss-reconnecting');
-            $('#ss-connect-dialog').html('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
+            $('#ss-overlay').addClass('ss-gray-out');
+            setReconnectDialog('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
             $('#ss-reload-button').click(function(){
               location.reload();
             });
@@ -466,7 +467,7 @@
         self.startReconnect();
       } else {
         self._doClose();
-        $('<div id="ss-gray-out"></div>').appendTo('body');
+        $('<div class="ss-gray-out"></div>').appendTo('body');
       }
     };
 
