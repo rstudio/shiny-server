@@ -10,13 +10,18 @@ body.disconnected {
 
 #ss-connect-dialog {
   opacity: 1 !important;
-  padding: .5em 1em 1em 1em;
+  padding: 1em;
   background-color: #FFF;
   position: fixed;
   top: 0;
   left: 30%;
   right: 30%;
   z-index: 99999;
+  border: 1px solid #888;
+  border-top: none;
+  border-radius: 0 0 7px 7px;
+  background-color: #F6F6F6;
+  box-shadow: 2px 2px 8px #777;
 }
 
 .ss-dialog-button {
@@ -26,16 +31,21 @@ body.disconnected {
 .ss-dialog-text {
 }
 
-#ss-gray-out {
+#ss-overlay {
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
   right: 0;
-  background-color: #999;
-  opacity: 0.7;
   z-index: 99998;
   overflow: hidden;
+  cursor: progress;
+}
+
+.ss-gray-out {
+  background-color: #999;
+  opacity: 0.7;
+  cursor: not-allowed !important;
 }
 
 #ss-clearfix {

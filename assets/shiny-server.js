@@ -338,7 +338,7 @@
       self._disconnectTimer = setTimeout(function(){
         debug('Displaying disconnect screen.');
         $('body').addClass('ss-reconnecting');
-        $('<div id="ss-connect-dialog">'+dialogMsg+'<div class="ss-clearfix"></div></div><div id="ss-gray-out"></div>').appendTo('body');
+        $('<div id="ss-connect-dialog">'+dialogMsg+'<div class="ss-clearfix"></div></div><div id="ss-overlay"></div>').appendTo('body');
       }, 3500);
 
       var timeout = 15;
@@ -353,7 +353,7 @@
         .then(function(){
           $('body').removeClass('ss-reconnecting');
           $('#ss-connect-dialog').remove();
-          $('#ss-gray-out').remove();
+          $('#ss-overlay').remove();
           def.resolve();
         }, function(err){
           // This was a failed attempt to reconnect
@@ -488,9 +488,10 @@
         if ($('#ss-connect-dialog').length){
           // Update existing dialog
           $('#ss-connect-dialog').html(html);
+          $('#ss-overlay').addClass('ss-gray-out');
         } else {
           // Create dialog from scratch.
-          $('<div id="ss-connect-dialog">'+html+'</div><div id="ss-gray-out"></div>').appendTo('body');
+          $('<div id="ss-connect-dialog">'+html+'</div><div id="ss-overlay" class="ss-gray-out"></div>').appendTo('body');
         }
         $('#ss-reload-button').click(function(){
           location.reload();
