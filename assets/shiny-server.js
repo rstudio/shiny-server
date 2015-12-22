@@ -328,10 +328,15 @@
 
     this.startReconnect = function(){
       var dialogMsg = '';
+
+      // Timer that periodically updates dialog box text. Used to ensure that text doesn't
+      // flicker; either shown for .5 seconds or not at all.
+      setInterval(function(){
+        $('#ss-connect-dialog').html(dialogMsg);
+      }, 500);
       function setReconnectDialog(msg){
         // Buffer the msg in case this element isn't visible in the DOM now
         dialogMsg = msg;
-        $('#ss-connect-dialog').html(msg);
       }
 
       // Schedule the display of the disconnect window
@@ -445,7 +450,7 @@
             // We were not able to reconnect
             self._doClose();
             $('body').removeClass('ss-reconnecting');
-            $('#ss-connect-dialog').html('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
+            setReconnectDialog('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
             $('#ss-reload-button').click(function(){
               location.reload();
             });
