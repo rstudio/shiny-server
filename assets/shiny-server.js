@@ -353,7 +353,7 @@
         .then(function(){
           $('body').removeClass('ss-reconnecting');
           $('#ss-connect-dialog').remove();
-          $('#ss-gray-out').remove();
+          $('#ss-overlay').remove();
           def.resolve();
         }, function(err){
           // This was a failed attempt to reconnect
