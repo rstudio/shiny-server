@@ -550,15 +550,21 @@ MultiplexClient.prototype._doClose = function(){
 
         // Compute delay exponentially.
         var interval;
-        if (count < 10){
-          interval = 1000 * Math.pow(2, count);
-          interval = Math.min(15 * 1000, interval); // Max of 15s delay.
-        } else { 
-          // The interval may end up being configurable or changed, so we don't cut off
-          // exactly at 2^4, but don't bother computing really large powers.
-          interval = 15 * 1000;
+        var delay;
+        if (count < 0){
+          interval = 0;
+          delay = 0;
+        } else {
+          if (count < 10){
+            interval = 1000 * Math.pow(2, count);
+            interval = Math.min(15 * 1000, interval); // Max of 15s delay.
+          } else { 
+            // The interval may end up being configurable or changed, so we don't cut off
+            // exactly at 2^4, but don't bother computing really large powers.
+            interval = 15 * 1000;
+          }
+          delay = time - Date.now() + interval;
         }
-        var delay = time - Date.now() + interval;
 
         // If the next attempt would be after the session is due to expire, 
         // schedule one last attempt to connect a couple seconds before the
@@ -621,14 +627,11 @@ MultiplexClient.prototype._doClose = function(){
       // Attempt to reconnect immediately, then start scheduling.
       if (!self._disconnected){
         var time = Date.now();
-        self.reconnect_p()
+        self.scheduleReconnect_p(time, -1, time + 15 * 1000)
         .fail(function(){
-          self.scheduleReconnect_p(time, 0, time + 15 * 1000)
-          .fail(function(){
-            // We were not able to reconnect
-            self._disconnected = true;
-            self._doClose();
-          });
+          // We were not able to re/connect
+          self._disconnected = true;
+          self._doClose();
         });
       } else {
         self._disconnected = true;
