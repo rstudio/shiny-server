@@ -353,7 +353,7 @@
         .then(function(){
           $('body').removeClass('ss-reconnecting');
           $('#ss-connect-dialog').remove();
-          $('#ss-gray-out').remove();
+          $('#ss-overlay').remove();
           def.resolve();
         }, function(err){
           // This was a failed attempt to reconnect
@@ -435,6 +435,7 @@
         return def;
       }
 
+
       // Attempt to reconnect immediately, then start scheduling.
       if (!self._disconnected){
         var time = Date.now();
@@ -443,15 +444,13 @@
           scheduleReconnect_p(time, 0, time + 15 * 1000)
           .fail(function(){
             // We were not able to reconnect
+            self._disconnected = true;
             self._doClose();
-            $('body').removeClass('ss-reconnecting');
-            $('#ss-overlay').addClass('ss-gray-out');
-            setReconnectDialog('<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.');
-            $('#ss-reload-button').click(function(){
-              location.reload();
-            });
           });
         });
+      } else {
+        self._disconnected = true;
+        self._doClose();
       }
     };
 
@@ -459,15 +458,14 @@
       log("Connection closed. Info: " + JSON.stringify(e));
 
       // If the server intentionally closed the connection, don't attempt to come back.
-      if (e && e.wasClean === true){
+      if (e && e.wasClean === true || ! self._autoReconnect){
         self._disconnected = true;
       }
 
-      if (e && e.wasClean === false && self._autoReconnect) {
+      if (!self._disconnected) {
         self.startReconnect();
       } else {
         self._doClose();
-        $('<div class="ss-gray-out"></div>').appendTo('body');
       }
     };
 
@@ -482,6 +480,22 @@
       }
       for (var i = 0; i < self.onclose.length; i++) {
         self.onclose[i]();
+      }
+
+      if (self._disconnected){
+        $('body').removeClass('ss-reconnecting');
+        var html = '<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.<div class="ss-clearfix"></div>';
+        if ($('#ss-connect-dialog').length){
+          // Update existing dialog
+          $('#ss-connect-dialog').html(html);
+          $('#ss-overlay').addClass('ss-gray-out');
+        } else {
+          // Create dialog from scratch.
+          $('<div id="ss-connect-dialog">'+html+'</div><div id="ss-overlay" class="ss-gray-out"></div>').appendTo('body');
+        }
+        $('#ss-reload-button').click(function(){
+          location.reload();
+        });
       }
     };
     this.onConnMessage = function(e) {
@@ -543,8 +557,13 @@
       return def;
     };
 
-    // Open a connection now.
-    this._openConnection_p().done();
+    // Open an initial connection 
+    this._openConnection_p()
+    .fail(function(err){
+      self._disconnected = true;
+      self.onConnClose.apply(self, arguments);
+    })
+    .done();
 
     this._parseMultiplexData = function(msg) {
       try {
