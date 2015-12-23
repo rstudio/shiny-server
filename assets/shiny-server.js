@@ -286,276 +286,12 @@
     this._diconnected = false;
     // The timer used to delay the display of the reconnecting dialog.
     this._disconnectTimer = null;
+    // The message shown to be shown to the user in the dialog box
+    this._dialogMsg = '';
 
     this._autoReconnect = {{{reconnect}}};
-
+    
     var self = this;
-
-    this.send = function(msg){
-      if (this._conn.readyState === 1){
-        this._conn.send(msg);
-      } else {
-        this._buffer.push(msg);
-      }
-    };
-
-    // The underlying SockJS connection. At this point it is not likely to
-    // be opened yet.
-    this.onConnOpen = function() {
-      self._first = false;
-      if (self._disconnectTimer){
-        clearTimeout(self._disconnectTimer);
-        self._disconnectTimer = null;
-      }
-      log("Connection opened. " + window.location.href);
-      var channel;
-      while ((channel = self._pendingChannels.shift())) {
-        // Be sure to check readyState so we don't open connections for
-        // channels that were closed before they finished opening
-        if (channel.readyState === 0) {
-          channel._open();
-        } else {
-          debug("NOT opening channel " + channel.id);
-        }
-      }
-
-      // Send any buffered messages.
-      var msg;
-      while ((msg = self._buffer.shift())){
-        self._conn.send(msg);
-      }
-    };
-
-    this.startReconnect = function(){
-      var dialogMsg = '';
-      function setReconnectDialog(msg){
-        // Buffer the msg in case this element isn't visible in the DOM now
-        dialogMsg = msg;
-        $('#ss-connect-dialog').html(msg);
-      }
-
-      // Schedule the display of the disconnect window
-      self._disconnectTimer = setTimeout(function(){
-        debug('Displaying disconnect screen.');
-        $('body').addClass('ss-reconnecting');
-        $('<div id="ss-connect-dialog">'+dialogMsg+'<div class="ss-clearfix"></div></div><div id="ss-overlay"></div>').appendTo('body');
-      }, 3500);
-
-      var timeout = 15;
-      
-      function reconnect_p(){
-        setReconnectDialog('Attempting to reconnect...');
-        var def = $.Deferred();
-
-        log("Attempting to reopen.");
-
-        self._openConnection_p()
-        .then(function(){
-          $('body').removeClass('ss-reconnecting');
-          $('#ss-connect-dialog').remove();
-          $('#ss-overlay').remove();
-          def.resolve();
-        }, function(err){
-          // This was a failed attempt to reconnect
-          log("Unable to reconnect: " + JSON.stringify(err));
-          def.reject();
-        });
-
-        return def;
-      }
-
-      // @param time The last time a connection attempt was started
-      // @param count 0-indexed count of how many reconnect attempts have occured.
-      // @param expires the time when the session is scheduled to expire on 
-      // the server.
-      function scheduleReconnect_p(time, count, expires) {
-        var def = $.Deferred();
-
-        if (Date.now() > expires){
-          // Shouldn't happen, but if the current time is after the known
-          // expiration for this session, give up.
-          debug('Overshot session expiration.');
-          return def.reject(new Error("Overshot session expiration"));
-        }
-
-        // Compute delay exponentially.
-        var interval;
-        if (count < 10){
-          interval = 1000 * Math.pow(2, count);
-          interval = Math.min(15 * 1000, interval); // Max of 15s delay.
-        } else { 
-          // The interval may end up being configurable or changed, so we don't cut off
-          // exactly at 2^4, but don't bother computing really large powers.
-          interval = 15 * 1000;
-        }
-        var delay = time - Date.now() + interval;
-
-        // If the next attempt would be after the session is due to expire, 
-        // schedule one last attempt to connect a couple seconds before the
-        // expiration.
-        if (Date.now() + delay > (expires - 2000)) {
-          delay = expires - Date.now() - 2000;
-        }
-        if (delay < 0){
-          // i.e. we're within 2 seconds of session expiration. Make
-          // one last connection attmpt but don't schedule any more.
-          debug('Final reconnection attempt');
-          return reconnect_p();
-        }
-
-        function doRecon(){
-          var startTime = Date.now();
-          reconnect_p()
-          .then(function(c){
-            // Able to reconnect.
-            def.resolve(c);
-          }, function(){
-            scheduleReconnect_p(startTime, count+1, expires)
-            .then(function(c){
-              def.resolve(c);
-            }, function(e){
-              def.reject(e);
-            });
-          });
-        }
-
-        var reconTimeout = null;
-        setReconnectDialog('<button id="ss-reconnect-btn" type="button" class="ss-dialog-button">Reconnect Now</button>Trouble connecting to server.');
-        $('#ss-reconnect-btn').click(function(){
-          debug('Trying to reconnect now.');
-          // Short-circuit the wait.
-          clearTimeout(reconTimeout);
-          doRecon();
-        });
-        debug('Setting countdown timer');
-        debug('Scheduling reconnect attempt for ' + delay + 'ms');
-        // Schedule the reconnect for some time in the future.
-        reconTimeout = setTimeout(doRecon, delay);
-
-        return def;
-      }
-
-
-      // Attempt to reconnect immediately, then start scheduling.
-      if (!self._disconnected){
-        var time = Date.now();
-        reconnect_p()
-        .fail(function(){
-          scheduleReconnect_p(time, 0, time + 15 * 1000)
-          .fail(function(){
-            // We were not able to reconnect
-            self._disconnected = true;
-            self._doClose();
-          });
-        });
-      } else {
-        self._disconnected = true;
-        self._doClose();
-      }
-    };
-
-    this.onConnClose = function(e) {
-      log("Connection closed. Info: " + JSON.stringify(e));
-
-      // If the server intentionally closed the connection, don't attempt to come back.
-      if (e && e.wasClean === true || ! self._autoReconnect){
-        self._disconnected = true;
-      }
-
-      if (!self._disconnected) {
-        self.startReconnect();
-      } else {
-        self._doClose();
-      }
-    };
-
-    this._doClose = function(){
-      // If the SockJS connection is terminated from the other end (or due
-      // to loss of connectivity or whatever) then we can notify all the
-      // active channels that they are closed too.
-      for (var key in self._channels) {
-        if (self._channels.hasOwnProperty(key)) {
-          self._channels[key]._destroy();
-        }
-      }
-      for (var i = 0; i < self.onclose.length; i++) {
-        self.onclose[i]();
-      }
-
-      if (self._disconnected){
-        $('body').removeClass('ss-reconnecting');
-        var html = '<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.<div class="ss-clearfix"></div>';
-        if ($('#ss-connect-dialog').length){
-          // Update existing dialog
-          $('#ss-connect-dialog').html(html);
-          $('#ss-overlay').addClass('ss-gray-out');
-        } else {
-          // Create dialog from scratch.
-          $('<div id="ss-connect-dialog">'+html+'</div><div id="ss-overlay" class="ss-gray-out"></div>').appendTo('body');
-        }
-        $('#ss-reload-button').click(function(){
-          location.reload();
-        });
-      }
-    };
-    this.onConnMessage = function(e) {
-      var msg = self._parseMultiplexData(e.data);
-      if (!msg) {
-        log("Invalid multiplex packet received from server");
-        self._conn.close();
-        return;
-      }
-      var id = msg.id;
-      var method = msg.method;
-      var payload = msg.payload;
-      var channel = self._channels[id];
-      if (!channel) {
-        log("Multiplex channel " + id + " not found");
-        return;
-      }
-      if (method === "c") {
-        // If we're closing, we want to close everything, not just a subapp.
-        // So don't send to a single channel.
-        self._conn.close();
-      } else if (method === "m") {
-        channel.onmessage({data: payload});
-      } else if (method === "r") {
-        self._disconnected = true;
-        if (msg.payload.length > 0){
-          alert(msg.payload);
-        }
-      }
-    };
-
-    // Open a new SockJS connection and assign it.
-    this._openConnection_p = function(){
-      var def = $.Deferred();
-
-      var url = self._sockjsUrl;
-      if (!self._first){
-        // Communicate to the server that we're intending to re-use an existing ID.
-        url = url.replace(/\/n=/, '/o=');
-      }
-      var conn = new SockJS(url,
-        null,{protocols_whitelist: self._whitelist});
-      conn.onmessage = self.onConnMessage;
-      
-      // Temporarily override so we can resolve the promise
-      conn.onopen = function(){
-        // Successful open; restore onClose pass through to real open callback
-        conn.onclose = self.onConnClose;
-        self.onConnOpen.apply(self, arguments);
-        def.resolve(conn);
-      };
-      conn.onclose = function(err){
-        // If we got here, means we didn't get to onopen, so it failed.
-        def.reject(err);
-      };
-
-      self._conn = conn;
-
-      return def;
-    };
 
     // Open an initial connection 
     this._openConnection_p()
@@ -564,47 +300,7 @@
       self.onConnClose.apply(self, arguments);
     })
     .done();
-
-    this._parseMultiplexData = function(msg) {
-      try {
-        var m = /^(\d+)\|(m|o|c|r)\|([\s\S]*)$/m.exec(msg);
-        if (!m)
-          return null;
-        msg = {
-          id: m[1],
-          method: m[2],
-          payload: m[3]
-        };
-
-        switch (msg.method) {
-          case 'm':
-            break;
-          case 'o':
-            if (msg.payload.length === 0)
-              return null;
-            break;
-          case 'c':
-            try {
-              msg.payload = JSON.parse(msg.payload);
-            } catch(e) {
-              return null;
-            }
-            break;
-          case 'r':
-            break;
-          default:
-            return null;
-        }
-
-        return msg;
-
-      } catch(e) {
-        log('Error parsing multiplex data: ' + e);
-        return null;
-      }
-    };
-
-  }
+  };
   MultiplexClient.prototype.open = function(url) {
     var channel = new MultiplexClientChannel(this, this._nextId++ + "",
                                              url);
@@ -635,6 +331,308 @@
     if (this._channelCount === 0 && this._conn.readyState < 2) {
       debug("Closing SockJS connection since no channels are left");
       this._conn.close();
+    }
+  };
+  MultiplexClient.prototype._parseMultiplexData = function(msg) {
+    try {
+      var m = /^(\d+)\|(m|o|c|r)\|([\s\S]*)$/m.exec(msg);
+      if (!m)
+        return null;
+      msg = {
+        id: m[1],
+        method: m[2],
+        payload: m[3]
+      };
+
+      switch (msg.method) {
+        case 'm':
+          break;
+        case 'o':
+          if (msg.payload.length === 0)
+            return null;
+          break;
+        case 'c':
+          try {
+            msg.payload = JSON.parse(msg.payload);
+          } catch(e) {
+            return null;
+          }
+          break;
+        case 'r':
+          break;
+        default:
+          return null;
+      }
+
+      return msg;
+
+    } catch(e) {
+      log('Error parsing multiplex data: ' + e);
+      return null;
+    }
+  };
+  // Open a new SockJS connection and assign it.
+  MultiplexClient.prototype._openConnection_p = function(){
+    var def = $.Deferred();
+
+    var url = this._sockjsUrl;
+    if (!this._first){
+      // Communicate to the server that we're intending to re-use an existing ID.
+      url = url.replace(/\/n=/, '/o=');
+    }
+    var conn = new SockJS(url,
+      null,{protocols_whitelist: this._whitelist});
+    var self = this;
+    conn.onmessage = function(){
+      self.onConnMessage.apply(self, arguments);
+    }
+
+    var self = this;
+
+    // Temporarily override so we can resolve the promise
+    conn.onopen = function(){
+      // Successful open; restore onClose pass through to real open callback
+      conn.onclose = function(){
+        self.onConnClose.apply(self, arguments);
+      };
+      self.onConnOpen.apply(self, arguments);
+      def.resolve(conn);
+    };
+    conn.onclose = function(err){
+      // If we got here, means we didn't get to onopen, so it failed.
+      def.reject(err);
+    };
+
+    this._conn = conn;
+
+    return def;
+  };
+  MultiplexClient.prototype.onConnMessage = function(e) {
+    var msg = this._parseMultiplexData(e.data);
+    if (!msg) {
+      log("Invalid multiplex packet received from server");
+      this._conn.close();
+      return;
+    }
+    var id = msg.id;
+    var method = msg.method;
+    var payload = msg.payload;
+    var channel = this._channels[id];
+    if (!channel) {
+      log("Multiplex channel " + id + " not found");
+      return;
+    }
+    if (method === "c") {
+      // If we're closing, we want to close everything, not just a subapp.
+      // So don't send to a single channel.
+      this._conn.close();
+    } else if (method === "m") {
+      channel.onmessage({data: payload});
+    } else if (method === "r") {
+      this._disconnected = true;
+      if (msg.payload.length > 0){
+        alert(msg.payload);
+      }
+    }
+  };
+  MultiplexClient.prototype._doClose = function(){
+    // If the SockJS connection is terminated from the other end (or due
+    // to loss of connectivity or whatever) then we can notify all the
+    // active channels that they are closed too.
+    for (var key in this._channels) {
+      if (this._channels.hasOwnProperty(key)) {
+        this._channels[key]._destroy();
+      }
+    }
+    for (var i = 0; i < this.onclose.length; i++) {
+      this.onclose[i]();
+    }
+
+    if (this._disconnected){
+      $('body').removeClass('ss-reconnecting');
+      var html = '<button id="ss-reload-button" type="button" class="ss-dialog-button">Reload</button> Disconnected from the server.<div class="ss-clearfix"></div>';
+      if ($('#ss-connect-dialog').length){
+        // Update existing dialog
+        $('#ss-connect-dialog').html(html);
+        $('#ss-overlay').addClass('ss-gray-out');
+      } else {
+        // Create dialog from scratch.
+        $('<div id="ss-connect-dialog">'+html+'</div><div id="ss-overlay" class="ss-gray-out"></div>').appendTo('body');
+      }
+      $('#ss-reload-button').click(function(){
+        location.reload();
+      });
+    }
+  };
+  MultiplexClient.prototype.onConnOpen = function() {
+    this._first = false;
+    if (this._disconnectTimer){
+      clearTimeout(this._disconnectTimer);
+      this._disconnectTimer = null;
+    }
+    log("Connection opened. " + window.location.href);
+    var channel;
+    while ((channel = this._pendingChannels.shift())) {
+      // Be sure to check readyState so we don't open connections for
+      // channels that were closed before they finished opening
+      if (channel.readyState === 0) {
+        channel._open();
+      } else {
+        debug("NOT opening channel " + channel.id);
+      }
+    }
+
+    // Send any buffered messages.
+    var msg;
+    while ((msg = this._buffer.shift())){
+      this._conn.send(msg);
+    }
+  };
+  MultiplexClient.prototype.onConnClose = function(e) {
+    log("Connection closed. Info: " + JSON.stringify(e));
+
+    // If the server intentionally closed the connection, don't attempt to come back.
+    if (e && e.wasClean === true || ! this._autoReconnect){
+      this._disconnected = true;
+    }
+
+    if (!this._disconnected) {
+      this.startReconnect();
+    } else {
+      this._doClose();
+    }
+  };
+  MultiplexClient.prototype.send = function(msg){
+    if (this._conn.readyState === 1){
+      this._conn.send(msg);
+    } else {
+      this._buffer.push(msg);
+    }
+  };
+  MultiplexClient.prototype.setReconnectDialog = function(msg){
+    // Buffer the msg in case this element isn't visible in the DOM now
+    this._dialogMsg = msg;
+    $('#ss-connect-dialog').html(msg);
+  }
+  MultiplexClient.prototype.reconnect_p = function(){
+    this.setReconnectDialog('Attempting to reconnect...');
+    var def = $.Deferred();
+
+    log("Attempting to reopen.");
+
+    this._openConnection_p()
+    .then(function(){
+      $('body').removeClass('ss-reconnecting');
+      $('#ss-connect-dialog').remove();
+      $('#ss-overlay').remove();
+      def.resolve();
+    }, function(err){
+      // This was a failed attempt to reconnect
+      log("Unable to reconnect: " + JSON.stringify(err));
+      def.reject();
+    });
+
+    return def;
+  }
+  // @param time The last time a connection attempt was started
+  // @param count 0-indexed count of how many reconnect attempts have occured.
+  // @param expires the time when the session is scheduled to expire on 
+  // the server.
+  MultiplexClient.prototype.scheduleReconnect_p = function(time, count, expires) {
+    var def = $.Deferred();
+
+    if (Date.now() > expires){
+      // Shouldn't happen, but if the current time is after the known
+      // expiration for this session, give up.
+      debug('Overshot session expiration.');
+      return def.reject(new Error("Overshot session expiration"));
+    }
+
+    // Compute delay exponentially.
+    var interval;
+    var delay;
+    if (count < 0){
+      interval = 0;
+      delay = 0;
+    } else {
+      if (count < 10){
+        interval = 1000 * Math.pow(2, count);
+        interval = Math.min(15 * 1000, interval); // Max of 15s delay.
+      } else { 
+        // The interval may end up being configurable or changed, so we don't cut off
+        // exactly at 2^4, but don't bother computing really large powers.
+        interval = 15 * 1000;
+      }
+      delay = time - Date.now() + interval;
+    }
+
+    // If the next attempt would be after the session is due to expire, 
+    // schedule one last attempt to connect a couple seconds before the
+    // expiration.
+    if (Date.now() + delay > (expires - 2000)) {
+      delay = expires - Date.now() - 2000;
+    }
+    if (delay < 0){
+      // i.e. we're within 2 seconds of session expiration. Make
+      // one last connection attmpt but don't schedule any more.
+      debug('Final reconnection attempt');
+      return this.reconnect_p();
+    }
+
+    var self = this;
+    function doRecon(){
+      var startTime = Date.now();
+      self.reconnect_p()
+      .then(function(c){
+        // Able to reconnect.
+        def.resolve(c);
+      }, function(){
+        self.scheduleReconnect_p(startTime, count+1, expires)
+        .then(function(c){
+          def.resolve(c);
+        }, function(e){
+          def.reject(e);
+        });
+      });
+    }
+
+    var reconTimeout = null;
+    this.setReconnectDialog('<button id="ss-reconnect-btn" type="button" class="ss-dialog-button">Reconnect Now</button>Trouble connecting to server.');
+    $('#ss-reconnect-btn').click(function(){
+      debug('Trying to reconnect now.');
+      // Short-circuit the wait.
+      clearTimeout(reconTimeout);
+      doRecon();
+    });
+    debug('Setting countdown timer');
+    debug('Scheduling reconnect attempt for ' + delay + 'ms');
+    // Schedule the reconnect for some time in the future.
+    reconTimeout = setTimeout(doRecon, delay);
+
+    return def;
+  }
+  MultiplexClient.prototype.startReconnect = function(){
+    var self = this;
+
+    // Schedule the display of the disconnect window
+    
+    // Attempt to reconnect immediately, then start scheduling.
+    if (!self._disconnected){
+      self._disconnectTimer = setTimeout(function(){
+        debug('Displaying disconnect screen.');
+        $('body').addClass('ss-reconnecting');
+        $('<div id="ss-connect-dialog">'+self._dialogMsg+'<div class="ss-clearfix"></div></div><div id="ss-overlay"></div>').appendTo('body');
+      }, 3500);
+
+      var time = Date.now();
+      self.scheduleReconnect_p(time, -1, time + 15 * 1000)
+      .fail(function(){
+        // We were not able to re/connect
+        self._disconnected = true;
+        self._doClose();
+      });
+    } else {
+      self._doClose();
     }
   };
 
