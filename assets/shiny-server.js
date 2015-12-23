@@ -615,17 +615,15 @@
     var self = this;
 
     // Schedule the display of the disconnect window
-    self._disconnectTimer = setTimeout(function(){
-      debug('Displaying disconnect screen.');
-      $('body').addClass('ss-reconnecting');
-      $('<div id="ss-connect-dialog">'+self._dialogMsg+'<div class="ss-clearfix"></div></div><div id="ss-overlay"></div>').appendTo('body');
-    }, 3500);
-
-    var timeout = 15; 
-
-
+    
     // Attempt to reconnect immediately, then start scheduling.
     if (!self._disconnected){
+      self._disconnectTimer = setTimeout(function(){
+        debug('Displaying disconnect screen.');
+        $('body').addClass('ss-reconnecting');
+        $('<div id="ss-connect-dialog">'+self._dialogMsg+'<div class="ss-clearfix"></div></div><div id="ss-overlay"></div>').appendTo('body');
+      }, 3500);
+
       var time = Date.now();
       self.scheduleReconnect_p(time, -1, time + 15 * 1000)
       .fail(function(){
@@ -634,10 +632,9 @@
         self._doClose();
       });
     } else {
-      self._disconnected = true;
       self._doClose();
     }
-    };
+  };
 
   function MultiplexClientChannel(owner, id, url) {
     this._owner = owner;
