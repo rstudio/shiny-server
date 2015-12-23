@@ -10,8 +10,7 @@
  * AGPL (http://www.gnu.org/licenses/agpl-3.0.txt) for more details.
  *
  */
-#include <node.h>
-#include <v8.h>
+#include <nan.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -20,18 +19,13 @@
 #include <grp.h>
 #include <fcntl.h>
 
-using namespace node;
-using namespace v8;
-
-Handle<Value> GetPwNam(const Arguments& args) {
-  HandleScope scope;
-
-  if (args.Length() < 1) {
-    return ThrowException(Exception::Error(
-          String::New("getpwnam requires 1 argument")));
+void GetPwNam(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  if (info.Length() < 1) {
+    Nan::ThrowTypeError("getpwnam requires 1 argument");
+    return;
   }
 
-  String::Utf8Value pwnam(args[0]);
+  v8::String::Utf8Value pwnam(info[0]);
 
   int err = 0;
   struct passwd pwd;
@@ -44,33 +38,41 @@ Handle<Value> GetPwNam(const Arguments& args) {
 
   errno = 0;
   if ((err = getpwnam_r(*pwnam, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
-    if (errno == 0)
-      return scope.Close(Null());
-    else
-      return ThrowException(ErrnoException(errno, "getpwnam_r"));
+    if (errno == 0) {
+      info.GetReturnValue().Set(Nan::Null());
+      return;
+    } else {
+      Nan::ThrowError(Nan::ErrnoException(errno, "getpwnam_r"));
+      return;
+    }
   }
 
-  Local<Object> userInfo = Object::New();
-  userInfo->Set(String::NewSymbol("name"), String::New(pwd.pw_name));
-  userInfo->Set(String::NewSymbol("passwd"), String::New(pwd.pw_passwd));
-  userInfo->Set(String::NewSymbol("uid"), Number::New(pwd.pw_uid));
-  userInfo->Set(String::NewSymbol("gid"), Number::New(pwd.pw_gid));
-  userInfo->Set(String::NewSymbol("gecos"), String::New(pwd.pw_gecos));
-  userInfo->Set(String::NewSymbol("home"), String::New(pwd.pw_dir));
-  userInfo->Set(String::NewSymbol("shell"), String::New(pwd.pw_shell));
+  v8::Local<v8::Object> userInfo = Nan::New<v8::Object>();
+  userInfo->Set(Nan::New("name").ToLocalChecked(),
+		Nan::New(pwd.pw_name).ToLocalChecked());
+  userInfo->Set(Nan::New("passwd").ToLocalChecked(),
+		Nan::New(pwd.pw_passwd).ToLocalChecked());
+  userInfo->Set(Nan::New("uid").ToLocalChecked(),
+		Nan::New(pwd.pw_uid));
+  userInfo->Set(Nan::New("gid").ToLocalChecked(),
+		Nan::New(pwd.pw_gid));
+  userInfo->Set(Nan::New("gecos").ToLocalChecked(),
+		Nan::New(pwd.pw_gecos).ToLocalChecked());
+  userInfo->Set(Nan::New("home").ToLocalChecked(),
+		Nan::New(pwd.pw_dir).ToLocalChecked());
+  userInfo->Set(Nan::New("shell").ToLocalChecked(),
+		Nan::New(pwd.pw_shell).ToLocalChecked());
 
-  return scope.Close(userInfo);
+  info.GetReturnValue().Set(userInfo);
 }
 
-Handle<Value> GetPwUid(const Arguments& args) {
-  HandleScope scope;
-
-  if (args.Length() < 1) {
-    return ThrowException(Exception::Error(
-          String::New("getpwuid requires 1 argument")));
+void GetPwUid(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  if (info.Length() < 1) {
+    Nan::ThrowTypeError("getpwuid requires 1 argument");
+    return;
   }
 
-  uid_t pwuid = args[0]->IntegerValue();
+  uid_t pwuid = info[0]->IntegerValue();
   printf("%d", pwuid);
 
   int err = 0;
@@ -84,33 +86,38 @@ Handle<Value> GetPwUid(const Arguments& args) {
 
   errno = 0;
   if ((err = getpwuid_r(pwuid, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
-    if (errno == 0)
-      return scope.Close(Null());
-    else
-      return ThrowException(ErrnoException(errno, "getpwuid_r"));
+    if (errno == 0) {
+      info.GetReturnValue().Set(Nan::Null());
+      return;
+    } else {
+      Nan::ThrowError(Nan::ErrnoException(errno, "getpwuid_r"));
+      return;
+    }
   }
 
-  Local<Object> userInfo = Object::New();
-  userInfo->Set(String::NewSymbol("name"), String::New(pwd.pw_name));
-  userInfo->Set(String::NewSymbol("passwd"), String::New(pwd.pw_passwd));
-  userInfo->Set(String::NewSymbol("uid"), Number::New(pwd.pw_uid));
-  userInfo->Set(String::NewSymbol("gid"), Number::New(pwd.pw_gid));
-  userInfo->Set(String::NewSymbol("gecos"), String::New(pwd.pw_gecos));
-  userInfo->Set(String::NewSymbol("home"), String::New(pwd.pw_dir));
-  userInfo->Set(String::NewSymbol("shell"), String::New(pwd.pw_shell));
+  v8::Local<v8::Object> userInfo = Nan::New<v8::Object>();
+  userInfo->Set(Nan::New("name").ToLocalChecked(),
+		Nan::New(pwd.pw_name).ToLocalChecked());
+  userInfo->Set(Nan::New("passwd").ToLocalChecked(),
+		Nan::New(pwd.pw_passwd).ToLocalChecked());
+  userInfo->Set(Nan::New("uid").ToLocalChecked(), Nan::New(pwd.pw_uid));
+  userInfo->Set(Nan::New("gid").ToLocalChecked(), Nan::New(pwd.pw_gid));
+  userInfo->Set(Nan::New("gecos").ToLocalChecked(),
+		Nan::New(pwd.pw_gecos).ToLocalChecked());
+  userInfo->Set(Nan::New("home").ToLocalChecked(),
+		Nan::New(pwd.pw_dir).ToLocalChecked());
+  userInfo->Set(Nan::New("shell").ToLocalChecked(),
+		Nan::New(pwd.pw_shell).ToLocalChecked());
 
-  return scope.Close(userInfo);
+  info.GetReturnValue().Set(userInfo);
 }
 
-Handle<Value> GetGroupList(const Arguments& args) {
-  HandleScope scope;
-
-  if (args.Length() < 1) {
-    return ThrowException(Exception::Error(
-          String::New("getgrouplist requires 1 argument")));
+void GetGroupList(const Nan::FunctionCallbackInfo<v8::Value>&info ) {
+  if (info.Length() < 1) {
+    return Nan::ThrowTypeError("getgrouplist requires 1 argument");
   }
 
-  String::Utf8Value name(args[0]);
+  v8::String::Utf8Value name(info[0]);
 
   int err = 0;
   struct passwd pwd;
@@ -129,10 +136,13 @@ Handle<Value> GetGroupList(const Arguments& args) {
 
   errno = 0;
   if ((err = getpwnam_r(*name, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
-    if (errno == 0)
-      return scope.Close(Null());
-    else
-      return ThrowException(ErrnoException(errno, "getpwnam_r"));
+    if (errno == 0) {
+      info.GetReturnValue().Set(Nan::Null());
+      return;
+    } else {
+      Nan::ThrowError(Nan::ErrnoException(errno, "getpwnam_r"));
+      return;
+    }
   }
 
   int ngrp = 64;
@@ -150,68 +160,70 @@ Handle<Value> GetGroupList(const Arguments& args) {
 #ifndef __linux__
     } else if (err != 0) {
       // On BSD, return value is 0 on success
-      return ThrowException(Exception::Error(String::New("Unexpected error calling getgrouplist")));
+      Nan::ThrowTypeError("Unexpected error calling getgrouplist");
+      return;
 #endif
     }
     else {
-      Local<Array> groupList = Array::New();
+      v8::Local<v8::Array> groupList = Nan::New<v8::Array>();
       for (int j = 0; j < ngrp; j++) {
-        groupList->Set(j, Integer::New(groups[j]));
+        groupList->Set(j, Nan::New(groups[j]));
       }
-      return scope.Close(groupList);
+      info.GetReturnValue().Set(groupList);
     }
   }
 
-  return ThrowException(Exception::Error(String::New("Unexpected getgrouplist behavior")));
+  Nan::ThrowTypeError("Unexpected getgrouplist behavior");
 }
 
-Handle<Value> GetGrNam(const Arguments& args) {
-  HandleScope scope;
-
-  if (args.Length() < 1) {
-    return ThrowException(Exception::Error(
-          String::New("getgrouplist requires 1 argument")));
+void GetGrNam(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  if (info.Length() < 1) {
+    return Nan::ThrowTypeError("getgrouplist requires 1 argument");
   }
 
-  String::Utf8Value name(args[0]);
+  v8::String::Utf8Value name(info[0]);
 
   errno = 0;
   struct group * group = getgrnam(*name);
   if (!group) {
-    if (errno == 0)
-      return scope.Close(Null());
-    else
-      return ThrowException(ErrnoException(errno, "getgrnam"));
+    if (errno == 0) {
+      info.GetReturnValue().Set(Nan::Null());
+      return;
+    } else {
+      Nan::ThrowError(Nan::ErrnoException(errno, "getgrnam"));
+      return;
+    }
   }
 
-  Local<Object> groupInfo = Object::New();
-  groupInfo->Set(String::NewSymbol("name"), String::New(group->gr_name));
-  groupInfo->Set(String::NewSymbol("passwd"), String::New(group->gr_passwd));
-  groupInfo->Set(String::NewSymbol("gid"), Integer::New(group->gr_gid));
-  Local<Array> members = Array::New();
-  groupInfo->Set(String::NewSymbol("members"), members);
+  v8::Local<v8::Object> groupInfo = Nan::New<v8::Object>();
+  groupInfo->Set(Nan::New("name").ToLocalChecked(),
+		 Nan::New(group->gr_name).ToLocalChecked());
+  groupInfo->Set(Nan::New("passwd").ToLocalChecked(),
+		 Nan::New(group->gr_passwd).ToLocalChecked());
+  groupInfo->Set(Nan::New("gid").ToLocalChecked(),
+		 Nan::New(group->gr_gid));
+  v8::Local<v8::Array> members = Nan::New<v8::Array>();
+  groupInfo->Set(Nan::New("members").ToLocalChecked(), members);
   for (int i = 0; group->gr_mem[i]; i++) {
-    members->Set(members->Length(), String::New(group->gr_mem[i]));
+    members->Set(members->Length(),
+		 Nan::New<v8::String>(group->gr_mem[i]).ToLocalChecked());
   }
-
-  return scope.Close(groupInfo);
+  info.GetReturnValue().Set(groupInfo);
 }
 
-Handle<Value> AcquireRecordLock(const Arguments& args) {
-  HandleScope scope;
-
+void AcquireRecordLock(const Nan::FunctionCallbackInfo<v8::Value>& info) {
   // Args: fd, lockType, whence, start, len
 
-  if (args.Length() < 5) {
-    return ThrowException(Exception::Error(
-          String::New("acquireRecordLock requires 5 arguments")));
+  if (info.Length() < 5) {
+    Nan::ThrowTypeError("acquireRecordLock requires 5 arguments");
+    return;
   }
 
-  int fd = args[0]->IntegerValue();
-  short lockType = args[1]->IntegerValue();
-  short whence = args[2]->IntegerValue();
-  off_t start = args[3]->IntegerValue();
-  off_t len = args[4]->IntegerValue();
+  int fd = info[0]->IntegerValue();
+  short lockType = info[1]->IntegerValue();
+  short whence = info[2]->IntegerValue();
+  off_t start = info[3]->IntegerValue();
+  off_t len = info[4]->IntegerValue();
 
   struct flock flk;
   flk.l_type = lockType;
@@ -221,25 +233,27 @@ Handle<Value> AcquireRecordLock(const Arguments& args) {
 
   if (-1 == fcntl(fd, F_SETLK, &flk)) {
     if (errno == EACCES || errno == EAGAIN) {
-      return scope.Close(Boolean::New(false));
+      info.GetReturnValue().Set(Nan::False());
+      return;
     } else {
-      return ThrowException(ErrnoException(errno, "acquireRecordLock"));
+      Nan::ThrowError(Nan::ErrnoException(errno, "acquireRecordLock"));
+      return;
     }
   } else {
-    return scope.Close(Boolean::New(true));
+    info.GetReturnValue().Set(Nan::True());
   }
 }
 
-void Initialize(Handle<Object> target) {
-  target->Set(String::NewSymbol("getpwnam"),
-      FunctionTemplate::New(GetPwNam)->GetFunction());
-  target->Set(String::NewSymbol("getpwuid"),
-      FunctionTemplate::New(GetPwUid)->GetFunction());
-  target->Set(String::NewSymbol("getgrouplist"),
-      FunctionTemplate::New(GetGroupList)->GetFunction());
-  target->Set(String::NewSymbol("getgrnam"),
-      FunctionTemplate::New(GetGrNam)->GetFunction());
-  target->Set(String::NewSymbol("acquireRecordLock"),
-      FunctionTemplate::New(AcquireRecordLock)->GetFunction());
+void Initialize(v8::Local<v8::Object> target) {
+  target->Set(Nan::New("getpwnam").ToLocalChecked(),
+      Nan::New<v8::FunctionTemplate>(GetPwNam)->GetFunction());
+  target->Set(Nan::New("getpwuid").ToLocalChecked(),
+      Nan::New<v8::FunctionTemplate>(GetPwUid)->GetFunction());
+  target->Set(Nan::New("getgrouplist").ToLocalChecked(),
+      Nan::New<v8::FunctionTemplate>(GetGroupList)->GetFunction());
+  target->Set(Nan::New("getgrnam").ToLocalChecked(),
+      Nan::New<v8::FunctionTemplate>(GetGrNam)->GetFunction());
+  target->Set(Nan::New("acquireRecordLock").ToLocalChecked(),
+      Nan::New<v8::FunctionTemplate>(AcquireRecordLock)->GetFunction());
 }
 NODE_MODULE(posix, Initialize)
