@@ -14,6 +14,15 @@
   var exports = window.ShinyServer = window.ShinyServer || {};
   exports.debugging = false;
   $(function() {
+    /**
+     * Detects whether or not this application is an embedded sub app in 
+     * a larger rmd file.
+     **/
+    function isSubApp(){
+      var subApp = window.location.search.match(/\?.*__subapp__=(\d)/);
+      return (subApp && subApp[1]); //is truthy
+    }
+
     if (typeof(Shiny) != "undefined") {
       (function() {
         var loc = location.pathname;
@@ -22,8 +31,7 @@
 
         exports.url = sockjsUrl;
 
-        var subApp = window.location.search.match(/\?.*__subapp__=(\d)/);
-        if (subApp && subApp[1]) {
+        if (isSubApp()) {
           // Take from nodeJS's path module.
           // The doc's on this function are lacking, but it looks like the last 
           // element in each path is treated as a file (regardless of the
@@ -35,7 +43,6 @@
           // something to each, like `/whatever/`, then we'd get '../b'.
           // This is why we append `__sockjs__` to each path before comparing.
           function getRelativePath(from, to, includeLast) {
-
             // The last element would otherwise get trimmed off, if you want it,
             // add some garbage to the end that can be trimmed.
             if (includeLast){
@@ -225,7 +232,7 @@
             }
           }
           store["shiny.whitelist"] = JSON.stringify(whitelist);
-        }
+        };
 
         exports.multiplexer = new MultiplexClient(sockjsUrl, whitelist);
 
