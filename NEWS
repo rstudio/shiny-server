@@ -1,3 +1,9 @@
+shiny-server 1.5.0
+--------------------------------------------------------------------------------
+* Add auto-reconnect capabilities.
+
+* Upgrade SockJS library to version 1.0.3.
+
 shiny-server 1.4.0
 --------------------------------------------------------------------------------
 * Added support for Red Hat Enterprise Linux 7 and Ubuntu 15.04.
