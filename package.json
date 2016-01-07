@@ -15,7 +15,7 @@
   "dependencies" : {
     "faye-websocket"    :  "https://github.com/rstudio/faye-websocket-node/archive/95436354.tar.gz",
     "http-proxy"        :  "https://github.com/rstudio/node-http-proxy/archive/039f907.tar.gz",
-    "sockjs"            :  "https://s3.amazonaws.com/rstudio-buildtools/sockjs-b88f9eadf.tar.gz",
+    "sockjs"            :  "0.3.15",
     "handlebars"        :  "1.0.7",
     "underscore"        :  "1.4.2",
     "q"                 :  "0.9.x",
