@@ -130,7 +130,7 @@ local({
    }
 
    inject <- paste(
-      tags$script(src='__assets__/sockjs-1.0.3.min.js'),
+      tags$script(src='__assets__/sockjs-0.3.4.min.js'),
       tags$script(src='__assets__/shiny-server.js'),
       tags$link(rel='stylesheet', type='text/css', href='__assets__/shiny-server.css'),
       gaTrackingCode,
