@@ -25,6 +25,10 @@
 
     if (typeof(Shiny) != "undefined") {
       (function() {
+        if (isSubApp()) {
+          robustId = 'none';
+        }
+
         var loc = location.pathname;
         loc = loc.replace(/\/$/, '');
         var sockjsUrl = loc + "/__sockjs__/n=" + robustId;
