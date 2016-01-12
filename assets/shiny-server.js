@@ -1,4 +1,3 @@
-
 (function( $ ) {
   function generateId(size){
     var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -584,6 +583,10 @@
       delay = expires - Date.now() - 2000;
     }
     if (delay < 0){
+      delay = 0;
+    }
+
+    if (expires - Date.now() < 2000){
       // i.e. we're within 2 seconds of session expiration. Make
       // one last connection attmpt but don't schedule any more.
       debug('Final reconnection attempt');
