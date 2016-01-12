@@ -129,4 +129,3 @@ for (var method in instance) EventSource.prototype[method] = instance[method];
 for (var key in EventTarget) EventSource.prototype[key] = EventTarget[key];
 
 module.exports = EventSource;
-
