@@ -391,7 +391,7 @@
       url = url.replace(/\/n=/, '/o=');
     }
     var conn = new SockJS(url,
-      null,{transports: this._whitelist, sessionId: 16});
+      null,{protocols_whitelist: this._whitelist});
     var self = this;
     conn.onmessage = function(){
       self.onConnMessage.apply(self, arguments);
