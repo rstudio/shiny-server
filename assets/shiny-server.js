@@ -92,7 +92,12 @@
           Shiny.createSocket = function() {
             try {
               if (window.parent.ShinyServer && window.parent.ShinyServer.multiplexer) {
-                var relURL = getRelativePath(window.parent.ShinyServer.url, sockjsUrl, true);
+                var parentUrl = window.parent.ShinyServer.url;
+                var ind = parentUrl.search(/\/[no]=/);
+                if (ind !== -1) {
+                  parentUrl = parentUrl.substring(0, ind+2);
+                }
+                var relURL = getRelativePath(parentUrl, sockjsUrl, true);
                 return window.parent.ShinyServer.multiplexer.open(relURL);
               }
               log("Couldn't get multiplexer: multiplexer not found in parent");
