@@ -132,12 +132,13 @@ local({
    inject <- paste(
       tags$script(src='__assets__/sockjs-0.3.4.min.js'),
       tags$script(src='__assets__/shiny-server.js'),
+      tags$script("preShinyInit({reconnect:true});"),
       tags$link(rel='stylesheet', type='text/css', href='__assets__/shiny-server.css'),
       gaTrackingCode,
       HTML("</head>"),
       sep="\n"
    )
-                            
+
    filter <- function(...) {
       # The signature of filter functions changed between Shiny 0.4.0 and
       # 0.4.1; previously the parameters were (ws, headers, response) and
