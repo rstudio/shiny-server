@@ -83,14 +83,14 @@ function parseId(str) {
 }
 
 MessageReceiver.prototype.receive = function (msg) {
-  var match = /^([\dA-F]+)#/.exec(msg);
-  if (!match) {
+  var result = message_utils.parseTag(msg);
+  if (!result) {
     throw new Error("Invalid robust-message, no msg-id found");
   }
 
-  this._pendingMsgId = message_utils.parseId(match[1]) + 1;
+  this._pendingMsgId = result.id;
 
-  return msg.replace(/^([\dA-F]+)#/, "");
+  return result.data;
 };
 
 MessageReceiver.prototype.nextId = function () {
