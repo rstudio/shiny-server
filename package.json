@@ -13,6 +13,7 @@
     "url": "https://github.com/rstudio/shiny-server.git"
   },
   "dependencies" : {
+    "shiny-server-js"   :  "https://github.com/rstudio/shiny-server-js/archive/es2015.tar.gz",
     "faye-websocket"    :  "https://github.com/rstudio/faye-websocket-node/archive/95436354.tar.gz",
     "http-proxy"        :  "https://github.com/rstudio/node-http-proxy/archive/039f907.tar.gz",
     "sockjs"            :  "0.3.15",
