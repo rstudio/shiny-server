@@ -69,6 +69,7 @@ describe("Reconnect decorator", function() {
     var connectionCount = 0;
     setup.fm.onConnCreate = function(mockConn) {
       connectionCount++;
+      mockConn.sendContinue = connectionCount > 1;
       mockConn.close(1005, "", false); // wasClean == false
     };
 

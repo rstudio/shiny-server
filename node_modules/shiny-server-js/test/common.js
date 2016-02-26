@@ -1,6 +1,8 @@
 var util = require("../lib/util");
 var WebSocket = require("../lib/websocket");
 
+var message_utils = require("../common/message-utils");
+
 // A mock connection factory. It lets you test connection
 // factory decorators by standing in for a connection
 // factory and letting you later retrieve the URL that
@@ -31,6 +33,7 @@ function MockConnection(parent, url, ctx, open, robust) {
   this.url = url;
   this.ctx = ctx;
   this.robust = robust;
+  this.sendContinue = false;
   this.log = [];
   this.onopen = this.onclose = this.onmessage = this.onerror = function() {};
   this.readyState = WebSocket.CONNECTING;
@@ -40,7 +43,7 @@ function MockConnection(parent, url, ctx, open, robust) {
       if (self.readyState === WebSocket.CONNECTING) {
         self.readyState = WebSocket.OPEN;
         self.onopen(util.createEvent("open"));
-        if (self.robust) {
+        if (self.robust && self.sendContinue) {
           self.onmessage({
             data: "CONTINUE " + (self._parent.nextId || 0).toString(16).toUpperCase()
           });
@@ -52,12 +55,15 @@ function MockConnection(parent, url, ctx, open, robust) {
 
 MockConnection.prototype.send = function(data) {
   if (this.robust) {
-    var match = /^([\dA-F]+)#./.exec(data);
-    if (!match) {
-      throw new Error("Message was not robustified");
+    var cont = message_utils.parseCONTINUE(data) !== null;
+    var ack = message_utils.parseACK(data) !== null;
+    var msg = message_utils.parseTag(data);
+
+    if (!cont && !ack && !msg) {
+      throw new Error("Message was not robustified: " + data);
     }
-    var messageId = parseInt(match[1], 16);
-    this._parent.nextId = messageId + 1;
+    if (msg)
+      this._parent.nextId = msg.id + 1;
   }
   this.log.push({type: "send", data: data});
 };

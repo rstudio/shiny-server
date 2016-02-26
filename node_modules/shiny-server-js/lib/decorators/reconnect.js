@@ -123,8 +123,6 @@ function RobustConnection(timeout, factory, url, ctx, robustId) {
   this._ctx = ctx;
   this._robustId = robustId;
   this._conn = null;
-  // Buffer messages here if connection is disconnected but may come back
-  this._pendingMessages = [];
   this._stayClosed = false;
 
   // Initialize all event handlers to no-op.
@@ -173,10 +171,6 @@ RobustConnection.prototype._acceptConn = function(conn) {
 
     // Otherwise, let our clients know that we've just reconnected.
     this.onreconnect(util.createEvent("reconnect"));
-  }
-
-  while (this._pendingMessages.length) {
-    this.send(this._pendingMessages.shift());
   }
 };
 
@@ -303,13 +297,18 @@ RobustConnection.prototype.send = function(data) {
     throw new Error("Can't send when connection is in CONNECTING state");
   } else if (this.readyState > WebSocket.OPEN) {
     throw new Error("Connection is already CLOSING or CLOSED");
+  } else if (!this._conn) {
+    // Previously, we buffered messages that were sent while in this
+    // state, so we could send them if/when a reconnection succeeded.
+    // But with BufferedResendConnection, such a mechanism is not only
+    // unnecessary, but dangerous; buffering messages can only be
+    // done safely by BufferedResendConnection, not by us, because
+    // only BRC retains knowledge about the proper message order, and
+    // what messages have actually been received by the other side.
+    throw new Error("Can't send when connection is disconnected");
   }
 
-  if (this._conn) {
-    this._conn.send(data);
-  } else {
-    this._pendingMessages.push(data);
-  }
+  this._conn.send(data);
 };
 
 RobustConnection.prototype.close = function(code, reason) {
@@ -365,6 +364,12 @@ function BufferedResendConnection(conn) {
 
   this._messageBuffer = new MessageBuffer();
   this._messageReceiver = new MessageReceiver();
+  this._messageReceiver.onacktimeout = e => {
+    let msgId = e.messageId;
+    if (this._conn.readyState === WebSocket.OPEN) {
+      this._conn.send(this._messageReceiver.ACK());
+    }
+  };
 
   this._disconnected = false;
 
@@ -446,7 +451,6 @@ BufferedResendConnection.prototype._handleMessage = function(e) {
   }
 
   e.data = this._messageReceiver.receive(e.data);
-  this._conn.send(this._messageReceiver.ACK());
 
   if (this.onmessage) {
     this.onmessage.apply(this, arguments);

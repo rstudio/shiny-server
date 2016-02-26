@@ -17,7 +17,6 @@ test:
 	./node_modules/.bin/mocha \
 		--compilers js:babel-register \
 		--reporter $(REPORTER) \
-		--growl \
 		$(TESTS)
 
 clean:
