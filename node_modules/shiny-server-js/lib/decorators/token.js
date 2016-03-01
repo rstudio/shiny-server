@@ -1,4 +1,4 @@
-var util = require('../util');
+let util = require('../util');
 
 // The job of this decorator is to request a token from
 // the server, and append that to the URL.
@@ -11,12 +11,12 @@ exports.decorate = function(factory, options) {
       throw new Error("No HTTP transport was provided");
     }
 
-    var xhr = exports.ajax("__token__", {
+    let xhr = exports.ajax("__token__", {
       type: "GET",
       cache: false,
       dataType: "text",
       success: function(data, textStatus) {
-        var newUrl = util.addPathParams(url, {"t": data});
+        let newUrl = util.addPathParams(url, {"t": data});
         factory(newUrl, ctx, callback);
       },
       error: function(jqXHR, textStatus, errorThrown) {

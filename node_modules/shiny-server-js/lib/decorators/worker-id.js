@@ -1,4 +1,4 @@
-var util = require('../util');
+let util = require('../util');
 
 // The job of this decorator is to add the worker ID
 // to the connection URL.
@@ -20,8 +20,8 @@ exports.decorate = function(factory, options) {
     // Search for the worker ID either in the URL query string,
     // or in the <base href> element
 
-    var search = global.location.search.replace(/^\?/, '');
-    var worker = '';
+    let search = global.location.search.replace(/^\?/, '');
+    let worker = '';
     if (search.match(/\bw=[^&]+/)){
       worker = search.match(/\bw=[^&]+/)[0].substring(2);
     }
@@ -30,7 +30,7 @@ exports.decorate = function(factory, options) {
 
     if (!worker) {
       // Check to see if we were assigned a base href
-      var base = jQuery('base').attr('href');
+      let base = jQuery('base').attr('href');
       // Extract the worker ID if it's included in a larger URL.
       mtch = base.match(/_w_(\w+)\//);
       base = mtch[1];

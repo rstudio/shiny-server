@@ -1,4 +1,4 @@
-var WebSocket = require("./websocket");
+let WebSocket = require("./websocket");
 
 module.exports = PromisedConnection;
 function PromisedConnection() {
@@ -51,7 +51,7 @@ PromisedConnection.prototype.close = function(code, reason) {
   } else {
     setTimeout(() => {
       if (this.onclose) {
-        var evt = util.createEvent("close", {
+        let evt = util.createEvent("close", {
           currentTarget: this,
           target: this,
           srcElement: this,

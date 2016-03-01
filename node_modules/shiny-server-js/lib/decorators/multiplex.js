@@ -1,4 +1,4 @@
-var MultiplexClient = require("../multiplex-client");
+let MultiplexClient = require("../multiplex-client");
 
 // The job of this decorator is to wrap the underlying
 // connection with our Multiplexing protocol, designed
@@ -19,7 +19,7 @@ exports.decorate = function(factory, options) {
       }
 
       try {
-        var client = new MultiplexClient(conn);
+        let client = new MultiplexClient(conn);
         ctx.multiplexClient = client;
         callback(null, client.open(""));
       } catch(e) {

@@ -1,5 +1,5 @@
-var log = require('./log');
-var debug = require('./debug');
+let log = require('./log');
+let debug = require('./debug');
 
 // MultiplexClient sits on top of a SockJS connection and lets the caller
 // open logical SockJS connections (channels). The SockJS connection is
@@ -26,7 +26,7 @@ function MultiplexClient(conn) {
 
   this._conn.onopen = () => {
     log("Connection opened. " + global.location.href);
-    var channel;
+    let channel;
     while ((channel = this._pendingChannels.shift())) {
       // Be sure to check readyState so we don't open connections for
       // channels that were closed before they finished opening
@@ -43,26 +43,26 @@ function MultiplexClient(conn) {
     // If the SockJS connection is terminated from the other end (or due
     // to loss of connectivity or whatever) then we can notify all the
     // active channels that they are closed too.
-    for (var key in this._channels) {
+    for (let key in this._channels) {
       if (this._channels.hasOwnProperty(key)) {
         this._channels[key]._destroy(e);
       }
     }
-    for (var i = 0; i < this.onclose.length; i++) {
+    for (let i = 0; i < this.onclose.length; i++) {
       this.onclose[i]();
     }
   };
   this._conn.onmessage = (e) => {
-    var msg = parseMultiplexData(e.data);
+    let msg = parseMultiplexData(e.data);
     if (!msg) {
       log("Invalid multiplex packet received from server");
       this._conn.close();
       return;
     }
-    var id = msg.id;
-    var method = msg.method;
-    var payload = msg.payload;
-    var channel = this._channels[id];
+    let id = msg.id;
+    let method = msg.method;
+    let payload = msg.payload;
+    let channel = this._channels[id];
     if (!channel) {
       log("Multiplex channel " + id + " not found");
       return;
@@ -77,7 +77,7 @@ function MultiplexClient(conn) {
   };
 }
 MultiplexClient.prototype.open = function(url) {
-  var channel = new MultiplexClientChannel(this, this._nextId++ + "",
+  let channel = new MultiplexClientChannel(this, this._nextId++ + "",
                                            this._conn, url);
   this._channels[channel.id] = channel;
   this._channelCount++;
@@ -123,7 +123,7 @@ MultiplexClientChannel.prototype._open = function(parentURL) {
   debug("Open channel " + this.id);
   this.readyState = 1;
 
-  //var relURL = getRelativePath(parentURL, this.url)
+  //let relURL = getRelativePath(parentURL, this.url)
 
   this.conn.send(formatOpenEvent(this.id, this.url));
   if (this.onopen)
@@ -170,7 +170,7 @@ function formatCloseEvent(id, code, reason) {
 }
 function parseMultiplexData(msg) {
   try {
-    var m = /^(\d+)\|(m|o|c)\|([\s\S]*)$/m.exec(msg);
+    let m = /^(\d+)\|(m|o|c)\|([\s\S]*)$/m.exec(msg);
     if (!m)
       return null;
     msg = {
