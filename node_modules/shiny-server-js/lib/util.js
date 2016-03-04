@@ -1,17 +1,5 @@
-let pinkySwear = require("pinkyswear");
-
-exports.addPathParams = function(url, params) {
-  let pathFragment = "";
-  for (let key in params) {
-    if (params.hasOwnProperty(key)) {
-      if (!/^\w*$/.test(key) || !/^\w*$/.test(params[key])) {
-        throw new Error("util.addPathParams doesn't implement escaping");
-      }
-      pathFragment += "/" + key + "=" + params[key];
-    }
-  }
-  return url.replace(/\/?(\?|$)/, pathFragment + "$1");
-};
+const assert = require("assert");
+const pinkySwear = require("pinkyswear");
 
 exports.createNiceBackoffDelayFunc = function() {
   // delays, in seconds; recycle the last value as needed

@@ -1,8 +1,11 @@
 var assert = require("chai").assert;
 
+var pathParams = require("../common/path-params");
+
 var reconnect = require("../lib/decorators/reconnect");
 var util = require("../lib/util");
 var WebSocket = require("../lib/websocket");
+var ConnectionContext = require("../lib/decorators/connection-context");
 var common = require("./common");
 
 describe("Reconnect decorator", function() {
@@ -13,7 +16,7 @@ describe("Reconnect decorator", function() {
     var factory = function(url, ctx, callback) {
       // Randomize the URL a bit, so we can distinguish physical
       // connections from each other.
-      url = util.addPathParams(url, {rnd: Math.round(Math.random()*1e12)});
+      url = pathParams.addPathParams(url, {rnd: Math.round(Math.random()*1e12)});
       connFactoryMock.factory(url, ctx, callback);
     };
     return {
@@ -24,7 +27,7 @@ describe("Reconnect decorator", function() {
 
   it("reconnects", function(done) {
     var setup = createTestFactory();
-    setup.factory("/foo/bar", {}, function(err, conn) {
+    setup.factory("/foo/bar", new ConnectionContext(), function(err, conn) {
       if (err) {
         throw err;
       }
@@ -73,7 +76,7 @@ describe("Reconnect decorator", function() {
       mockConn.close(1005, "", false); // wasClean == false
     };
 
-    setup.factory("/foo/bar", {}, function(err, conn) {
+    setup.factory("/foo/bar", new ConnectionContext(), function(err, conn) {
       if (err) {
         throw err;
       }
@@ -125,7 +128,7 @@ describe("Reconnect decorator", function() {
       }
     };
 
-    setup.factory("/foo/bar", {}, function(err, conn) {
+    setup.factory("/foo/bar", new ConnectionContext(), function(err, conn) {
       if (err) {
         throw err;
       }
@@ -149,7 +152,7 @@ describe("Reconnect decorator", function() {
 
   it("prepends message numbers", function(done) {
     var setup = createTestFactory();
-    setup.factory("/foo/bar", {}, function(err, conn) {
+    setup.factory("/foo/bar", new ConnectionContext(), function(err, conn) {
       if (err) {
         throw err;
       }

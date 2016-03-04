@@ -1,5 +1,6 @@
 var assert = require("chai").assert;
 
+var ConnectionContext = require("../lib/decorators/connection-context");
 var workerId = require("../lib/decorators/worker-id");
 var common = require("./common");
 
@@ -23,7 +24,7 @@ describe("Worker ID decorator", function() {
 
     var factory = workerId.decorate(fm.factory);
 
-    factory("/foo/bar", {}, function(err, conn) {
+    factory("/foo/bar", new ConnectionContext(), function(err, conn) {
       if (err) {
         throw err;
       }

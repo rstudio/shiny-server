@@ -1,5 +1,5 @@
 let assert = require("assert");
-let EventEmitter = require("events");
+let EventEmitter = require("events").EventEmitter;
 
 let inherits = require("inherits");
 
@@ -12,6 +12,7 @@ let BaseConnectionDecorator = require("./base-connection-decorator");
 let MessageBuffer = require("../../common/message-buffer");
 let MessageReceiver = require("../../common/message-receiver");
 let message_utils = require("../../common/message-utils");
+let pathParams = require("../../common/path-params");
 
 function generateId(size){
   let chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -28,7 +29,7 @@ function generateId(size){
 // connection, and restore the connection.
 //
 // * Reads from options: reconnectTimeout (in millis; <0 to disable)
-// * Writes to ctx: nothing
+// * Writes to ctx: params.n or params.o
 // * Reads from ctx: nothing
 exports.decorate = function(factory, options) {
   // Returns a connection promise
@@ -199,7 +200,8 @@ RobustConnection.prototype._connect = function(timeoutMillis) {
   let open_p = () => {
     let params = {};
     params[this.readyState === WebSocket.CONNECTING ? "n" : "o"] = this._robustId;
-    let url = util.addPathParams(this._url, params);
+    this._ctx.params[this.readyState === WebSocket.CONNECTING ? "n" : "o"] = this._robustId;
+    let url = pathParams.addPathParams(this._url, params);
 
     let promise = util.promise();
     this._factory(url, this._ctx, function(err, conn) {

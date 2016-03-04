@@ -1,5 +1,6 @@
 var assert = require("chai").assert;
 
+var ConnectionContext = require("../lib/decorators/connection-context");
 var token = require("../lib/decorators/token");
 var common = require("./common");
 
@@ -31,7 +32,7 @@ describe("Token decorator", function() {
 
     var factory = token.decorate(fm.factory);
 
-    factory("/foo/bar", {}, function(err, conn) {
+    factory("/foo/bar", new ConnectionContext(), function(err, conn) {
       if (err) {
         throw err;
       }

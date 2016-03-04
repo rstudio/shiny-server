@@ -1,6 +1,7 @@
 let util = require("./util");
 
 let log = require("./log");
+const pathParams = require("../common/path-params");
 
 let disabled = false;
 let currConn = null;
@@ -30,6 +31,8 @@ global.__shinyserverdebug__ = {
 exports.createFactory = function(options) {
   return function(url, context, callback) {
     if (!callback) throw new Error("callback is required");
+
+    url = pathParams.reorderPathParams(url, ["n", "o", "t", "w", "s"]);
 
     let conn = new SockJS(url, null, options);
     currConn = conn;

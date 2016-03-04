@@ -1,4 +1,5 @@
 let util = require('../util');
+const pathParams = require("../../common/path-params");
 
 // The job of this decorator is to request a token from
 // the server, and append that to the URL.
@@ -16,11 +17,12 @@ exports.decorate = function(factory, options) {
       cache: false,
       dataType: "text",
       success: function(data, textStatus) {
-        let newUrl = util.addPathParams(url, {"t": data});
+        let newUrl = pathParams.addPathParams(url, {"t": data});
+        ctx.params.t = data;
         factory(newUrl, ctx, callback);
       },
       error: function(jqXHR, textStatus, errorThrown) {
-        callback(errorThrown);
+        callback(new Error("Failed to retrieve token: " + errorThrown));
       }
     });
   };

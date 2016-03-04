@@ -5,6 +5,8 @@ var log = require("../lib/log");
 var multiplex = require("../lib/decorators/multiplex");
 var util = require("../lib/util");
 
+var ConnectionContext = require("../lib/decorators/connection-context");
+
 var common = require("./common");
 
 // Squelch log/debug messages during tests
@@ -26,25 +28,25 @@ describe("Multiplex decorator", function() {
   var factory = multiplex.decorate(fm.factory);
 
   it("adds expected info to ctx", function(done) {
-    var ctx = {};
+    var ctx = new ConnectionContext();
     factory("/foo/bar", ctx, function(err, conn) {
       if (err) {
         throw err;
       }
 
-      assert.equal(fm.getConn().url, "/foo/bar");
+      assert.equal(fm.getConn().url, "/foo/bar/s=0");
       assert.equal(typeof(ctx.multiplexClient.open), "function");
       done();
     });
   });
 
   it("implements multiplex protocol", function(done) {
-    var ctx = {};
+    var ctx = new ConnectionContext();
     factory("/foo/bar", ctx, function(err, conn) {
       if (err) {
         throw err;
       }
-      
+
       var childConn1 = ctx.multiplexClient.open("/subapp1");
 
       conn.onopen = function() {
@@ -57,11 +59,11 @@ describe("Multiplex decorator", function() {
 
       setTimeout(function() {
         assert.equal(
-          JSON.stringify(ctx.multiplexClient._conn.log),
+          JSON.stringify(fm.getConn().log),
           JSON.stringify(
             [ { type: 'send', data: '0|o|' },
               { type: 'send', data: '0|m|Hello world!' },
-              { type: 'send', data: '1|o|/subapp1' },
+              { type: 'send', data: '1|o|/subapp1/s=1' },
               { type: 'send', data: '0|c|{\"code\":3000,\"reason\":\"Done for the day.\"}' },
               { type: 'send', data: '1|c|{\"code\":3001,\"reason\":\"Gone fishing.\"}' },
               { type: 'close', data: {}} ]

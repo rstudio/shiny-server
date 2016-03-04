@@ -18,16 +18,20 @@ PromisedConnection.prototype.resolve = function(err, conn) {
     this._conn.close.apply(this._conn, this._closed);
   } else {
     this._conn.onclose = (evt) => {
-      this.onclose(evt);
+      if (this.onclose)
+        this.onclose(evt);
     };
     this._conn.onopen = (evt) => {
-      this.onopen(evt);
+      if (this.onopen)
+        this.onopen(evt);
     };
     this._conn.onmessage = (evt) => {
-      this.onmessage(evt);
+      if (this.onmessage)
+        this.onmessage(evt);
     };
     this._conn.onerror = (evt) => {
-      this.onerror(evt);
+      if (this.onerror)
+        this.onerror(evt);
     };
   }
 };
