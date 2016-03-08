@@ -1,3 +1,5 @@
+"use strict";
+
 // No ES6 allowed in this directory!
 
 var message_utils = require("./message-utils");

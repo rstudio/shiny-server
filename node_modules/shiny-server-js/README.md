@@ -41,3 +41,7 @@ Be sure to run `make` before commiting changes to `lib` or `common`! If your cod
 - `/common` - Shared code between client and Node.js-based servers. ES2015 not allowed, due to servers still using Node v0.10. (If this becomes a pain point we could transpile here too.)
 - `/test` - Unit tests (mocha, chai, sinon). ES2015 is allowed.
 - `/dist` - Final build artifacts go here.
+
+### License
+
+This library is licensed under the terms of the [AGPLv3](http://www.gnu.org/licenses/agpl-3.0.en.html) unless distributed with one of our proprietary server products, in which case that product's license applies.

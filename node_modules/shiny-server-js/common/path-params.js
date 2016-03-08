@@ -1,3 +1,5 @@
+"use strict";
+
 var assert = require("assert");
 
 exports.addPathParams = function(url, params) {

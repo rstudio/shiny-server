@@ -2,7 +2,7 @@ JSFILES := $(wildcard lib/*.js lib/decorators/*.js common/*.js)
 TESTS = test/*.js
 REPORTER = list
 
-all: dist/shiny-server.min.js
+all: dist/shiny-server.min.js lint
 
 build: dist/shiny-server.js
 
@@ -22,4 +22,9 @@ test:
 clean:
 	rm -f dist/shiny-server.js dist/shiny-server.min.js
 
-.PHONY: test clean all build
+lint:
+	./node_modules/.bin/eslint lib
+	./node_modules/.bin/eslint -c .eslintrc.es5.js common
+	./node_modules/.bin/eslint --env=mocha test
+
+.PHONY: test clean all build lint

@@ -1,3 +1,5 @@
+"use strict";
+
 module.exports = BaseConnectionDecorator;
 
 function BaseConnectionDecorator(conn) {

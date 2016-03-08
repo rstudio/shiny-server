@@ -24,6 +24,15 @@ local({
   SHINY_MODE=input[7],
   RSTUDIO_PANDOC=input[8],
   LOG_FILE=input[9])
+
+  protocols <- strsplit(input[10], ",")[[1]]
+  if (length(protocols) == 0) {
+    protocols <- ""
+  } else {
+    protocols <- paste('"', protocols, '"', sep = '', collapse = ',')
+  }
+  reconnect <- if (identical("true", tolower(input[11]))) "true" else "false"
+
   close(fd)
 
   if (!identical(Sys.getenv('LOG_FILE'), "")){
@@ -132,7 +141,11 @@ local({
    inject <- paste(
       tags$script(src='__assets__/sockjs-0.3.4.min.js'),
       tags$script(src='__assets__/shiny-server.js'),
-      tags$script("preShinyInit({reconnect:true});"),
+      tags$script(
+        sprintf("preShinyInit({reconnect:%s,disableProtocols:[%s]});",
+          reconnect, protocols
+        )
+      ),
       tags$link(rel='stylesheet', type='text/css', href='__assets__/shiny-server.css'),
       gaTrackingCode,
       HTML("</head>"),

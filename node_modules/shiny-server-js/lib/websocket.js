@@ -1,6 +1,8 @@
+"use strict";
+
 // Constants from WebSocket and SockJS APIs.
 
-export const CONNECTING = 0;
-export const OPEN = 1;
-export const CLOSING = 2;
-export const CLOSED = 3;
+exports.CONNECTING = 0;
+exports.OPEN = 1;
+exports.CLOSING = 2;
+exports.CLOSED = 3;
