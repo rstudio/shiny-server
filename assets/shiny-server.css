@@ -11,21 +11,37 @@ body.disconnected {
 #ss-connect-dialog {
   opacity: 1 !important;
   padding: 1em;
-  background-color: #FFF;
   position: fixed;
-  top: 0;
-  left: 30%;
-  right: 30%;
+  bottom: 50px;
+  left: -30px;
+  padding-left: 45px;
+  padding-right: 18px;
+  width: 300px;
+  height: auto;
   z-index: 99999;
-  border: 1px solid #888;
-  border-top: none;
-  border-radius: 0 0 7px 7px;
-  background-color: #F6F6F6;
-  box-shadow: 2px 2px 8px #777;
+  background-color: #404040;
+  color: white;
+  border-radius: 3px;
+  font-size: 0.9em;
+  box-shadow: rgba(0, 0, 0, 0.3) 3px 3px 10px;
+}
+#ss-connect-dialog label {
+  display: block;
+  font-weight: normal;
+  color: white;
+  margin: 0;
+  padding: 0;
 }
 
-.ss-dialog-button {
-  float: right;
+#ss-connect-dialog a, #ss-connect-dialog a:visited {
+  display: block;
+  color: #9999FF;
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
+}
+
+.ss-dialog-link {
 }
 
 .ss-dialog-text {
