@@ -6,10 +6,9 @@ Shiny Server is a server program that makes [Shiny](https://rstudio.com/shiny) a
 
 * Host multiple Shiny applications, each with its own URL
 * Can be configured to allow any user on the system to create and deploy their own Shiny applications
-* Supports non-websocket-capable browsers, like IE8/9
+* Supports non-websocket-capable browsers, like IE9
 * Free and open source ([AGPLv3](http://www.gnu.org/licenses/agpl-3.0.html) license)
 * Pre-built installers for select Linux distributions.
-* **Experimental quality. Use at your own risk!**
 
 ## Installing
 
@@ -41,4 +40,4 @@ To customize any of the above, or to explore the other ways Shiny Server can hos
 
 See [the Administrator's Guide to Shiny Server](https://rstudio.github.io/shiny-server/latest/) for more complete documentation regarding the setup and management of Shiny Server.
 
-Please direct questions to the [shiny-discuss](https://groups.google.com/group/shiny-discuss) mailing list. If you're interested in Professional Support, please look at our commercial Shiny Server Professional product.
+Please direct questions to the [shiny-discuss](https://groups.google.com/group/shiny-discuss) mailing list. If you're interested in Professional Support, please look at our commercial [Shiny Server Pro](https://www.rstudio.com/products/shiny-server-pro/) product.
