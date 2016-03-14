@@ -14,7 +14,7 @@ then
     systemctl daemon-reload
     rm -f /etc/systemd/system/shiny-server.service
 
-elif test $LSB_RELEASE = "Ubuntu" && test -d /etc/init/
+elif (test $LSB_RELEASE = "Ubuntu" || test $LSB_RELEASE = "LinuxMint") && test -d /etc/init/
 then
     initctl stop shiny-server 2>/dev/null
     rm -r /etc/init/shiny-server.conf
