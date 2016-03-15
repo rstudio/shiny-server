@@ -83,7 +83,7 @@ then
    systemctl enable shiny-server.service
    systemctl start shiny-server.service
    systemctl --no-pager status shiny-server.service
-elif test $LSB_RELEASE = "Ubuntu" && test -d /etc/init/
+elif (test $LSB_RELEASE = "Ubuntu" || test $LSB_RELEASE = "LinuxMint") && test -d /etc/init/
 then
    cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/upstart/shiny-server.conf /etc/init/
 
