@@ -72,7 +72,7 @@ function MultiplexClient(conn) {
     if (method === "c") {
       // If we're closing, we want to close everything, not just a subapp.
       // So don't send to a single channel.
-      this._conn.close();
+      this._conn.close(payload.code, payload.reason);
     } else if (method === "m") {
       channel.onmessage({data: payload});
     }

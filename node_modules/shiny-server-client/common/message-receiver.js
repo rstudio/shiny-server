@@ -27,7 +27,12 @@ MessageReceiver.prototype.receive = function(msg) {
     throw new Error("Invalid robust-message, no msg-id found");
   }
 
-  this._pendingMsgId = result.id;
+  // The pending message ID is the first id *not* seen by
+  // us (as opposed to the last id seen by us). This is
+  // not intuitive, but it makes it possible to indicate
+  // no messages seen ("0") and makes the indexing math a
+  // bit cleaner as well.
+  this._pendingMsgId = result.id + 1;
 
   if (!this._ackTimer) {
     this._ackTimer = setTimeout(function() {

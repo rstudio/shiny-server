@@ -128,11 +128,23 @@ function initSession(shiny, options, shinyServer) {
       // Signal to Shiny 0.14 and above that a Shiny-level reconnection (i.e.
       // automatically starting a new session) is permitted.
       pc.allowReconnect = true;
-      ctx.on("disconnect", () => {
+      ctx.on("disconnect", e => {
+        // e here is the websocket/SockJS close event.
+
         // Don't allow a Shiny-level reconnection (new session) if we close
         // cleanly; this is an indication that the server wanted us to close
         // and stay closed (e.g. session idle timeout).
-        pc.allowReconnect = false;
+        //
+        // But in some cases, even a clean close should allow reconnect; these
+        // are cases where the server couldn't service our existing session
+        // but wouldn't mind us starting a new one. E.g.: robust id not found
+        // or expired. The server indicates this by sending a close code in
+        // the 47xx range.
+        if (e.code && e.code >= 4700 && e.code < 4800) {
+          pc.allowReconnect = true;
+        } else {
+          pc.allowReconnect = false;
+        }
       });
 
       return pc;

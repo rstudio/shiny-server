@@ -300,16 +300,17 @@ RobustConnection.prototype._connect = function(timeoutMillis) {
 
 RobustConnection.prototype._handleClose = function(e) {
   this._clearConn();
-  // Use 4567 for interactive debugging purposes to trigger reconnect
-  if ((e.code !== 4567) && e.wasClean || this._stayClosed) {
-    // Apparently this closure was on purpose; don't try to reconnect
-    this._setReadyState(WebSocket.CLOSED);
-    this.onclose(e);
-    this._ctx.emit("disconnect");
-  } else {
+
+  // Use 46xx for interactive debugging purposes to trigger reconnect
+  if (!this._stayClosed && (!e.wasClean || (e.code >= 4600 && e.code < 4700))) {
     log("Disconnect detected; attempting reconnect");
     this.ondisconnect(util.createEvent("disconnect"));
     this._connect(this._timeout);
+  } else {
+    // Apparently this closure was on purpose; don't try to reconnect
+    this._setReadyState(WebSocket.CLOSED);
+    this.onclose(e);
+    this._ctx.emit("disconnect", e);
   }
 };
 
