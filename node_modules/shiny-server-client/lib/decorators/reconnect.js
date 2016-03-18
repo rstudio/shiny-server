@@ -432,6 +432,11 @@ BufferedResendConnection.prototype._handleReconnect = function() {
   this._conn.send(this._messageReceiver.CONTINUE());
 
   this._conn.onmessage = e => {
+    if (message_utils.parseACK(e.data) !== null) {
+      // In this state, ignore ACK, which can be sent at any time.
+      return;
+    }
+
     this._disconnected = false;
     this._conn.onmessage = this._handleMessage.bind(this);
 
@@ -441,6 +446,8 @@ BufferedResendConnection.prototype._handleReconnect = function() {
     try {
       let continueId = message_utils.parseCONTINUE(e.data);
       if (continueId === null) {
+        // Anything but ACK or CONTINUE when we were expecting CONTINUE,
+        // is an error.
         throw new Error("The RobustConnection handshake failed, CONTINUE expected");
       } else {
         // continueId represents the first id *not* seen by the server.
