@@ -68,7 +68,6 @@ describe("Reconnect decorator", () => {
   });
 
   it("failure on initial connection doesn't trigger retry", function(done) {
-    this.timeout(10000);
     // If initial connection attempt fails, then the connection should
     // immediately close.
 

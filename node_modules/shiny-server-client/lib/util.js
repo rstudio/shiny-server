@@ -17,13 +17,20 @@ exports.createNiceBackoffDelayFunc = function() {
 // it either returns successfully, or time expires. Use a configurable
 // delay in between attempts.
 //
-// progressCallbacks should be an EventEmitter or similar; it will be called
-// with the following event names (and arguments):
+// progressCallbacks should be an EventEmitter or similar; this function will
+// emit the following events (and arguments):
 //
 // "schedule", delayMillis  // Called each time the next attempt is scheduled
 // "attempt"                // Called each time an attempt begins
 // "success"                // Called if retryPromise_p ends in success
 // "failure"                // Called if retryPromise_p ends in failure
+//
+// On the same progressCallbacks object, this function will LISTEN FOR the
+// following event (note that it can be invoked repeatedly):
+//
+// "retry-now"              // Stop waiting for next attempt; do it immediately.
+//                          // If emitted during an attempt, event will be
+//                          // ignored.
 exports.retryPromise_p = function(create_p, delayFunc, expiration,
   progressCallbacks) {
 
@@ -38,7 +45,8 @@ exports.retryPromise_p = function(create_p, delayFunc, expiration,
   // But in no case should the delay be less than zero, either.
   delay = Math.max(0, delay);
 
-  setTimeout(function() {
+  function attempt() {
+    progressCallbacks.removeListener("retry-now", retryNow);
     progressCallbacks.emit("attempt");
 
     create_p().then(
@@ -61,7 +69,15 @@ exports.retryPromise_p = function(create_p, delayFunc, expiration,
         }
       }
     ).done();
-  }, delay);
+  }
+
+  let timeoutHandle = setTimeout(attempt, delay);
+
+  function retryNow() {
+    clearTimeout(timeoutHandle);
+    attempt();
+  }
+  progressCallbacks.on("retry-now", retryNow);
 
   progressCallbacks.emit("schedule", delay);
 

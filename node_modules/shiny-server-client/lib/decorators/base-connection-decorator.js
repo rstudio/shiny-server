@@ -14,8 +14,8 @@ BaseConnectionDecorator.prototype.send = function(data) {
   this._conn.send(data);
 };
 
-BaseConnectionDecorator.prototype.close = function() {
-  return this._conn.close();
+BaseConnectionDecorator.prototype.close = function(code, reason) {
+  return this._conn.close.apply(this._conn, arguments);
 };
 
 BaseConnectionDecorator.prototype._handleOpen = function() {
