@@ -25,11 +25,11 @@ local({
   RSTUDIO_PANDOC=input[8],
   LOG_FILE=input[9])
 
-  protocols <- strsplit(input[10], ",")[[1]]
-  if (length(protocols) == 0) {
-    protocols <- ""
+  disableProtocols <- strsplit(input[10], ",")[[1]]
+  if (length(disableProtocols) == 0) {
+    disableProtocols <- ""
   } else {
-    protocols <- paste('"', protocols, '"', sep = '', collapse = ',')
+    disableProtocols <- paste('"', disableProtocols, '"', sep = '', collapse = ',')
   }
   reconnect <- if (identical("true", tolower(input[11]))) "true" else "false"
 
@@ -143,7 +143,7 @@ local({
       tags$script(src='__assets__/shiny-server-client.min.js'),
       tags$script(
         sprintf("preShinyInit({reconnect:%s,disableProtocols:[%s]});",
-          reconnect, protocols
+          reconnect, disableProtocols
         )
       ),
       tags$link(rel='stylesheet', type='text/css', href='__assets__/shiny-server.css'),
