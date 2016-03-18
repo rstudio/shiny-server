@@ -1,7 +1,7 @@
 shiny-server 1.5.0
 --------------------------------------------------------------------------------
-* Add auto-reconnect capabilities. Can be disabled via `disable_reconnect`
-  config option. 
+* Add auto-reconnect capabilities. Can be disabled via `reconnect false;`
+  config option (replaces `disable_reconnect true;`).
 
 shiny-server 1.4.2
 --------------------------------------------------------------------------------
