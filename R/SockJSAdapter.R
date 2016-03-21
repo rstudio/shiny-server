@@ -24,6 +24,15 @@ local({
   SHINY_MODE=input[7],
   RSTUDIO_PANDOC=input[8],
   LOG_FILE=input[9])
+
+  disableProtocols <- strsplit(input[10], ",")[[1]]
+  if (length(disableProtocols) == 0) {
+    disableProtocols <- ""
+  } else {
+    disableProtocols <- paste('"', disableProtocols, '"', sep = '', collapse = ',')
+  }
+  reconnect <- if (identical("true", tolower(input[11]))) "true" else "false"
+
   close(fd)
 
   if (!identical(Sys.getenv('LOG_FILE'), "")){
@@ -131,13 +140,18 @@ local({
 
    inject <- paste(
       tags$script(src='__assets__/sockjs-0.3.4.min.js'),
-      tags$script(src='__assets__/shiny-server.js'),
+      tags$script(src='__assets__/shiny-server-client.min.js'),
+      tags$script(
+        sprintf("preShinyInit({reconnect:%s,disableProtocols:[%s]});",
+          reconnect, disableProtocols
+        )
+      ),
       tags$link(rel='stylesheet', type='text/css', href='__assets__/shiny-server.css'),
       gaTrackingCode,
       HTML("</head>"),
       sep="\n"
    )
-                            
+
    filter <- function(...) {
       # The signature of filter functions changed between Shiny 0.4.0 and
       # 0.4.1; previously the parameters were (ws, headers, response) and

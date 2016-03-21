@@ -13,6 +13,7 @@
     "url": "https://github.com/rstudio/shiny-server.git"
   },
   "dependencies" : {
+    "shiny-server-client" :  "https://github.com/rstudio/shiny-server-client/archive/master.tar.gz",
     "faye-websocket"    :  "https://github.com/rstudio/faye-websocket-node/archive/95436354.tar.gz",
     "http-proxy"        :  "https://github.com/rstudio/node-http-proxy/archive/039f907.tar.gz",
     "sockjs"            :  "0.3.15",
@@ -39,7 +40,7 @@
     "mocha" :   "1.12.x",
     "rewire" : "1.1.x"
   },
-  "license": "AGPL-3",
+  "license": "AGPL-3.0",
   "engines": {
     "node": ">=0.8.16"
   }
