@@ -32,6 +32,7 @@ local({
     disableProtocols <- paste('"', disableProtocols, '"', sep = '', collapse = ',')
   }
   reconnect <- if (identical("true", tolower(input[11]))) "true" else "false"
+  options(shiny.sanitize.errors = identical("true", tolower(input[12])))
 
   close(fd)
 
