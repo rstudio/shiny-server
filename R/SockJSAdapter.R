@@ -34,6 +34,39 @@ local({
   reconnect <- if (identical("true", tolower(input[11]))) "true" else "false"
   options(shiny.sanitize.errors = identical("true", tolower(input[12])))
 
+  bookmarkStateDir <- tolower(input[13])
+  if (!is.null(asNamespace("shiny")$shinyOptions)) {
+    if (nchar(bookmarkStateDir) > 0) {
+      shiny::shinyOptions(
+        persist.interface = function(id, callback) {
+          dirname <- file.path(bookmarkStateDir, id)
+          if (dir.exists(dirname)) {
+            stop("Directory ", dirname, " already exists")
+          } else {
+            dir.create(dirname, recursive = FALSE, mode = "0700")
+            callback(dirname)
+          }
+        },
+        restore.interface = function(id, callback) {
+          dirname <- file.path(bookmarkStateDir, id)
+          if (!dir.exists(dirname)) {
+            stop("Session ", id, " not found")
+          } else {
+            callback(dirname)
+          }
+        }
+      )
+    } else {
+      shiny::shinyOptions(
+        persist.interface = function(id, callback) {
+          stop("This server is not configured for persistent sessions.")
+        },
+        restore.interface = function(id, callback) {
+          stop("This server is not configured for persistent sessions.")
+        }
+      )
+    }
+  } 
   close(fd)
 
   if (!identical(Sys.getenv('LOG_FILE'), "")){
