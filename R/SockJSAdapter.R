@@ -47,7 +47,7 @@ local({
             callback(dirname)
           }
         },
-        restore.interface = function(id, callback) {
+        load.interface = function(id, callback) {
           dirname <- file.path(bookmarkStateDir, id)
           if (!dir.exists(dirname)) {
             stop("Session ", id, " not found")
@@ -61,7 +61,7 @@ local({
         persist.interface = function(id, callback) {
           stop("This server is not configured for persistent sessions.")
         },
-        restore.interface = function(id, callback) {
+        load.interface = function(id, callback) {
           stop("This server is not configured for persistent sessions.")
         }
       )
