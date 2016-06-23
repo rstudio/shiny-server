@@ -39,7 +39,8 @@ local({
     if (nchar(bookmarkStateDir) > 0) {
       shiny::shinyOptions(
         persist.interface = function(id, callback) {
-          dirname <- file.path(bookmarkStateDir, id)
+          username <- Sys.info()[["effective_user"]]
+          dirname <- file.path(bookmarkStateDir, username, id)
           if (dir.exists(dirname)) {
             stop("Directory ", dirname, " already exists")
           } else {
@@ -48,7 +49,8 @@ local({
           }
         },
         load.interface = function(id, callback) {
-          dirname <- file.path(bookmarkStateDir, id)
+          username <- Sys.info()[["effective_user"]]
+          dirname <- file.path(bookmarkStateDir, username, id)
           if (!dir.exists(dirname)) {
             stop("Session ", id, " not found")
           } else {
