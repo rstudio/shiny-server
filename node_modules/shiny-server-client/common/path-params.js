@@ -99,7 +99,7 @@ exports.extractParams = function(url) {
   var urlObj = parseUrl(url);
   var result = {};
   for (var i = 0; i < urlObj.params.length; i++) {
-    var m = /^(.+)=(.*)$/.exec(urlObj.params[i]);
+    var m = /^(.+?)=(.*)$/.exec(urlObj.params[i]);
     result[m[1]] = m[2];
   }
   return result;

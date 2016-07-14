@@ -86,7 +86,17 @@ exports.retryPromise_p = function(create_p, delayFunc, expiration,
 
 exports.createEvent = function(type, props) {
   if (global.document) {
-    return new Event(type, props);
+    try {
+      return new Event(type, props);
+    } catch(e) {
+      // "new Event()" not supported in MSIE, not even 11
+      let evt = global.document.createEvent("Event");
+      evt.initEvent(type, true, false);
+      for (let key in props) {
+        evt[key] = props[key];
+      }
+      return evt;
+    }
   } else if (props) {
     props.type = type;
     return props;
