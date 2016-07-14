@@ -1,11 +1,14 @@
+shiny-server 1.4.4
+--------------------------------------------------------------------------------
+
+* Upgrade to Node.js v0.10.46 (security patches).
+
 shiny-server 1.4.3
 --------------------------------------------------------------------------------
 * Add auto-reconnect capabilities. Can be disabled via `reconnect false;`
   config option (replaces `disable_reconnect true;`).
 
 * Upgrade to Node.js v0.10.45 (primarily for updated OpenSSL).
-
-* Upgrade to Node.js v0.10.46 (security patches).
 
 shiny-server 1.4.2
 --------------------------------------------------------------------------------
