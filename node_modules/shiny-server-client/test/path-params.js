@@ -36,4 +36,8 @@ describe("Path parameters", () => {
       "/__sockjs__/foo=bar/baz=?a=b&c=d/e=f"
     );
   });
+
+  it("Excludes '=' from param name", () => {
+    assert.equal(pathParams.extractParams("/foo=bar=baz/").foo, "bar=baz");
+  });
 });

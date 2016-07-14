@@ -266,7 +266,7 @@ exports.extractParams = function (url) {
   var urlObj = parseUrl(url);
   var result = {};
   for (var i = 0; i < urlObj.params.length; i++) {
-    var m = /^(.+)=(.*)$/.exec(urlObj.params[i]);
+    var m = /^([^=]+)=(.*)$/.exec(urlObj.params[i]);
     result[m[1]] = m[2];
   }
   return result;
@@ -2132,7 +2132,17 @@ exports.retryPromise_p = function (create_p, delayFunc, expiration, progressCall
 
 exports.createEvent = function (type, props) {
   if (global.document) {
-    return new Event(type, props);
+    try {
+      return new Event(type, props);
+    } catch (e) {
+      // "new Event()" not supported in MSIE, not even 11
+      var evt = global.document.createEvent("Event");
+      evt.initEvent(type, true, false);
+      for (var key in props) {
+        evt[key] = props[key];
+      }
+      return evt;
+    }
   } else if (props) {
     props.type = type;
     return props;
