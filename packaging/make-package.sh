@@ -64,6 +64,7 @@ make
 # START: building in project root --------------------------
 pushd ../..
 
+./bin/npm --python="${PYTHON}" install
 ./bin/npm --python="${PYTHON}" rebuild
 
 # Need to rebuild ourselves since 'npm install' won't run gyp for us.
