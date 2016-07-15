@@ -16,7 +16,7 @@
     "bash": "0.0.1",
     "client-sessions": "^0.7.0",
     "connect": "2.7.x",
-    "faye-websocket": "https://github.com/rstudio/faye-websocket-node/archive/95436354.tar.gz",
+    "faye-websocket": "^0.11.0",
     "graceful-fs": "2.0.x",
     "handlebars": "1.0.7",
     "http-proxy": "^1.14.0",

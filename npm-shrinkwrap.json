@@ -86,14 +86,21 @@
       }
     },
     "faye-websocket": {
-      "version": "0.6.1",
-      "from": "https://github.com/rstudio/faye-websocket-node/archive/95436354.tar.gz",
-      "resolved": "https://github.com/rstudio/faye-websocket-node/archive/95436354.tar.gz",
+      "version": "0.11.0",
+      "from": "faye-websocket@latest",
+      "resolved": "https://registry.npmjs.org/faye-websocket/-/faye-websocket-0.11.0.tgz",
       "dependencies": {
         "websocket-driver": {
-          "version": "0.3.0",
-          "from": "https://registry.npmjs.org/websocket-driver/-/websocket-driver-0.3.0.tgz",
-          "resolved": "https://registry.npmjs.org/websocket-driver/-/websocket-driver-0.3.0.tgz"
+          "version": "0.6.5",
+          "from": "websocket-driver@>=0.5.1",
+          "resolved": "https://registry.npmjs.org/websocket-driver/-/websocket-driver-0.6.5.tgz",
+          "dependencies": {
+            "websocket-extensions": {
+              "version": "0.1.1",
+              "from": "websocket-extensions@>=0.1.1",
+              "resolved": "https://registry.npmjs.org/websocket-extensions/-/websocket-extensions-0.1.1.tgz"
+            }
+          }
         }
       }
     },
