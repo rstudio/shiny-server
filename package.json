@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "bash": "0.0.1",
-    "client-sessions": "0.4.x",
+    "client-sessions": "^0.7.0",
     "connect": "2.7.x",
     "faye-websocket": "https://github.com/rstudio/faye-websocket-node/archive/95436354.tar.gz",
     "graceful-fs": "2.0.x",
@@ -37,8 +37,7 @@
     "split": "0.2.x",
     "stable": "0.1.2",
     "underscore": "1.4.2",
-    "unixgroups": "https://github.com/rstudio/node-unixgroups/tarball/af6544c",
-    "webkit-devtools-agent": "*"
+    "unixgroups": "https://github.com/rstudio/node-unixgroups/archive/e6dfefe.tar.gz"
   },
   "license": "AGPL-3.0",
   "engines": {
