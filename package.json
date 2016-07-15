@@ -19,7 +19,7 @@
     "faye-websocket": "https://github.com/rstudio/faye-websocket-node/archive/95436354.tar.gz",
     "graceful-fs": "2.0.x",
     "handlebars": "1.0.7",
-    "http-proxy": "https://github.com/rstudio/node-http-proxy/archive/039f907.tar.gz",
+    "http-proxy": "^1.14.0",
     "log4js": "0.5.x",
     "mocha": "1.12.x",
     "moment": "1.7.x",
