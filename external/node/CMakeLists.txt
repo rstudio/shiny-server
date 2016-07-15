@@ -1,9 +1,9 @@
 project(node)
 
-set(NODEJS_VERSION 0.10.46)
+set(NODEJS_VERSION 4.4.7)
 # See e.g. http://nodejs.org/dist/v0.10.21/SHASUMS.txt to find the appropriate
 # hash value for the node-v0.10.21.tar.gz file.
-set(NODEJS_SHA1 2b04de94217779217e3e900318183188ebc3b40e)
+set(NODEJS_SHA256 cbe1c6e421969dd5639d0fbaa6d3c1f56c0463b87efe75be8594638da4d8fc4f)
 
 include(ExternalProject)
 
@@ -28,7 +28,7 @@ get_filename_component(NODE_PREFIX
 ExternalProject_Add(
   node
   URL http://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}.tar.gz
-  URL_HASH SHA1=${NODEJS_SHA1}
+  URL_HASH SHA256=${NODEJS_SHA256}
   DOWNLOAD_DIR download
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}
   BUILD_IN_SOURCE 1
