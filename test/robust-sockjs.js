@@ -18,11 +18,11 @@ var _ = require('underscore');
 
 describe('RobustSockJS', function(){
   describe('#robustify', function(){
-    it('errors on invalid URL', function(){
+    it('passes through on invalid URL', function(){
       var rsjs = new RobustSockJS();
-      var conn = {pathname: 'blah', close: sinon.spy(), write: sinon.spy()};
-      rsjs.robustify(conn);
-      should(conn.close.called);
+      var conn = {url: 'blah', close: sinon.spy(), write: sinon.spy()};
+      var result = rsjs.robustify(conn);
+      (conn === result).should.be.true;
     });
     it('handles all 4 cases properly', function(){
       var rsjs = new RobustSockJS();
@@ -30,12 +30,13 @@ describe('RobustSockJS', function(){
 
       // Fresh connections work
       var conn = {
-        pathname: '/__sockjs__/n=1234/', 
-        close: sinon.spy(), 
+        url: '/__sockjs__/n=1234/',
+        close: sinon.spy(),
         write: function(){}
       };
       var rob = rsjs.robustify(conn);
       _.size(rsjs._connections).should.equal(1);
+      (conn === rob).should.be.false;
 
       // ID collisions fail
       var rob2 = rsjs.robustify(conn);
@@ -43,23 +44,24 @@ describe('RobustSockJS', function(){
       (rob2 === undefined).should.be.true;
 
       // Reconnects succeed.
-      conn.pathname = conn.pathname.replace(/\/n=/, '/o=');
-      rob = rsjs.robustify(conn);
+      conn.url = conn.url.replace(/\/n=/, '/o=');
+      var rob3 = rsjs.robustify(conn);
       _.size(rsjs._connections).should.equal(1);
-      (rob === undefined).should.be.false;
+      (rob3 === undefined).should.be.false;
+      (rob3 === rob).should.be.true;
 
       // Reconnects of expired/invalid IDs fail.
-      conn.pathname = conn.pathname.replace(/1234/, 'abcd');
-      rob2 = rsjs.robustify(conn);
+      conn.url = conn.url.replace(/1234/, 'abcd');
+      var rob4 = rsjs.robustify(conn);
       _.size(rsjs._connections).should.equal(1);
-      (rob2 === undefined).should.be.true;
+      (rob4 === undefined).should.be.true;
     });
     it('buffers disconnects', function(){
       var clock = sinon.useFakeTimers();
       var rsjs = new RobustSockJS(1); //Timeout after 1 sec
       var conn = {
-        pathname: '/__sockjs__/n=1234/', 
-        close: sinon.spy(), 
+        url: '/__sockjs__/n=1234/',
+        close: sinon.spy(),
         write: function(){},
         emit: function(){}
       };
@@ -76,7 +78,7 @@ describe('RobustSockJS', function(){
       _.size(rsjs._connections).should.equal(1);
 
       // Reconnect
-      conn.pathname = conn.pathname.replace(/\/n=/, '/o=');
+      conn.url = conn.url.replace(/\/n=/, '/o=');
       rsjs.robustify(conn);
 
       clock.tick(750);
