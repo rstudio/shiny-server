@@ -1,3 +1,8 @@
+shiny-server 1.5.0
+--------------------------------------------------------------------------------
+* Major upgrade to Node.js (to v4.4.7) and many JS dependencies. Lots of code
+  rewritten to adapt to backwards-incompatible changes in Node.js and libraries.
+
 shiny-server 1.4.4
 --------------------------------------------------------------------------------
 
