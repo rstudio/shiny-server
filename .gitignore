@@ -9,3 +9,4 @@ ext/
 src/launcher.h
 .vagrant
 node_modules/
+packaging/fake_python/
