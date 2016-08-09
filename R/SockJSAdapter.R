@@ -38,7 +38,7 @@ local({
   if (!is.null(asNamespace("shiny")$shinyOptions)) {
     if (nchar(bookmarkStateDir) > 0) {
       shiny::shinyOptions(
-        persist.interface = function(id, callback) {
+        save.interface = function(id, callback) {
           username <- Sys.info()[["effective_user"]]
           dirname <- file.path(bookmarkStateDir, username, id)
           if (dir.exists(dirname)) {
@@ -60,11 +60,11 @@ local({
       )
     } else {
       shiny::shinyOptions(
-        persist.interface = function(id, callback) {
-          stop("This server is not configured for persistent sessions.")
+        save.interface = function(id, callback) {
+          stop("This server is not configured for saving sessions to disk.")
         },
         load.interface = function(id, callback) {
-          stop("This server is not configured for persistent sessions.")
+          stop("This server is not configured for saving sessions to disk.")
         }
       )
     }
