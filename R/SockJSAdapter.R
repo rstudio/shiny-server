@@ -34,6 +34,41 @@ local({
   reconnect <- if (identical("true", tolower(input[11]))) "true" else "false"
   options(shiny.sanitize.errors = identical("true", tolower(input[12])))
 
+  bookmarkStateDir <- tolower(input[13])
+  if (!is.null(asNamespace("shiny")$shinyOptions)) {
+    if (nchar(bookmarkStateDir) > 0) {
+      shiny::shinyOptions(
+        save.interface = function(id, callback) {
+          username <- Sys.info()[["effective_user"]]
+          dirname <- file.path(bookmarkStateDir, username, id)
+          if (dir.exists(dirname)) {
+            stop("Directory ", dirname, " already exists")
+          } else {
+            dir.create(dirname, recursive = FALSE, mode = "0700")
+            callback(dirname)
+          }
+        },
+        load.interface = function(id, callback) {
+          username <- Sys.info()[["effective_user"]]
+          dirname <- file.path(bookmarkStateDir, username, id)
+          if (!dir.exists(dirname)) {
+            stop("Session ", id, " not found")
+          } else {
+            callback(dirname)
+          }
+        }
+      )
+    } else {
+      shiny::shinyOptions(
+        save.interface = function(id, callback) {
+          stop("This server is not configured for saving sessions to disk.")
+        },
+        load.interface = function(id, callback) {
+          stop("This server is not configured for saving sessions to disk.")
+        }
+      )
+    }
+  } 
   close(fd)
 
   if (!identical(Sys.getenv('LOG_FILE'), "")){
