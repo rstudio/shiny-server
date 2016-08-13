@@ -40,6 +40,8 @@ fi
 # Log dir must be writable by "shiny" user
 chown shiny:shiny /var/log/shiny-server
 
+mkdir -p /var/lib/shiny-server
+
 # check lsb release
 LSB_RELEASE=`lsb_release --id --short`
 

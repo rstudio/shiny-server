@@ -43,6 +43,8 @@ fi
 # Log dir must be writable by "shiny" user
 chown shiny:shiny /var/log/shiny-server
 
+mkdir -p /var/lib/shiny-server
+
 RH_VER=""
 if test -e /etc/redhat-release
 then
