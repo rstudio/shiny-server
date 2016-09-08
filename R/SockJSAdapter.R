@@ -53,13 +53,13 @@ local({
           if (dir.exists(dirname)) {
             stop("Directory ", dirname, " already exists")
           } else {
-            dir.create(dirname, recursive = FALSE, mode = "0700")
+            dir.create(dirname, recursive = TRUE, mode = "0700")
             callback(dirname)
           }
         },
         load.interface = function(id, callback) {
           username <- Sys.info()[["effective_user"]]
-          dirname <- file.path(bookmarkStateDir, username, id)
+          dirname <- file.path(bookmarkStateDir, username, bookmarkAppDir, id)
           if (!dir.exists(dirname)) {
             stop("Session ", id, " not found")
           } else {
