@@ -59,7 +59,7 @@ local({
         },
         load.interface = function(id, callback) {
           username <- Sys.info()[["effective_user"]]
-          dirname <- file.path(bookmarkStateDir, username, id)
+          dirname <- file.path(bookmarkStateDir, username, bookmarkAppDir, id)
           if (!dir.exists(dirname)) {
             stop("Session ", id, " not found")
           } else {
