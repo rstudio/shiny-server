@@ -53,7 +53,7 @@ local({
           if (dir.exists(dirname)) {
             stop("Directory ", dirname, " already exists")
           } else {
-            dir.create(dirname, recursive = FALSE, mode = "0700")
+            dir.create(dirname, recursive = TRUE, mode = "0700")
             callback(dirname)
           }
         },
