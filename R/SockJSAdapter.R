@@ -34,13 +34,22 @@ local({
   reconnect <- if (identical("true", tolower(input[11]))) "true" else "false"
   options(shiny.sanitize.errors = identical("true", tolower(input[12])))
 
+  # Top-level bookmarking directory (for all users)
   bookmarkStateDir <- tolower(input[13])
+  # Name of bookmark directory for this app. Uses the basename of the path and
+  # appends a hash of the full path. So if the path is "/path/to/myApp", the
+  # result is "myApp-6fbdbedc4c99d052b538b2bfc3c96550".
+  bookmarkAppDir <- paste0(
+    basename(input[1]), "-",
+    digest::digest(input[1], algo = "md5", serialize = FALSE)
+  )
+
   if (!is.null(asNamespace("shiny")$shinyOptions)) {
     if (nchar(bookmarkStateDir) > 0) {
       shiny::shinyOptions(
         save.interface = function(id, callback) {
           username <- Sys.info()[["effective_user"]]
-          dirname <- file.path(bookmarkStateDir, username, id)
+          dirname <- file.path(bookmarkStateDir, username, bookmarkAppDir, id)
           if (dir.exists(dirname)) {
             stop("Directory ", dirname, " already exists")
           } else {
