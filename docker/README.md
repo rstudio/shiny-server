@@ -28,8 +28,7 @@ Once started, you will need to build Shiny Server once:
 
 ```sh
 cd /shiny-server
-cd packaging
-./make-package.sh
+packaging/make-package.sh
 ```
 
 Once this is done, you can start `shiny-server` directly from the development directory. You can also modify the source code and restart `shiny-server`.
@@ -39,14 +38,15 @@ cd /shiny-server
 sudo bin/shiny-server
 ```
 
-After all this is done, you may want to rebuild the package and reinstall:
+You can then visit the server at http://localhost:3838/.
+
+After making changes, you may want to rebuild the package and reinstall:
 
 ```sh
-cd packaging
-./make-package.sh
+packaging/make-package.sh
 
 # Might need to adjust the version
-sudo dpkg -i build/shiny-server-1.4.4.0-amd64.deb
+sudo dpkg -i packaging/build/shiny-server-1.4.4.0-amd64.deb
 ```
 
 
