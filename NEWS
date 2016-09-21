@@ -1,3 +1,11 @@
+shiny-server 1.4.6
+--------------------------------------------------------------------------------
+(Skipped 1.4.5 for parity with Shiny Server Pro; 1.4.5 was a security release
+that was Shiny Server Pro specific.)
+
+* Fix a bug where a 404 response on some URLs could cause the server to exit
+  with an unhandled exception.
+
 shiny-server 1.4.4
 --------------------------------------------------------------------------------
 
