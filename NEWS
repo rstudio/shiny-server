@@ -1,3 +1,10 @@
+shiny-server 1.5.0
+--------------------------------------------------------------------------------
+
+* Upgrade to Node.js v6.6.0, and upgrade all npm dependencies. While no distinct
+  features or significant bug fixes result from this upgrade, catching up to the
+  current Node.js release is critical for the long-term health of our codebase.
+
 shiny-server 1.4.6
 --------------------------------------------------------------------------------
 (Skipped 1.4.5 for parity with Shiny Server Pro; 1.4.5 was a security release
