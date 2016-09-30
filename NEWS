@@ -1,3 +1,9 @@
+shiny-server 1.4.7
+--------------------------------------------------------------------------------
+
+* Fix a minor bug where subapps being created after a disrupted-then-restored
+  SockJS connection, might result in a duplicate connection.
+
 shiny-server 1.4.6
 --------------------------------------------------------------------------------
 (Skipped 1.4.5 for parity with Shiny Server Pro; 1.4.5 was a security release

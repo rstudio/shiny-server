@@ -47,8 +47,7 @@ describe('RobustSockJS', function(){
       conn.url = conn.url.replace(/\/n=/, '/o=');
       var rob3 = rsjs.robustify(conn);
       _.size(rsjs._connections).should.equal(1);
-      (rob3 === undefined).should.be.false;
-      (rob3 === rob).should.be.true;
+      (rob3 === undefined).should.be.true;
 
       // Reconnects of expired/invalid IDs fail.
       conn.url = conn.url.replace(/1234/, 'abcd');
