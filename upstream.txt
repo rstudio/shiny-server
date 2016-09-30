@@ -1,0 +1,5 @@
+# Each line should list a repo/branch pair (separated by space) that
+# must be merged into this branch for tools/check-upstream.sh to pass.
+
+# Example:
+# https://github.com/rstudio/shiny-server master
