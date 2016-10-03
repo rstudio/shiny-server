@@ -1,6 +1,8 @@
 shiny-server 1.4.7
 --------------------------------------------------------------------------------
 
+* Upgrade to Node.js v0.10.47 (security patches).
+
 * Fix a minor bug where subapps being created after a disrupted-then-restored
   SockJS connection, might result in a duplicate connection.
 
