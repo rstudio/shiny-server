@@ -73,7 +73,11 @@ int main(int argc, char **argv) {
 int findBaseDir(std::string* shinyServerPath) {
 
   char execPath[MAXPATHLEN + 1];
+#ifdef __sun
+  int cn = snprintf(execPath, MAXPATHLEN + 1, "/proc/%d/path/a.out", getpid());
+#else
   int cn = snprintf(execPath, MAXPATHLEN + 1, "/proc/%d/exe", getpid());
+#endif
   if (cn < 0 || cn > MAXPATHLEN) {
     // Not expected
     return 2;
@@ -82,14 +86,22 @@ int findBaseDir(std::string* shinyServerPath) {
   struct stat execStat;
   if (lstat(execPath, &execStat)) {
     if (errno == ENOENT)
+#ifdef __sun
+      fprintf(stderr, "/proc/%d/path/a.out doesn't exist--got Solaris?\n", getpid());
+#else
       fprintf(stderr, "/proc/%d/exe doesn't exist--got Linux?\n", getpid());
+#endif
     else
       fprintf(stderr, "Fatal error calling lstat: %d\n", errno);
     return 1;
   }
 
   if (!S_ISLNK(execStat.st_mode)) {
+#ifdef __sun
+    fprintf(stderr, "/proc/%d/path/a.out was not a symlink\n", getpid());
+#else
     fprintf(stderr, "/proc/%d/exe was not a symlink\n", getpid());
+#endif
     return 1;
   }
 
