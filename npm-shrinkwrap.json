@@ -34,7 +34,7 @@
     },
     "bash": {
       "version": "0.0.1",
-      "from": "bash@0.0.1",
+      "from": "https://registry.npmjs.org/bash/-/bash-0.0.1.tgz",
       "resolved": "https://registry.npmjs.org/bash/-/bash-0.0.1.tgz"
     },
     "brace-expansion": {
@@ -217,9 +217,9 @@
       "resolved": "https://registry.npmjs.org/glob/-/glob-7.0.5.tgz"
     },
     "graceful-fs": {
-      "version": "4.1.8",
+      "version": "4.1.9",
       "from": "graceful-fs@>=4.1.0 <4.2.0",
-      "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.8.tgz"
+      "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.9.tgz"
     },
     "graceful-readlink": {
       "version": "1.0.1",
@@ -416,9 +416,9 @@
       }
     },
     "mocha": {
-      "version": "3.1.0",
+      "version": "3.1.1",
       "from": "mocha@>=3.1.0 <3.2.0",
-      "resolved": "https://registry.npmjs.org/mocha/-/mocha-3.1.0.tgz"
+      "resolved": "https://registry.npmjs.org/mocha/-/mocha-3.1.1.tgz"
     },
     "moment": {
       "version": "2.15.1",
@@ -456,9 +456,9 @@
       "resolved": "https://registry.npmjs.org/parseurl/-/parseurl-1.3.1.tgz"
     },
     "path-is-absolute": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "from": "path-is-absolute@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/path-is-absolute/-/path-is-absolute-1.0.0.tgz"
+      "resolved": "https://registry.npmjs.org/path-is-absolute/-/path-is-absolute-1.0.1.tgz"
     },
     "path-to-regexp": {
       "version": "0.1.7",
@@ -547,8 +547,8 @@
     },
     "shiny-server-client": {
       "version": "1.0.0",
-      "from": "https://github.com/rstudio/shiny-server-client/archive/04eb69d.tar.gz",
-      "resolved": "https://github.com/rstudio/shiny-server-client/archive/04eb69d.tar.gz",
+      "from": "https://github.com/rstudio/shiny-server-client/archive/3ebce9e5.tar.gz",
+      "resolved": "https://github.com/rstudio/shiny-server-client/archive/3ebce9e5.tar.gz",
       "dependencies": {
         "commander": {
           "version": "2.3.0",
@@ -572,7 +572,7 @@
         },
         "inherits": {
           "version": "2.0.1",
-          "from": "inherits@>=2.0.0 <2.1.0",
+          "from": "https://registry.npmjs.org/inherits/-/inherits-2.0.1.tgz",
           "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.1.tgz"
         },
         "jade": {
@@ -619,7 +619,7 @@
         },
         "pinkyswear": {
           "version": "2.2.2",
-          "from": "pinkyswear@>=2.2.0 <2.3.0",
+          "from": "https://registry.npmjs.org/pinkyswear/-/pinkyswear-2.2.2.tgz",
           "resolved": "https://registry.npmjs.org/pinkyswear/-/pinkyswear-2.2.2.tgz"
         },
         "promises-aplus-tests": {
@@ -687,9 +687,9 @@
       }
     },
     "should": {
-      "version": "11.1.0",
+      "version": "11.1.1",
       "from": "should@>=11.1.0 <11.2.0",
-      "resolved": "https://registry.npmjs.org/should/-/should-11.1.0.tgz"
+      "resolved": "https://registry.npmjs.org/should/-/should-11.1.1.tgz"
     },
     "should-equal": {
       "version": "1.0.1",
@@ -697,9 +697,9 @@
       "resolved": "https://registry.npmjs.org/should-equal/-/should-equal-1.0.1.tgz"
     },
     "should-format": {
-      "version": "3.0.1",
-      "from": "should-format@>=3.0.1 <4.0.0",
-      "resolved": "https://registry.npmjs.org/should-format/-/should-format-3.0.1.tgz"
+      "version": "3.0.2",
+      "from": "should-format@>=3.0.2 <4.0.0",
+      "resolved": "https://registry.npmjs.org/should-format/-/should-format-3.0.2.tgz"
     },
     "should-type": {
       "version": "1.4.0",
@@ -707,9 +707,9 @@
       "resolved": "https://registry.npmjs.org/should-type/-/should-type-1.4.0.tgz"
     },
     "should-type-adaptors": {
-      "version": "1.0.0",
-      "from": "should-type-adaptors@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/should-type-adaptors/-/should-type-adaptors-1.0.0.tgz"
+      "version": "1.0.1",
+      "from": "should-type-adaptors@>=1.0.1 <2.0.0",
+      "resolved": "https://registry.npmjs.org/should-type-adaptors/-/should-type-adaptors-1.0.1.tgz"
     },
     "should-util": {
       "version": "1.0.0",
