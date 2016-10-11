@@ -322,8 +322,8 @@
     },
     "shiny-server-client": {
       "version": "1.0.0",
-      "from": "https://github.com/rstudio/shiny-server-client/archive/33ef43e.tar.gz",
-      "resolved": "https://github.com/rstudio/shiny-server-client/archive/33ef43e.tar.gz",
+      "from": "https://github.com/rstudio/shiny-server-client/archive/803ebb14.tar.gz",
+      "resolved": "https://github.com/rstudio/shiny-server-client/archive/803ebb14.tar.gz",
       "dependencies": {
         "pinkyswear": {
           "version": "2.2.2",
