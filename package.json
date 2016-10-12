@@ -30,7 +30,7 @@
     "regexp-quote": "0.0.0",
     "rewire": "2.5.x",
     "send": "0.14.x",
-    "shiny-server-client": "https://github.com/rstudio/shiny-server-client/archive/3ebce9e5.tar.gz",
+    "shiny-server-client": "https://github.com/rstudio/shiny-server-client/archive/803ebb14.tar.gz",
     "should": "11.1.x",
     "sinon": "1.17.x",
     "sockjs": "0.3.18",
