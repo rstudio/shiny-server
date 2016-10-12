@@ -13,6 +13,10 @@ shiny-server 1.4.7
 * Fix a minor bug where subapps being created after a disrupted-then-restored
   SockJS connection, might result in a duplicate connection.
 
+* The bookmarkable state feature in Shiny v0.14 is now officially supported.
+  Use the `bookmark_state_dir` directive to store bookmarked sessions in a
+  specific location (default is /var/lib/shiny-server/bookmarks).
+
 shiny-server 1.4.6
 --------------------------------------------------------------------------------
 (Skipped 1.4.5 for parity with Shiny Server Pro; 1.4.5 was a security release
