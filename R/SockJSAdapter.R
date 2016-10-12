@@ -35,7 +35,7 @@ local({
   options(shiny.sanitize.errors = identical("true", tolower(input[12])))
 
   # Top-level bookmarking directory (for all users)
-  bookmarkStateDir <- tolower(input[13])
+  bookmarkStateDir <- input[13]
   # Name of bookmark directory for this app. Uses the basename of the path and
   # appends a hash of the full path. So if the path is "/path/to/myApp", the
   # result is "myApp-6fbdbedc4c99d052b538b2bfc3c96550".
