@@ -60,7 +60,7 @@ describe('SchedulerRegistry', function(){
       // Confirm we created the scheduler in the right place and of the right type.
       _.size(schedReg.$schedulers).should.equal(1);
       _.keys(schedReg.$schedulers).should.eql([appSpec.getKey()]);
-      schedReg.$schedulers[appSpec.getKey()].should.include({type: "MockSimpleScheduler"});
+      schedReg.$schedulers[appSpec.getKey()].should.containEql({type: "MockSimpleScheduler"});
 
       acquireWorkerSpy.callCount.should.equal(1);
     }),
@@ -73,8 +73,8 @@ describe('SchedulerRegistry', function(){
       
       _.size(schedReg.$schedulers).should.equal(1);
       // Confirm we created the scheduler in the right place and of the right type.
-      _.keys(schedReg.$schedulers).should.includeEql(appSpec.getKey());
-      schedReg.$schedulers[appSpec.getKey()].should.include({type: "MockSimpleScheduler"});
+      _.keys(schedReg.$schedulers).should.containEql(appSpec.getKey());
+      schedReg.$schedulers[appSpec.getKey()].should.containEql({type: "MockSimpleScheduler"});
 
       acquireWorkerSpy.callCount.should.equal(2);
     }),
@@ -103,8 +103,8 @@ describe('SchedulerRegistry', function(){
       
       _.size(schedReg.$schedulers).should.equal(2);
       // Confirm we created the scheduler in the right place and of the right type.
-      _.keys(schedReg.$schedulers).should.includeEql(appSpec.getKey());
-      schedReg.$schedulers[appSpec.getKey()].should.include({type: "MockSimpleScheduler"});
+      _.keys(schedReg.$schedulers).should.containEql(appSpec.getKey());
+      schedReg.$schedulers[appSpec.getKey()].should.containEql({type: "MockSimpleScheduler"});
 
       acquireWorkerSpy.callCount.should.equal(2);
       acquireWorkerSpy.firstCall.calledWithExactly(appSpec, URL, WORKER).should.be.true;

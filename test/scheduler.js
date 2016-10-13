@@ -71,9 +71,9 @@ describe('Scheduler', function(){
 
         //check that the worker has the necessary fields created.
         var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
-        worker.should.have.keys(['data', 'promise']);
-        worker.data.should.have.keys(['a', 'b', 'sockConn', 'httpConn', 
-          'pendingConn', 'timer']);        
+        worker.should.have.keys('data', 'promise');
+        worker.data.should.have.keys('a', 'b', 'sockConn', 'httpConn', 
+          'pendingConn', 'timer');
       })      
       .then(done, done).done();
     }),

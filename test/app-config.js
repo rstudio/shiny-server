@@ -34,8 +34,8 @@ describe('AppConfig', function(){
             }
           });
 
-      merged.should.have.keys(['appDir','runAs', 'settings']);
-      merged.settings.should.have.keys(['scheduler', 'appDefaults']);
+      merged.should.have.keys('appDir','runAs', 'settings');
+      merged.settings.should.have.keys('scheduler', 'appDefaults');
       merged.settings.appDefaults.initTimeout.should.equal(50);
       Object.keys(merged.settings.scheduler).should.eql(['simple']);
 
@@ -62,8 +62,8 @@ describe('AppConfig', function(){
             }
           });
 
-      merged.should.have.keys(['appDir','runAs', 'settings']);
-      merged.settings.should.have.keys(['scheduler', 'appDefaults']);
+      merged.should.have.keys('appDir','runAs', 'settings');
+      merged.settings.should.have.keys('scheduler', 'appDefaults');
       merged.settings.appDefaults.initTimeout.should.equal(50);
       Object.keys(merged.settings.scheduler).should.eql(['simple']);
     }),
@@ -88,8 +88,8 @@ describe('AppConfig', function(){
           }
         });
 
-      merged.should.have.keys(['appDir','runAs', 'settings']);
-      merged.settings.should.have.keys(['scheduler', 'appDefaults']);
+      merged.should.have.keys('appDir','runAs', 'settings');
+      merged.settings.should.have.keys('scheduler', 'appDefaults');
       merged.settings.appDefaults.initTimeout.should.equal(50);
       merged.settings.appDefaults.idleTimeout.should.equal(10);
       Object.keys(merged.settings.scheduler).should.eql(['simple']);
@@ -115,8 +115,8 @@ describe('AppConfig', function(){
           },
           logDir: '/abc'
         });
-      merged.should.have.keys(['appDir','runAs', 'settings']);
-      merged.settings.should.have.keys(['scheduler', 'appDefaults']); //not logDir
+      merged.should.have.keys('appDir','runAs', 'settings');
+      merged.settings.should.have.keys('scheduler', 'appDefaults'); //not logDir
       merged.settings.appDefaults.initTimeout.should.equal(50);
       merged.settings.appDefaults.idleTimeout.should.equal(10);
       Object.keys(merged.settings.scheduler).should.eql(['simple']);
