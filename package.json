@@ -23,6 +23,7 @@
     "log4js": "0.6.x",
     "mocha": "3.1.x",
     "moment": "2.15.x",
+    "morgan": "^1.7.0",
     "optimist": "0.6.1",
     "pause": "0.1.0",
     "q": "1.4.x",
