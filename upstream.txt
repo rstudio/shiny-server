@@ -4,4 +4,3 @@
 # Example:
 # https://github.com/rstudio/shiny-server master
 
-https://github.com/rstudio/shiny-server master
