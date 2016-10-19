@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+set -x
 
 # This is needed for CentOS5/6 Jenkins workers to bootstrap the gcc-4.8 toolchain.
 
@@ -42,6 +43,7 @@ init_nodejs_vars() {
 setup_cached_nodejs () {
   # This is the URL where we'll expect to find a suitable cached build of Node.js, if one exists
   local NODE_ARCHIVE_URL="https://s3.amazonaws.com/rstudio-shiny-server-os-build/node/${NODE_ARCHIVE_FILENAME}"
+  mkdir -p ../ext
   # The local path where we'll put the cached build, if we can find it
   local NODE_ARCHIVE_DEST="../ext/${NODE_ARCHIVE_FILENAME}"
 
