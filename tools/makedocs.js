@@ -17,13 +17,13 @@
  * This script is for generating config.html. It is designed to run under
  * node-supervisor (https://github.com/isaacs/node-supervisor).
  *
- *   supervisor -n exit --extensions 'js|html' lib/makedocs.js
+ *   supervisor -n exit --extensions 'js|html' tools/makedocs.js
  */
 
 var fs = require('fs');
 var path = require('path');
 var util = require('util');
-var htmlEscape = require('connect/lib/utils').escape;
+var htmlEscape = require('escape-html');
 var Handlebars = require('handlebars');
 var _ = require('underscore');
 var map = require('../lib/core/map');
