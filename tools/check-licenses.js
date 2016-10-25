@@ -5,17 +5,22 @@ var path = require("path");
 // in their package.json, but have the info available elsewhere
 
 var KNOWN_LICENSES = {
-  bash:           "MIT",
-  commander:      "MIT",
-  debug:          "MIT",
-  formatio:       "BSD-3-Clause",
-  growl:          "MIT",
-  jade:           "MIT",
-  keygrip:        "MIT",
-  ms:             "MIT",
-  "regexp-quote": "MIT",
-  samsam:         "BSD-3-Clause",
-  unixgroups:     "MIT",
+  "bash@0.0.1":           "MIT",
+  "commander@0.6.1":      "MIT",
+  "commander@2.3.0":      "MIT",
+  "commander@2.9.0":      "MIT",
+  "debug@2.0.0":          "MIT",
+  "debug@2.2.0":          "MIT",
+  "formatio@1.1.1":       "BSD-3-Clause",
+  "growl@1.8.1":          "MIT",
+  "growl@1.9.2":          "MIT",
+  "jade@0.26.3":          "MIT",
+  "keygrip@1.0.1":        "MIT",
+  "ms@0.6.2":             "MIT",
+  "ms@0.7.1":             "MIT",
+  "regexp-quote@0.0.0":   "MIT",
+  "samsam@1.1.2":         "BSD-3-Clause",
+  "unixgroups@0.2.0":     "MIT",
 };
 
 function readJSON(file) {
@@ -27,7 +32,7 @@ function getLicense(packageJson) {
     (packageJson.licenses && packageJson.licenses[0]) ||
     (packageJson.licenses && packageJson.licenses.type);
   if (typeof(license) === "undefined") {
-    return KNOWN_LICENSES[packageJson.name];
+    return KNOWN_LICENSES[packageJson.name + "@" + packageJson.version];
   }
   if (typeof(license) === "string") {
     return license;
@@ -66,7 +71,7 @@ function getLicenses(path) {
       var packageInfo = readJSON(package);
       var license = getLicense(packageInfo);
       return {
-        name: packageInfo.name,
+        name: packageInfo.name + "@" + packageInfo.version,
         path: package,
         license: license
       };
@@ -97,7 +102,7 @@ function showAllLicenses(unapprovedOnly) {
 function checkLicenses() {
   var anyUnapproved = false;
   getLicenses("node_modules").forEach(function(info) {
-    if (!isApprovedLicense(info.license) && info.name !== "shiny-server-client") {
+    if (!isApprovedLicense(info.license) && !/^shiny-server-client@/.test(info.name)) {
       anyUnapproved = true;
       console.error(
         (info.license || "[NONE]") + "\t" +
