@@ -562,8 +562,8 @@
     },
     "shiny-server-client": {
       "version": "1.0.0",
-      "from": "https://github.com/rstudio/shiny-server-client/archive/803ebb14.tar.gz",
-      "resolved": "https://github.com/rstudio/shiny-server-client/archive/803ebb14.tar.gz",
+      "from": "https://github.com/rstudio/shiny-server-client/archive/f214eae20.tar.gz",
+      "resolved": "https://github.com/rstudio/shiny-server-client/archive/f214eae20.tar.gz",
       "dependencies": {
         "commander": {
           "version": "2.3.0",
