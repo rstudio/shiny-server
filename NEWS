@@ -5,6 +5,9 @@ shiny-server 1.5.0
   features or significant bug fixes result from this upgrade, catching up to the
   current Node.js release is critical for the long-term health of our codebase.
 
+* Fix bug where R processes would not be cleaned up if an HTTP request was
+  prematurely closed.
+
 shiny-server 1.4.7
 --------------------------------------------------------------------------------
 
