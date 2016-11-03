@@ -79,7 +79,6 @@ void GetPwUid(const FunctionCallbackInfo<Value>& args) {
   }
 
   uid_t pwuid = args[0]->IntegerValue();
-  printf("%d", pwuid);
 
   int err = 0;
   struct passwd pwd;
