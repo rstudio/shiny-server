@@ -1,3 +1,9 @@
+shiny-server 1.5.1
+--------------------------------------------------------------------------------
+
+* Improve robustness with unfriendly proxy configurations. This had regressed
+  some time between 1.4.3 and 1.4.7. (PR #263)
+
 shiny-server 1.5.0
 --------------------------------------------------------------------------------
 
