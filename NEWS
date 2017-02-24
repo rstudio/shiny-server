@@ -1,6 +1,11 @@
 shiny-server 1.5.2
 --------------------------------------------------------------------------------
 
+* Upgrade to Node.js v6.10.0
+
+shiny-server 1.5.2
+--------------------------------------------------------------------------------
+
 * Add additional configuration directives `http_keepalive_timeout`,
   `sockjs_heartbeat_delay`, and `sockjs_disconnect_delay` to allow working
   with very slow connections and large SockJS payloads. (The default values

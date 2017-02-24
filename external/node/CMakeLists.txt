@@ -1,9 +1,9 @@
 project(node)
 
-set(NODEJS_VERSION 6.9.1)
+set(NODEJS_VERSION 6.10.0)
 # See e.g. http://nodejs.org/dist/v0.10.21/SHASUMS.txt to find the appropriate
 # hash value for the node-v0.10.21.tar.gz file.
-set(NODEJS_SHA256 a98997ca3a4d10751f0ebe97839b2308a31ae884b4203cda0c99cf36bc7fe3bf)
+set(NODEJS_SHA256 01dae00dc0faa37a4b7a84098e2f04631827fc42e319eb66ccc3ab1d561ea42d)
 
 include(ExternalProject)
 
