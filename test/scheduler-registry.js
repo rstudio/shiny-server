@@ -23,7 +23,7 @@ var SchedulerRegistry = rewire('../lib/scheduler/scheduler-registry');
 var SimpleScheduler =  function (eventBus, appSpec, timeout) {
   this.type = "MockSimpleScheduler";
 };
-SimpleScheduler.prototype.acquireWorker_p = function(appSpec, url, worker){
+SimpleScheduler.prototype.acquireWorker = function(appSpec, url, worker){
   return {type: "MockWorker"};
 }
 SchedulerRegistry.__set__("SimpleScheduler", SimpleScheduler);
@@ -41,8 +41,8 @@ var eventBus =  new SimpleEventBus();
 var URL = "/URL";
 var WORKER = "SomeWorker";
 
-// Spy on the acquireWorker_p function.
-var acquireWorkerSpy = sinon.spy(SimpleScheduler.prototype, "acquireWorker_p");
+// Spy on the acquireWorker function.
+var acquireWorkerSpy = sinon.spy(SimpleScheduler.prototype, "acquireWorker");
 
 
 describe('SchedulerRegistry', function(){  
@@ -50,12 +50,12 @@ describe('SchedulerRegistry', function(){
     acquireWorkerSpy.reset();
   })
 
-  describe('#getWorker_p', function(){
+  describe('#getWorker', function(){
     it('Creates a new scheduler on initial request.', function(){
       var schedReg = new SchedulerRegistry(eventBus);
 
       _.size(schedReg.$schedulers).should.equal(0);
-      schedReg.getWorker_p(appSpec, URL, WORKER);
+      schedReg.getWorker(appSpec, URL, WORKER);
       
       // Confirm we created the scheduler in the right place and of the right type.
       _.size(schedReg.$schedulers).should.equal(1);
@@ -68,8 +68,8 @@ describe('SchedulerRegistry', function(){
       var schedReg = new SchedulerRegistry(eventBus);
 
       _.size(schedReg.$schedulers).should.equal(0);
-      schedReg.getWorker_p(appSpec, URL, WORKER);
-      schedReg.getWorker_p(appSpec, URL, WORKER);
+      schedReg.getWorker(appSpec, URL, WORKER);
+      schedReg.getWorker(appSpec, URL, WORKER);
       
       _.size(schedReg.$schedulers).should.equal(1);
       // Confirm we created the scheduler in the right place and of the right type.
@@ -82,7 +82,7 @@ describe('SchedulerRegistry', function(){
       var schedReg = new SchedulerRegistry(eventBus);
 
       _.size(schedReg.$schedulers).should.equal(0);
-      schedReg.getWorker_p(appSpec, URL, WORKER);
+      schedReg.getWorker(appSpec, URL, WORKER);
       _.size(schedReg.$schedulers).should.equal(1);
 
       eventBus.emit('vacantSched', appSpec.getKey());
@@ -98,8 +98,8 @@ describe('SchedulerRegistry', function(){
       }; 
 
       _.size(schedReg.$schedulers).should.equal(0);
-      schedReg.getWorker_p(appSpec, URL, WORKER);
-      schedReg.getWorker_p(alternateAppSpec, URL, WORKER);
+      schedReg.getWorker(appSpec, URL, WORKER);
+      schedReg.getWorker(alternateAppSpec, URL, WORKER);
       
       _.size(schedReg.$schedulers).should.equal(2);
       // Confirm we created the scheduler in the right place and of the right type.

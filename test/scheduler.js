@@ -27,7 +27,7 @@ var Scheduler = rewire('../lib/scheduler/scheduler.js');
 var exitPromise = Q.defer();
 
 var killSpy = sinon.spy();
-Scheduler.__set__("app_worker", {launchWorker_p: function(){
+Scheduler.__set__("app_worker", {launchWorker_p: function() {
   return Q({
     kill: killSpy,
     getExit_p: function(){ return exitPromise.promise; },
@@ -58,13 +58,13 @@ describe('Scheduler', function(){
 
 
 
-  describe('#spawnWorker_p', function(){
+  describe('#spawnWorker', function(){
     it('properly stores provided data.', function(done){
       //check that we're starting off with no workers.
       Object.keys(scheduler.$workers).should.be.empty;
 
       //request a worker
-      scheduler.spawnWorker_p(appSpec, {a:5, b:"test"})
+      scheduler.spawnWorker(appSpec, {a:5, b:"test"}).getAppWorkerHandle_p()
       .then(function(wh){
         //check that exactly one worker has been created
         Object.keys(scheduler.$workers).should.have.length(1);
@@ -72,45 +72,42 @@ describe('Scheduler', function(){
         //check that the worker has the necessary fields created.
         var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
         worker.should.have.keys('data', 'promise');
-        worker.data.should.have.keys('a', 'b', 'sockConn', 'httpConn', 
-          'pendingConn', 'timer');
+        worker.data.should.have.keys('a', 'b', 'sockConn', 'httpConn');
       })      
       .then(done, done).done();
     }),
-    it('properly handles acquire and release.', function(done){
+    it('properly handles acquire and release.', function() {
       //request a worker
-      scheduler.spawnWorker_p(appSpec, {})
-      .then(function(wh){
-        var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
+      let workerEntry = scheduler.spawnWorker(appSpec, {});
+      var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
 
-        worker.data.httpConn.should.equal(0);
-        worker.data.sockConn.should.equal(0);
+      worker.data.httpConn.should.equal(0);
+      worker.data.sockConn.should.equal(0);
 
-        wh.acquire('http');
-        
-        worker.data.httpConn.should.equal(1);
-        worker.data.sockConn.should.equal(0);
+      workerEntry.acquire('http');
+      
+      worker.data.httpConn.should.equal(1);
+      worker.data.sockConn.should.equal(0);
 
-        wh.acquire('sock');
-        
-        worker.data.httpConn.should.equal(1);
-        worker.data.sockConn.should.equal(1);
+      workerEntry.acquire('sock');
+      
+      worker.data.httpConn.should.equal(1);
+      worker.data.sockConn.should.equal(1);
 
-        wh.release('http');
-        
-        worker.data.httpConn.should.equal(0);
-        worker.data.sockConn.should.equal(1);
+      workerEntry.release('http');
+      
+      worker.data.httpConn.should.equal(0);
+      worker.data.sockConn.should.equal(1);
 
-        wh.release('sock');
-        
-        worker.data.httpConn.should.equal(0);
-        worker.data.sockConn.should.equal(0);        
-      })      
-      .then(done, done).done();
+      workerEntry.release('sock');
+      
+      worker.data.httpConn.should.equal(0);
+      worker.data.sockConn.should.equal(0);        
     }),
-    it('sets timer after last connection.', function(done){
+    it('sets timer after last connection.', function(done) {
       //request a worker
-      scheduler.spawnWorker_p(appSpec, {})
+      let workerEntry = scheduler.spawnWorker(appSpec, {});
+      workerEntry.getAppWorkerHandle_p()
       .then(function(wh){
         // TODO: clean up 
         // The old tests all have pending kill timers which the spy will
@@ -122,16 +119,13 @@ describe('Scheduler', function(){
 
         //check that the worker has the necessary fields created.
         var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
+        should.exist(worker);
         
         // make a connection so there should be no timer.
-        wh.acquire('sock');
-
-        should.not.exist(worker.data.timer);
+        workerEntry.acquire('sock');
 
         // release the only connection which should trigger the timer
-        wh.release('sock');
-
-        should.exist(worker.data.timer);
+        workerEntry.release('sock');
 
         // Advance time far enough that the process
         // should have been killed
