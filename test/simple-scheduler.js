@@ -17,8 +17,10 @@ var map = require('../lib/core/map');
 var _ = require('underscore');
 var SimpleEventBus = require('../lib/events/simple-event-bus');
 var rewire = require("rewire");
+var should = require('should');
 var sinon = require('sinon');
 var SimpleScheduler = require('../lib/scheduler/simple-scheduler');
+var WorkerEntry = require('../lib/scheduler/worker-entry');
 
 // Setup a simple scheduler with a max of 4 requests.
 var MAX_REQUESTS = 4;
@@ -32,7 +34,7 @@ var spawnWorkerSpy;
 var scheduler;
 
 // Helper function to quickly add workers to a scheduler
-function addWorker(scheduler, id, sock, http, isPending){
+function addWorker(scheduler, id, sock, http, pending, isPending){
   if (!scheduler.$workers){
     scheduler.$workers = map.create();
   }
@@ -41,10 +43,12 @@ function addWorker(scheduler, id, sock, http, isPending){
     id: id,
     data: {
       sockConn: sock,
-      httpConn: http
+      httpConn: http,
+      pendingConn: pending
     },
     promise: Q({type: "mockWorker", id: id}),
-    getAppWorkerHandle_p: function() { return this.promise; }
+    getAppWorkerHandle_p: function() { return this.promise; },
+    sessionCount: WorkerEntry.prototype.sessionCount
   };
 
   scheduler.spawnWorker();
@@ -95,7 +99,7 @@ describe('SimpleScheduler', function(){
     it('should not create a new worker when one exists.', function(done){
       var WORKER_ID = "WORKER";
       var mockWorker = 
-        addWorker(scheduler, WORKER_ID, 0, 0, false);
+        addWorker(scheduler, WORKER_ID, 0, 0, 0, false);
       
       // Reset after adding the initial worker.
       spawnWorkerSpy.reset();
@@ -130,7 +134,7 @@ describe('SimpleScheduler', function(){
     it('should approach the MAX_REQUESTS directive.', function(done){
       var WORKER_ID = "WORKER";
       var mockWorker = 
-        addWorker(scheduler, WORKER_ID, MAX_REQUESTS - 1, 0, false);
+        addWorker(scheduler, WORKER_ID, MAX_REQUESTS - 1, 0, 0, false);
 
       //request a worker for the new app
       scheduler.acquireWorker(appSpec, '/').getAppWorkerHandle_p()
@@ -140,10 +144,33 @@ describe('SimpleScheduler', function(){
       })
       .then(done, done).done();
     })
+    it('should not let an http connection use a pending conn count.', function() {
+      var WORKER_ID = "WORKER";
+      var mockWorker = 
+        addWorker(scheduler, WORKER_ID, MAX_REQUESTS - 1, 0, 1, false);
+
+      //request a worker for the new app
+      (() => {
+        scheduler.acquireWorker(appSpec, '/').getAppWorkerHandle_p();
+      }).should.throw();
+    })
+    it('should let a sockjs connection use a pending conn count.', function(done){
+      var WORKER_ID = "WORKER";
+      var mockWorker = 
+        addWorker(scheduler, WORKER_ID, MAX_REQUESTS - 1, 0, 1, false);
+
+      //request a worker for the new app
+      scheduler.acquireWorker(appSpec, 'ws').getAppWorkerHandle_p()
+      .then(function(wh){
+        // should succeed, there's room for one more.
+        wh.id.should.equal(mockWorker.id);
+      })
+      .then(done, done).done();
+    })
     it('should not exceed the MAX_REQUESTS directive on the base URL.', function(){
       var WORKER_ID = "WORKER";
       var mockWorker = 
-        addWorker(scheduler, WORKER_ID, MAX_REQUESTS, 0, false);
+        addWorker(scheduler, WORKER_ID, MAX_REQUESTS, 0, 0, false);
 
       //request a worker for the new app
       (function(){
@@ -153,7 +180,7 @@ describe('SimpleScheduler', function(){
     it('should not 503 non-/, non-ws traffic ever', function(done){
       var WORKER_ID = "WORKER";
       var mockWorker = 
-        addWorker(scheduler, WORKER_ID, MAX_REQUESTS*2, 0, false);
+        addWorker(scheduler, WORKER_ID, MAX_REQUESTS*2, 0, 0, false);
 
       appSpec.settings.scheduler = {simple: {maxRequests: 0}};
 
