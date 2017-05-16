@@ -422,9 +422,9 @@
       "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.15.tgz"
     },
     "minimatch": {
-      "version": "3.0.3",
+      "version": "3.0.4",
       "from": "minimatch@>=3.0.2 <4.0.0",
-      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-3.0.3.tgz"
+      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-3.0.4.tgz"
     },
     "minimist": {
       "version": "0.0.10",
@@ -444,9 +444,9 @@
       }
     },
     "mocha": {
-      "version": "3.3.0",
-      "from": "mocha@3.3.0",
-      "resolved": "https://registry.npmjs.org/mocha/-/mocha-3.3.0.tgz",
+      "version": "3.4.1",
+      "from": "mocha@*",
+      "resolved": "https://registry.npmjs.org/mocha/-/mocha-3.4.1.tgz",
       "dependencies": {
         "debug": {
           "version": "2.6.0",
