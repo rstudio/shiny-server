@@ -1,12 +1,14 @@
 shiny-server 1.5.4
 --------------------------------------------------------------------------------
 
-* Upgrade to Node.js v6.10.2
+* Upgrade to Node.js v6.10.2.
+
+* Refactor scheduler code to make enforcement of connection limits more robust.
 
 shiny-server 1.5.3
 --------------------------------------------------------------------------------
 
-* Upgrade to Node.js v6.10.0
+* Upgrade to Node.js v6.10.0.
 
 shiny-server 1.5.2
 --------------------------------------------------------------------------------
