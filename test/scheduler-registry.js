@@ -107,8 +107,8 @@ describe('SchedulerRegistry', function(){
       schedReg.$schedulers[appSpec.getKey()].should.containEql({type: "MockSimpleScheduler"});
 
       acquireWorkerSpy.callCount.should.equal(2);
-      acquireWorkerSpy.firstCall.calledWithExactly(appSpec, URL, WORKER).should.be.true;
-      acquireWorkerSpy.secondCall.calledWithExactly(alternateAppSpec, URL, WORKER).should.be.true;
+      acquireWorkerSpy.firstCall.calledWithExactly(appSpec, URL, WORKER).should.be.true();
+      acquireWorkerSpy.secondCall.calledWithExactly(alternateAppSpec, URL, WORKER).should.be.true();
     })
   });
 })

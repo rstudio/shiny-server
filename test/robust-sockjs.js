@@ -22,7 +22,7 @@ describe('RobustSockJS', function(){
       var rsjs = new RobustSockJS();
       var conn = {url: 'blah', close: sinon.spy(), write: sinon.spy()};
       var result = rsjs.robustify(conn);
-      (conn === result).should.be.true;
+      (conn === result).should.be.true();
     });
     it('handles all 4 cases properly', function(){
       var rsjs = new RobustSockJS();
@@ -41,19 +41,19 @@ describe('RobustSockJS', function(){
       // ID collisions fail
       var rob2 = rsjs.robustify(conn);
       _.size(rsjs._connections).should.equal(1);
-      (rob2 === undefined).should.be.true;
+      (rob2 === undefined).should.be.true();
 
       // Reconnects succeed.
       conn.url = conn.url.replace(/\/n=/, '/o=');
       var rob3 = rsjs.robustify(conn);
       _.size(rsjs._connections).should.equal(1);
-      (rob3 === undefined).should.be.true;
+      (rob3 === undefined).should.be.true();
 
       // Reconnects of expired/invalid IDs fail.
       conn.url = conn.url.replace(/1234/, 'abcd');
       var rob4 = rsjs.robustify(conn);
       _.size(rsjs._connections).should.equal(1);
-      (rob4 === undefined).should.be.true;
+      (rob4 === undefined).should.be.true();
     });
     it('buffers disconnects', function(){
       var clock = sinon.useFakeTimers();
