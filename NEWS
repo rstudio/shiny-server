@@ -3,6 +3,8 @@ shiny-server 1.5.4
 
 * Upgrade to Node.js v6.10.3.
 
+* Upgrade to pandoc 1.17.2.
+
 * Refactor scheduler code to make enforcement of connection limits more robust.
 
 shiny-server 1.5.3
