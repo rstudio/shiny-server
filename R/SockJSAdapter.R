@@ -25,6 +25,13 @@ local({
   RSTUDIO_PANDOC=input[8],
   LOG_FILE=input[9])
 
+  if (!identical(Sys.getenv('LOG_FILE'), "")){
+    # Redirect stderr to the given path.
+    message("Redirecting to ", Sys.getenv("LOG_FILE"))
+    errFile <- file(Sys.getenv('LOG_FILE'), "a")
+    sink(errFile, type="message")
+  }
+
   disableProtocols <- strsplit(input[10], ",")[[1]]
   if (length(disableProtocols) == 0) {
     disableProtocols <- ""
@@ -79,13 +86,6 @@ local({
     }
   } 
   close(fd)
-
-  if (!identical(Sys.getenv('LOG_FILE'), "")){
-    # Redirect stderr to the given path.
-    message("Redirecting to ", Sys.getenv("LOG_FILE"))
-    errFile <- file(Sys.getenv('LOG_FILE'), "a")
-    sink(errFile, type="message")
-  }
 
   MIN_R_VERSION <- "2.15.1"
   MIN_SHINY_VERSION <- "0.7.0"
