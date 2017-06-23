@@ -1,7 +1,7 @@
 #
 # SockJSAdapter.R
 #
-# Copyright (C) 2009-13 by RStudio, Inc.
+# Copyright (C) 2009-17 by RStudio, Inc.
 #
 # This program is licensed to you under the terms of version 3 of the
 # GNU Affero General Public License. This program is distributed WITHOUT
@@ -11,6 +11,10 @@
 #
 
 local({
+  dir_exists <- function(path) {
+    utils::file_test('-d', path)
+  }
+
   # Read config directives from stdin and put them in the environment.
   fd = file('stdin')
   input <- readLines(fd)
@@ -50,7 +54,7 @@ local({
         save.interface = function(id, callback) {
           username <- Sys.info()[["effective_user"]]
           dirname <- file.path(bookmarkStateDir, username, bookmarkAppDir, id)
-          if (dir.exists(dirname)) {
+          if (dir_exists(dirname)) {
             stop("Directory ", dirname, " already exists")
           } else {
             dir.create(dirname, recursive = TRUE, mode = "0700")
@@ -60,7 +64,7 @@ local({
         load.interface = function(id, callback) {
           username <- Sys.info()[["effective_user"]]
           dirname <- file.path(bookmarkStateDir, username, bookmarkAppDir, id)
-          if (!dir.exists(dirname)) {
+          if (!dir_exists(dirname)) {
             stop("Session ", id, " not found")
           } else {
             callback(dirname)
