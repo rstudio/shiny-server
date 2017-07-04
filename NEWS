@@ -7,6 +7,8 @@ shiny-server 1.5.4
 
 * Refactor scheduler code to make enforcement of connection limits more robust.
 
+* Add opt-in clickjacking protection via `frame_options` directive.
+
 shiny-server 1.5.3
 --------------------------------------------------------------------------------
 
