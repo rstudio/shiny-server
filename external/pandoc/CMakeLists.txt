@@ -28,6 +28,8 @@ foreach(DOWNLOAD_INFO ${PANDOC_DOWNLOADS})
     list(GET DL 1 CURRENT_SHA)
 
     set(DOWNLOAD_DEST "${CMAKE_CURRENT_BINARY_DIR}/${CURRENT_FILENAME}.gz")
+    set(GUNZIP_DEST "${CMAKE_CURRENT_BINARY_DIR}/${CURRENT_FILENAME}")
+
     if (EXISTS "${DOWNLOAD_DEST}")
         # If the file was downloaded in the past, check if it's the
         # right file by verifying the SHA1 hash. If it's not the right
@@ -53,17 +55,18 @@ foreach(DOWNLOAD_INFO ${PANDOC_DOWNLOADS})
 
     # gunzip the downloaded (or cached) file. If the output file
     # already exists, get rid of it first so gunzip doesn't prompt.
-    file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/${CURRENT_FILENAME}")
+    file(REMOVE "${GUNZIP_DEST}")
     message(STATUS "gunzip ${DOWNLOAD_DEST}")
-    execute_process(COMMAND gunzip -k "${DOWNLOAD_DEST}"
+    execute_process(COMMAND gunzip -c "${DOWNLOAD_DEST}"
         RESULT_VARIABLE UNZIP_RESULT
+        OUTPUT_FILE "${GUNZIP_DEST}"
     )
     if (NOT ${UNZIP_RESULT} EQUAL 0)
         message(FATAL_ERROR "Failed to gunzip ${DOWNLOAD_DEST}")
     endif()
 
     # Copy and chmod the downloaded file
-    file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CURRENT_FILENAME}"
+    file(COPY "${GUNZIP_DEST}"
         DESTINATION "${PANDOC_PREFIX}"
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
     )
