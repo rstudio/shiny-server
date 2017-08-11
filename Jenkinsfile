@@ -94,10 +94,12 @@ try {
         }
         parallel parallel_containers
 
-        sendNotifications slack_channel: SLACK_CHANNEL
+        if (env.BRANCH_NAME == 'master') {
+          sendNotifications slack_channel: SLACK_CHANNEL
+        }
     }
 
 } catch(err) {
-   sendNotifications slack_channel: SLACK_CHANNEL
+   sendNotifications slack_channel: SLACK_CHANNEL, result: 'FAILURE'
    error("failed: ${err}")
 }
