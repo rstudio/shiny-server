@@ -15,6 +15,30 @@ def prepareWorkspace(){ // accessory to clean workspace and checkout
   sh 'git reset --hard && git clean -ffdx' // lifted from rstudio/connect
 }
 
+def getPathFromBranch(branch_name) {
+  def path = ''
+  if (branch_name != 'master') {
+    path = "branches/${branch_name.replaceAll('/','-')}"
+  }
+  return path
+}
+
+def getPackageTypeFromOs(os) {
+  def type = ''
+  if (os.contains('ubuntu')) {
+    type = 'deb'
+  } else {
+    type = 'rpm'
+  }
+}
+
+def s3_upload(os, arch) {
+  def path = getPathFromBranch(env.BRANCH_NAME)
+  def type = getPackageTypeFromOs(os)
+  sh "aws s3 cp packaging/build/*.${type} s3://rstudio-shiny-server-os-build/${path}/${os}/${arch}/"
+  sh "aws s3 cp packaging/build/VERSION s3://rstudio-shiny-server-os-build/${path}/${os}/${arch}/"
+}
+
 try {
     timestamps {
         def containers = [
@@ -52,9 +76,9 @@ try {
                           }
                         }
                     }
-                    //stage('s3 upload') {
-                    //    TODO
-                    //}
+                    stage('s3 upload') {
+                        s3_upload(current_container.os, current_container.arch)
+                    }
                 }
             }
         }
