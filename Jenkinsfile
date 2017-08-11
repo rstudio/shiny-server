@@ -15,6 +15,14 @@ def prepareWorkspace(){ // accessory to clean workspace and checkout
   sh 'git reset --hard && git clean -ffdx' // lifted from rstudio/connect
 }
 
+def getBucketFromJobName(job) {
+  def bucket = 'rstudio-shiny-server-os-build'
+  if (job.contains('shiny-server-pro')) {
+    bucket = 'rstudio-shiny-server-pro-build'
+  }
+  return bucket
+}
+
 def getPathFromBranch(branch_name) {
   def path = ''
   if (branch_name != 'master') {
@@ -34,10 +42,11 @@ def getPackageTypeFromOs(os) {
 }
 
 def s3_upload(os, arch) {
+  def bucket = getBucketFromJobName(env.JOB_NAME)
   def path = getPathFromBranch(env.BRANCH_NAME)
   def type = getPackageTypeFromOs(os)
-  sh "aws s3 cp packaging/build/*.${type} s3://rstudio-shiny-server-os-build/${path}/${os}/${arch}/"
-  sh "aws s3 cp packaging/build/VERSION s3://rstudio-shiny-server-os-build/${path}/${os}/${arch}/"
+  sh "aws s3 cp packaging/build/*.${type} s3://${bucket}/${path}/${os}/${arch}/"
+  sh "aws s3 cp packaging/build/VERSION s3://${bucket}/${path}/${os}/${arch}/"
 }
 
 try {
