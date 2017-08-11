@@ -1,0 +1,31 @@
+FROM ubuntu:precise
+
+ARG AWS_REGION=us-east-1
+
+# install needed packages. replace httpredir apt source with cloudfront
+RUN set -x \
+    && sed -i "s/archive.ubuntu.com/$AWS_REGION.ec2.archive.ubuntu.com/" /etc/apt/sources.list \
+    && export DEBIAN_FRONTEND=noninteractive \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9 \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BA9EF27F \
+    && echo 'deb http://cran.rstudio.com/bin/linux/ubuntu precise/' >> /etc/apt/sources.list \
+    && echo 'deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu precise main' >> /etc/apt/sources.list \
+    && apt-get update
+
+RUN apt-get update \
+  && apt-get install -y build-essential curl make gcc-4.8 g++-4.8 git python libssl-dev cmake r-base sudo wget
+
+WORKDIR /tmp
+RUN wget https://cmake.org/files/v2.8/cmake-2.8.11.2.tar.gz \
+  && tar xzf cmake-2.8.11.2.tar.gz \
+  && cd cmake-2.8.11.2 \
+  && ./configure \
+  && make \
+  && make install
+
+# create jenkins user, make sudo. try to keep this toward the bottom for less cache busting
+ARG JENKINS_GID=999
+ARG JENKINS_UID=999
+RUN groupadd -g $JENKINS_GID jenkins && \
+    useradd -m -d /var/lib/jenkins -u $JENKINS_UID -g jenkins jenkins && \
+    echo "jenkins ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
