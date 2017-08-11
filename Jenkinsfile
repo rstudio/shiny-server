@@ -30,6 +30,7 @@ def getPackageTypeFromOs(os) {
   } else {
     type = 'rpm'
   }
+  return type
 }
 
 def s3_upload(os, arch) {
