@@ -4,7 +4,7 @@ MAINTAINER Chad Barraford <chad@rstudio.com>
 RUN yum -y update
 RUN yum -y install epel-release
 RUN yum -y groupinstall "Development tools"
-RUN yum -y install rsyslog screen passwd sudo wget git python26 python-setuptools python-devel gcc glibc-devel python-setuptools R curl openssl-devel
+RUN yum -y install rsyslog screen passwd sudo wget git python26 python-setuptools python-devel gcc glibc-devel python-setuptools R curl openssl-devel pam-devel
 RUN easy_install Mercurial==3.4.2
 
 RUN cd /usr/local/ && \
