@@ -15,7 +15,8 @@ RUN set -x \
 # add ppa for oracle jdk 8, pre-accept license
 RUN apt-get install -y python-software-properties \
     && apt-add-repository -y ppa:webupd8team/java \
-    && echo debconf shared/accepted-oracle-license-v1-1 select true > debconf-set-selections
+    && echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections \
+    && echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
 
 RUN apt-get update \
   && apt-get install -y build-essential curl make gcc-4.8 g++-4.8 git python libssl-dev cmake r-base sudo wget libpam0g-dev oracle-java8-installer
