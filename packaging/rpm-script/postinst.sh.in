@@ -2,6 +2,7 @@
 
 # errors shouldn't cause script to exit
 set +e
+echo here1
 
 ln -f -s "${CMAKE_INSTALL_PREFIX}/shiny-server/bin/shiny-server" /usr/bin/shiny-server
 # See if "shiny" user exists
@@ -81,13 +82,6 @@ else
    service shiny-server stop 2>/dev/null
    sleep 1
    service shiny-server start
-fi
-
-if [ -e /etc/SuSE-release ] || [ "$RH_VER" == "7" ]  || [ "$RH_VER" == "6" ]
-then
-   # The default Pandoc binaries aren't compatible, overwrite with the static versions.
-   cp -f ${CMAKE_INSTALL_PREFIX}/shiny-server/ext/pandoc/static/pandoc ${CMAKE_INSTALL_PREFIX}/shiny-server/ext/pandoc/pandoc
-   cp -f ${CMAKE_INSTALL_PREFIX}/shiny-server/ext/pandoc/static/pandoc-citeproc ${CMAKE_INSTALL_PREFIX}/shiny-server/ext/pandoc/pandoc-citeproc
 fi
 
 # clear error termination state
