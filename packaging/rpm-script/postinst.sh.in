@@ -2,7 +2,6 @@
 
 # errors shouldn't cause script to exit
 set +e
-echo here1
 
 ln -f -s "${CMAKE_INSTALL_PREFIX}/shiny-server/bin/shiny-server" /usr/bin/shiny-server
 # See if "shiny" user exists
