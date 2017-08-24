@@ -45,8 +45,17 @@ def s3_upload(os, arch) {
   def bucket = getBucketFromJobName(env.JOB_NAME)
   def path = getPathFromBranch(env.BRANCH_NAME)
   def type = getPackageTypeFromOs(os)
-  sh "aws s3 cp packaging/build/*.${type} s3://${bucket}/${path}/${os}/${arch}/"
-  sh "aws s3 cp packaging/build/VERSION s3://${bucket}/${path}/${os}/${arch}/"
+  if (path.empty) {
+    // If the path is empty, we're on master and don't want 'master' to appear
+    // in the object paths.
+    sh "aws s3 cp packaging/build/*.${type} s3://${bucket}/${os}/${arch}/"
+    sh "aws s3 cp packaging/build/VERSION s3://${bucket}/${os}/${arch}/"
+  } else {
+    // If the path is non-empty, we're on a branch other than master, and its
+    // name should be included in the object paths.
+    sh "aws s3 cp packaging/build/*.${type} s3://${bucket}/${path}/${os}/${arch}/"
+    sh "aws s3 cp packaging/build/VERSION s3://${bucket}/${path}/${os}/${arch}/"
+  }
 }
 
 try {
