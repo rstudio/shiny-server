@@ -65,6 +65,12 @@ archive_nodejs() {
   fi
 }
 
+# Repo checkout directories are re-used by Jenkins workers, and so a
+# $PROJECT_DIR/packaging/build/CMakeCache.txt might be hanging around from a
+# previous build. This cache file is platform-specific, and the build that
+# generated it may have been on a different platform. In order to build reliably
+# we must first blow it away if it exists.
+rm -f ../packaging/build/CMakeCache.txt
 
 init_nodejs_vars
 setup_cached_nodejs
