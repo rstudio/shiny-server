@@ -70,7 +70,7 @@ archive_nodejs() {
 # previous build. This cache file is platform-specific, and the build that
 # generated it may have been on a different platform. In order to build reliably
 # we must first blow it and any other files not in the repo away.
-git clean -fdx .
+git reset --hard && git clean -ffdx
 
 init_nodejs_vars
 setup_cached_nodejs
