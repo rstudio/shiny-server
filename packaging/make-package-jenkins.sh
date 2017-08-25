@@ -69,8 +69,8 @@ archive_nodejs() {
 # $PROJECT_DIR/packaging/build/CMakeCache.txt might be hanging around from a
 # previous build. This cache file is platform-specific, and the build that
 # generated it may have been on a different platform. In order to build reliably
-# we must first blow it away if it exists.
-rm -f ../packaging/build/CMakeCache.txt
+# we must first blow it and any other files not in the repo away.
+git clean -fdx .
 
 init_nodejs_vars
 setup_cached_nodejs
