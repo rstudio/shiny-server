@@ -21,6 +21,8 @@ RUN apt-get install -y python-software-properties \
 RUN apt-get update \
   && apt-get install -y build-essential curl make gcc-4.8 g++-4.8 git python libssl-dev cmake r-base sudo wget libpam0g-dev oracle-java8-installer
 
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 100 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
+
 WORKDIR /tmp
 RUN wget https://cmake.org/files/v2.8/cmake-2.8.11.2.tar.gz \
   && tar xzf cmake-2.8.11.2.tar.gz \
