@@ -29,7 +29,6 @@
     "pause": "0.1.0",
     "q": "^1.5.1",
     "qs": "^6.5.1",
-    "regexp-quote": "0.0.0",
     "rewire": "^3.0.2",
     "send": "^0.16.2",
     "shiny-server-client": "https://github.com/rstudio/shiny-server-client/archive/f214eae20.tar.gz",
