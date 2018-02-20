@@ -18,7 +18,6 @@ var KNOWN_LICENSES = {
   "keygrip@1.0.1":        "MIT",
   "ms@0.6.2":             "MIT",
   "ms@0.7.1":             "MIT",
-  "regexp-quote@0.0.0":   "MIT",
   "samsam@1.1.2":         "BSD-3-Clause",
   "unixgroups@0.2.0":     "MIT",
 };
