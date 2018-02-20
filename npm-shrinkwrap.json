@@ -545,11 +545,6 @@
       "from": "readable-stream@>=1.1.7 <2.0.0",
       "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.14.tgz"
     },
-    "regexp-quote": {
-      "version": "0.0.0",
-      "from": "regexp-quote@0.0.0",
-      "resolved": "https://registry.npmjs.org/regexp-quote/-/regexp-quote-0.0.0.tgz"
-    },
     "repeat-string": {
       "version": "1.6.1",
       "from": "repeat-string@>=1.5.2 <2.0.0",
