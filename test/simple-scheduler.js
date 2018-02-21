@@ -85,7 +85,7 @@ describe('SimpleScheduler', function(){
 
   }),
   afterEach(function(){
-    spawnWorkerSpy.reset();
+    spawnWorkerSpy.resetHistory();
   }),
   describe('#acquireWorker()', function(done){
     it('should initially create a new worker.', function(){
@@ -102,7 +102,7 @@ describe('SimpleScheduler', function(){
         addWorker(scheduler, WORKER_ID, 0, 0, 0, false);
       
       // Reset after adding the initial worker.
-      spawnWorkerSpy.reset();
+      spawnWorkerSpy.resetHistory();
 
       scheduler.acquireWorker(appSpec).getAppWorkerHandle_p()
       .then(function(wh){
@@ -121,7 +121,7 @@ describe('SimpleScheduler', function(){
         addWorker(scheduler, WORKER_ID, 10000, 0, false);
       
       // Reset after adding the initial worker.
-      spawnWorkerSpy.reset();      
+      spawnWorkerSpy.resetHistory();      
       appSpec.settings.scheduler = {simple: {maxRequests: 0}};
       scheduler.acquireWorker(appSpec).getAppWorkerHandle_p()
       .then(function(wh){

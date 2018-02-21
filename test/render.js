@@ -45,8 +45,8 @@ var res = {
 
 describe('Render', function(){  
   beforeEach(function(){
-    res.writeHead.reset();
-    res.end.reset();
+    res.writeHead.resetHistory();
+    res.end.resetHistory();
     
     render.flushCache();
 
