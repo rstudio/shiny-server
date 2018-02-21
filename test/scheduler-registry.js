@@ -47,7 +47,7 @@ var acquireWorkerSpy = sinon.spy(SimpleScheduler.prototype, "acquireWorker");
 
 describe('SchedulerRegistry', function(){  
   afterEach(function(){
-    acquireWorkerSpy.reset();
+    acquireWorkerSpy.resetHistory();
   })
 
   describe('#getWorker', function(){

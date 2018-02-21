@@ -52,7 +52,7 @@ describe('Scheduler', function(){
       })
     }});
 
-    killSpy.reset();
+    killSpy.resetHistory();
     exitPromise = Q.defer();
   });
 
@@ -115,7 +115,7 @@ describe('Scheduler', function(){
         // those kills out of the way then reset the spy to get an accurate
         // count from JUST this test.
         clock.tick(5500);
-        killSpy.reset();
+        killSpy.resetHistory();
 
         //check that the worker has the necessary fields created.
         var worker = scheduler.$workers[Object.keys(scheduler.$workers)[0]];
