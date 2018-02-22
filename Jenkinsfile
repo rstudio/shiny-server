@@ -90,10 +90,10 @@ try {
                           stage('run tests') {
                               sh './bin/node ./node_modules/mocha/bin/mocha test'
                           }
-                          stage('check licenses') {
-                              sh 'tools/preflight.sh'
-                          }
                         }
+                    }
+                    stage('check licenses') {
+                        sh 'tools/preflight.sh'
                     }
                     stage('s3 upload') {
                         s3_upload(current_container.os, current_container.arch)
