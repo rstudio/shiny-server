@@ -62,7 +62,7 @@ function getPackageJson(basedir) {
 }
 
 function isApprovedLicense(license) {
-  return /^MIT|BSD|BSD-3-Clause|ISC|Apache[- ]2.0|WTFPL|Public Domain|MPL 2.0|zlib$/.test(license);
+  return /^MIT|BSD|BSD-3-Clause|ISC|Apache[- ]2.0|WTFPL|Public Domain|MPL[- ]2.0|zlib|Unlicense$/.test(license);
 }
 
 function getLicenses(path) {
