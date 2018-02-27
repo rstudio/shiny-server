@@ -199,6 +199,16 @@
         }
       }
     },
+    "compressible": {
+      "version": "2.0.13",
+      "from": "compressible@>=2.0.13 <2.1.0",
+      "resolved": "https://registry.npmjs.org/compressible/-/compressible-2.0.13.tgz"
+    },
+    "compression": {
+      "version": "1.7.2",
+      "from": "compression@latest",
+      "resolved": "https://registry.npmjs.org/compression/-/compression-1.7.2.tgz"
+    },
     "concat-map": {
       "version": "0.0.1",
       "from": "concat-map@0.0.1",
