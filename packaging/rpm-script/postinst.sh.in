@@ -45,43 +45,7 @@ chown shiny:shiny /var/log/shiny-server
 
 mkdir -p /var/lib/shiny-server
 
-RH_VER=""
-if test -e /etc/redhat-release
-then
-  RH_VER=`sed -nr "s/.*release\\ ([0-9]).*/\\1/p" /etc/redhat-release`
-fi
 
-# add upstart profile, or init.d/systemd script and start the server
-if test -d /etc/init/
-then
-   # remove any previously existing init.d based scheme
-   service shiny-server stop 2>/dev/null
-   rm -f /etc/init.d/shiny-server
-
-   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/upstart/shiny-server.conf /etc/init/
-   initctl reload-configuration
-   initctl stop shiny-server 2>/dev/null
-   sleep 1
-   initctl start shiny-server
-elif [ "$RH_VER" == "7" ]
-then
-   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/systemd/shiny-server.service /etc/systemd/system/
-   systemctl enable shiny-server
-   systemctl restart shiny-server
-else
-   if test -e /etc/SuSE-release
-   then
-      cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/suse/shiny-server /etc/init.d/
-   else
-      cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/init.d/redhat/shiny-server /etc/init.d/
-   fi
-
-   chmod +x /etc/init.d/shiny-server
-   chkconfig --add shiny-server
-   service shiny-server stop 2>/dev/null
-   sleep 1
-   service shiny-server start
-fi
-
-# clear error termination state
-set -e
+# Do not remove!
+%posttrans
+${RPM_POSTTRANS_SCRIPT}
