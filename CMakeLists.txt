@@ -114,6 +114,7 @@ set(DEBIAN_PRERM prerm.in)
 set(DEBIAN_POSTRM postrm.in)
 
 # rpm scripts
+set(RPM_POSTTRANS posttrans.sh.in)
 set(RPM_POSTINST postinst.sh.in)
 set(RPM_POSTRM postrm.sh.in)
 
@@ -143,6 +144,9 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_BINARY_DIR}/packaging/de
 # dynamically configured rpm scripts (only works with cmake 2.8.1 or higher). 
 # alternatively you can get CPackRPM.cmake from the cmake tip and copy it into
 # your local cmake modules directory -- this is what we currently do
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/rpm-script/${RPM_POSTTRANS}
+               ${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/posttrans.sh)
+file(READ ${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/posttrans.sh RPM_POSTTRANS_SCRIPT)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/rpm-script/${RPM_POSTINST}
                ${CMAKE_CURRENT_BINARY_DIR}/packaging/rpm-script/postinst.sh)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/rpm-script/${RPM_POSTRM}
