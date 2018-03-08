@@ -5,6 +5,8 @@ shiny-server 1.5.7
   necessary with the directive "http_allow_compression no;" at the top level
   of shiny-server.conf.
 
+* Don't color log output if stdout is not a terminal.
+
 shiny-server 1.5.6
 --------------------------------------------------------------------------------
 
