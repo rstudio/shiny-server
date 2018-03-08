@@ -40,4 +40,4 @@ To customize any of the above, or to explore the other ways Shiny Server can hos
 
 See [the Administrator's Guide to Shiny Server](https://rstudio.github.io/shiny-server/latest/) for more complete documentation regarding the setup and management of Shiny Server.
 
-Please direct questions to the [shiny-discuss](https://groups.google.com/group/shiny-discuss) mailing list. If you're interested in Professional Support, please look at our commercial [Shiny Server Pro](https://www.rstudio.com/products/shiny-server-pro/) product.
+Please direct questions to the [Shiny Community discussion board](https://community.rstudio.com/c/shiny). If you're interested in Professional Support, please look at our commercial [Shiny Server Pro](https://www.rstudio.com/products/shiny-server-pro/) product.
