@@ -5,6 +5,8 @@ shiny-server 1.5.7
   necessary with the directive "http_allow_compression no;" at the top level
   of shiny-server.conf.
 
+* Upgrade to Node.js v8.10.0.
+
 shiny-server 1.5.6
 --------------------------------------------------------------------------------
 
