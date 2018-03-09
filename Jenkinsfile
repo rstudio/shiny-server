@@ -61,7 +61,6 @@ def s3_upload(os, arch) {
 try {
     timestamps {
         def containers = [
-          [os: 'ubuntu-12.04', arch: 'x86_64'],
           [os: 'ubuntu-14.04', arch: 'x86_64'],
           [os: 'centos6.3', arch: 'x86_64']
         ]
