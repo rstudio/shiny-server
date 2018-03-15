@@ -2,8 +2,8 @@ project(node)
 
 set(NODEJS_VERSION 8.10.0)
 # See e.g. http://nodejs.org/dist/v0.10.21/SHASUMS.txt to find the appropriate
-# hash value for the node-v0.10.21-linux-x64.tar.xz file.
-set(NODEJS_SHA256 92220638d661a43bd0fee2bf478cb283ead6524f231aabccf14c549ebc2bc338)
+# hash value for the node-v0.10.21-linux-x64.tar.gz file.
+set(NODEJS_SHA256 c1302439aee9791d70d3ab4194a612e6131d37fa0e3452072e847e212ed77867)
 
 include(ExternalProject)
 
@@ -33,10 +33,9 @@ if (NOT NODEVER STREQUAL "v${NODEJS_VERSION}")
   # show "shiny-server" for our process.
   ExternalProject_Add(
     node
-    URL http://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.xz
+    URL http://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.gz
     URL_HASH SHA256=${NODEJS_SHA256}
     DOWNLOAD_DIR download
-    DOWNLOAD_NAME node-v${NODEJS_VERSION}-linux-x64.tar.xz
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}-linux-x64
     CONFIGURE_COMMAND echo pass
     BUILD_COMMAND echo pass
