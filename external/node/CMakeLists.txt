@@ -2,8 +2,8 @@ project(node)
 
 set(NODEJS_VERSION 8.10.0)
 # See e.g. http://nodejs.org/dist/v0.10.21/SHASUMS.txt to find the appropriate
-# hash value for the node-v0.10.21-linux-x64.tar.gz file.
-set(NODEJS_SHA256 c1302439aee9791d70d3ab4194a612e6131d37fa0e3452072e847e212ed77867)
+# hash value for the node-v0.10.21.tar.gz file.
+set(NODEJS_SHA256 57ddd302260f77fa6dfe774f97b196828ec7c08aafbbd8def5e527a388d18f2d)
 
 include(ExternalProject)
 
@@ -33,14 +33,16 @@ if (NOT NODEVER STREQUAL "v${NODEJS_VERSION}")
   # show "shiny-server" for our process.
   ExternalProject_Add(
     node
-    URL http://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.gz
+    URL http://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}.tar.gz
     URL_HASH SHA256=${NODEJS_SHA256}
     DOWNLOAD_DIR download
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}-linux-x64
-    CONFIGURE_COMMAND echo pass
-    BUILD_COMMAND echo pass
-    INSTALL_COMMAND cp -p -R "${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}-linux-x64" "${NODE_PREFIX}" &&
-                    cp -p "${NODE_PREFIX}/bin/node" "${NODE_PREFIX}/bin/shiny-server" &&
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}
+    BUILD_IN_SOURCE 1
+    CONFIGURE_COMMAND ${PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}/configure
+                      "--prefix=${NODE_PREFIX}"
+    BUILD_COMMAND make -j4 PYTHON=${PYTHON}
+    INSTALL_COMMAND make install &&
+                    cp "${NODE_PREFIX}/bin/node" "${NODE_PREFIX}/bin/shiny-server" &&
                     rm "${NODE_PREFIX}/bin/npm" &&
                     cd "${NODE_PREFIX}/lib/node_modules/npm" &&
                     ./scripts/relocate.sh
