@@ -33,7 +33,6 @@ execute_process(COMMAND echo "${CPACK_PACKAGE_VERSION}"
                 OUTPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/VERSION")
 
 add_subdirectory(src)
-add_subdirectory(external/node)
 add_subdirectory(external/pandoc)
 
 install(DIRECTORY assets

@@ -71,6 +71,7 @@ make
 # START: building in project root --------------------------
 pushd ../..
 
+./external/node/install-node.sh
 ./bin/npm --python="${PYTHON}" install --no-optional
 ./bin/npm --python="${PYTHON}" rebuild
 
