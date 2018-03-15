@@ -85,8 +85,12 @@ setup_cached_nodejs () {
 # we must first blow it and any other files not in the repo away.
 git reset --hard && git clean -ffdx
 
-init_vars
-setup_cached_nodejs
+## jcheng 2018-03-15: Don't download our own nodejs builds, we are having
+## trouble getting them to build with a GLIBCXX version that's 3.4.19 or
+## less. Instead, just use the binaries from nodejs.org, which we'll do
+## as part of the cmake configure.
+# init_vars
+# setup_cached_nodejs
 
 if (which scl && scl -l | grep -q devtoolset-2);
 then
