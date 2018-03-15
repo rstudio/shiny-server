@@ -36,6 +36,7 @@ if (NOT NODEVER STREQUAL "v${NODEJS_VERSION}")
     URL http://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.xz
     URL_HASH SHA256=${NODEJS_SHA256}
     DOWNLOAD_DIR download
+    DOWNLOAD_NAME node-v${NODEJS_VERSION}-linux-x64.tar.xz
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}-linux-x64
     CONFIGURE_COMMAND echo pass
     BUILD_COMMAND echo pass
