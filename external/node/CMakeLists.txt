@@ -39,8 +39,8 @@ if (NOT NODEVER STREQUAL "v${NODEJS_VERSION}")
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}-linux-x64
     CONFIGURE_COMMAND echo pass
     BUILD_COMMAND echo pass
-    INSTALL_COMMAND cp -R "${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}-linux-x64" "${NODE_PREFIX}" &&
-                    cp "${NODE_PREFIX}/bin/node" "${NODE_PREFIX}/bin/shiny-server" &&
+    INSTALL_COMMAND cp -p -R "${CMAKE_CURRENT_SOURCE_DIR}/node-v${NODEJS_VERSION}-linux-x64" "${NODE_PREFIX}" &&
+                    cp -p "${NODE_PREFIX}/bin/node" "${NODE_PREFIX}/bin/shiny-server" &&
                     rm "${NODE_PREFIX}/bin/npm" &&
                     cd "${NODE_PREFIX}/lib/node_modules/npm" &&
                     ./scripts/relocate.sh
