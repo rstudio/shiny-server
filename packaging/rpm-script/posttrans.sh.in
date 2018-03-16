@@ -3,12 +3,6 @@
 # errors shouldn't cause script to exit
 set +e
 
-RH_VER=""
-if test -e /etc/redhat-release
-then
-  RH_VER=`sed -nr "s/.*release\\ ([0-9]).*/\\1/p" /etc/redhat-release`
-fi
-
 # add upstart profile, or init.d/systemd script and start the server
 if test -d /etc/init/
 then
@@ -21,7 +15,7 @@ then
    initctl stop shiny-server 2>/dev/null
    sleep 1
    initctl start shiny-server
-elif [ "$RH_VER" == "7" ]
+elif [ -d /etc/systemd/system ]
 then
    cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/systemd/shiny-server.service /etc/systemd/system/
    systemctl enable shiny-server
