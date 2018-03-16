@@ -17,7 +17,12 @@ then
    initctl start shiny-server
 elif [ -d /etc/systemd/system ]
 then
-   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/systemd/shiny-server.service /etc/systemd/system/
+   if test -e /etc/SuSE-release
+   then
+      cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/systemd/shiny-server.suse.service /etc/systemd/system/
+   else
+      cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/systemd/shiny-server.redhat.service /etc/systemd/system/
+   fi
    systemctl enable shiny-server
    systemctl restart shiny-server
 else
