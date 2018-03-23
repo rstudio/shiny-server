@@ -17,6 +17,15 @@ then
    initctl start shiny-server
 elif [ -d /etc/systemd/system ]
 then
+   # SLES 12 upgrades from pre-1.5.7 will be running shiny-server using SysV init scripts.
+   # Make sure that the process is stopped before we proceed. Really this should be in the
+   # postrm scripts too, but too late in this release to add that.
+   if [ -f /var/run/shiny-server.pid ]
+   then
+      pkill -F /var/run/shiny-server.pid
+      /usr/bin/env sleep 5
+   fi
+
    cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/systemd/shiny-server.service /etc/systemd/system/shiny-server.service
    systemctl enable shiny-server
    systemctl restart shiny-server
