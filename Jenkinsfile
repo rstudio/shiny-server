@@ -103,10 +103,7 @@ try {
         parallel parallel_containers
 
         if (env.BRANCH_NAME == 'master') {
-          build job: 'test-shiny-server-os', wait: false
-        }
-
-        if (env.BRANCH_NAME == 'master') {
+          build job: 'shiny/test-shiny-server-os', wait: false
           sendNotifications slack_channel: SLACK_CHANNEL
         }
     }
