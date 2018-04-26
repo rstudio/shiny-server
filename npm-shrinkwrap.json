@@ -1166,11 +1166,6 @@
       "from": "underscore@1.8.3",
       "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.8.3.tgz"
     },
-    "unixgroups": {
-      "version": "0.2.0",
-      "from": "https://github.com/rstudio/node-unixgroups/tarball/e6dfefe",
-      "resolved": "https://github.com/rstudio/node-unixgroups/tarball/e6dfefe"
-    },
     "unpipe": {
       "version": "1.0.0",
       "from": "unpipe@>=1.0.0 <1.1.0",

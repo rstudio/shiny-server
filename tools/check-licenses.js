@@ -19,7 +19,6 @@ var KNOWN_LICENSES = {
   "ms@0.6.2":             "MIT",
   "ms@0.7.1":             "MIT",
   "samsam@1.1.2":         "BSD-3-Clause",
-  "unixgroups@0.2.0":     "MIT",
 };
 
 function readJSON(file) {
