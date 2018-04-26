@@ -37,8 +37,7 @@
     "sockjs": "^0.3.19",
     "split": "^1.0.1",
     "stable": "^0.1.6",
-    "underscore": "1.8.3",
-    "unixgroups": "https://github.com/rstudio/node-unixgroups/tarball/e6dfefe"
+    "underscore": "1.8.3"
   },
   "license": "AGPL-3.0",
   "engines": {
