@@ -51,9 +51,10 @@ void GetPwNam(const FunctionCallbackInfo<Value>& args) {
       args.GetReturnValue().Set(Null(isolate));
       return;
     }
-    else
+    else {
       isolate->ThrowException(UVException(isolate, errno, "getpwnam_r"));
       return;
+    }
   }
 
   Local<Object> userInfo = Object::New(isolate);
