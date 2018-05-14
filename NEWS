@@ -3,6 +3,8 @@ shiny-server 1.5.8
 
 * Added support for listening on IPv6 addresses.
 
+* X-Powered-By response header now reports "Shiny Server" instead of "Express".
+
 shiny-server 1.5.7
 --------------------------------------------------------------------------------
 
