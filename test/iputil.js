@@ -26,7 +26,8 @@ describe("iputil", () => {
       "::0001",
       "fe80::1b38:f53:e5f2:f9e2",
       "fe80:1b38:f53:e5f2::f9e2",
-      "0000:0000:0000:0000:0000:0000:0000:0000"
+      "fe80::1b38:f53:e5f2:f9e2%ens33",
+      "0000:0000:0000:0000:0000:0000:0000:0000",
     ];
     yes.forEach(x => assert(iputil.isValid(x)));
 
@@ -57,12 +58,20 @@ describe("iputil", () => {
     assert(iputil.isWildcard("0:0:0::0000"));
   });
 
+  it("normalizes", () => {
+    assert.equal(iputil.normalize("::1"), "::1");
+    assert.equal(iputil.normalize("0:0:0::1"), "::1");
+    assert.equal(iputil.normalize("fe80::1b38:f53:e5f2:f9e2%ens33"), "fe80::1b38:f53:e5f2:f9e2%ens33");
+  });
+
   it("implicitly normalizes when testing for equality", () => {
     assert(iputil.equal("::ffff:10.11.12.13", "10.11.12.13"));
     assert(iputil.equal("127.0.0.1", "127.0.0.1"));
 
     assert(!iputil.equal("10.11.12.13", "10.11.12.14"));
     assert(!iputil.equal("127.0.0.1", "::1"));
+
+    assert(!iputil.equal("fe80::1b38:f53:e5f2:f9e2%ens33", "fe80::1b38:f53:e5f2:f9e2"));
   });
 
   it("wraps in [] appropriately", () => {
