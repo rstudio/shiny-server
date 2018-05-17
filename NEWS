@@ -9,6 +9,9 @@ shiny-server 1.5.8
   squash. The `log_as_dir` directive was intended to work for these situations,
   but would fail in common configurations. It should now work.
 
+* `log_file_mode` no longer respects the process umask, and the default has been
+  changed from `0660` to `0640`.
+
 shiny-server 1.5.7
 --------------------------------------------------------------------------------
 
