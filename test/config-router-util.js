@@ -10,20 +10,24 @@
  * AGPL (http://www.gnu.org/licenses/agpl-3.0.txt) for more details.
  *
  */
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const configRouterUtil = require('../lib/router/config-router-util');
+const sinon = require('sinon');
+const config = require('../lib/config/config');
+const ConfigNode = config.ConfigNode;
+const _ = require('underscore');
+const Q = require('q');
 
-var configRouterUtil = require('../lib/router/config-router-util');
-var sinon = require('sinon');
-var config = require('../lib/config/config'); 
-var ConfigNode = config.ConfigNode;
-var _ = require('underscore');
+const should = require('should'); // need the static functions.
 
-var should = require('should'); // need the static functions.
-
-var APP_PATH = {appDir: "/somePath"};
-var SIMPLE_PARAMS = {maxRequests: 10};
-var APP_INIT_PARAMS = {timeout: 5};
-var APP_IDLE_PARAMS = {timeout: 8};
-var LOCATION_PARAMS = {path: '/'};
+const APP_PATH = {appDir: "/somePath"};
+const SIMPLE_PARAMS = {maxRequests: 10};
+const APP_INIT_PARAMS = {timeout: 5};
+const APP_IDLE_PARAMS = {timeout: 8};
+const LOCATION_PARAMS = {path: '/'};
 
 /** 
  * Helper function to init a sample config for testing.
@@ -157,4 +161,25 @@ describe('ConfigRouterUtil', function(){
       should.not.exist(settings.appDefaults.idleTimeout);
     })
   })
+});
+
+describe("fs.fchown", () => {
+  // fs.fchown officially only expects an integer for mode, but we rely on it
+  // allowing a string.
+  it("accepts file permission mode as string", async () => {
+    const tmpfile = path.join(os.tmpdir(), "shiny_server_fs_chown_test.txt");
+    const fd = await Q.nfcall(fs.open, tmpfile, "a");
+    try {
+
+      await Q.nfcall(fs.fchmod, fd, "651");
+      assert.equal((await Q.nfcall(fs.fstat, fd)).mode & 0o777, 0o651);
+
+      await Q.nfcall(fs.fchmod, fd, "723");
+      assert.equal((await Q.nfcall(fs.fstat, fd)).mode & 0o777, 0o723);
+
+    } finally {
+      fs.closeSync(fd);
+      fs.unlinkSync(tmpfile);
+    }
+  });
 });

@@ -4,14 +4,15 @@
 Vagrant.configure(2) do |config|
   # define primary development box
   config.vm.define "sso", primary: true do |p|
-    p.vm.box = "ubuntu/trusty64"
+    p.vm.box = "ubuntu/xenial64"
     p.vm.network "private_network", ip: "192.168.42.101"
     p.vm.network "forwarded_port", guest: 3838, host: 3838, auto_correct: true
+    p.vm.provision :shell, path: "bootstrap-debian.sh"
     p.vm.provision :shell, path: "provision-sso.sh"
   end
 
   config.vm.define "nfs", autostart: false do |b|
-    b.vm.box = "ubuntu/trusty64"
+    b.vm.box = "ubuntu/xenial64"
     b.vm.network "private_network", ip: "192.168.42.102"
     b.vm.provision :shell, path: "provision-nfs.sh"
   end
@@ -24,6 +25,4 @@ Vagrant.configure(2) do |config|
 
   config.vm.synced_folder "../../", "/shiny-server"
   config.vm.synced_folder "../../", "/home/vagrant/shiny-server"
-
-  config.vm.provision :shell, path: "bootstrap-debian.sh"
 end

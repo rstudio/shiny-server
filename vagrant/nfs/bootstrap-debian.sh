@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+set -e
+
 # add repo for R 
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-echo "deb https://cran.rstudio.com/bin/linux/ubuntu trusty/" >> /etc/apt/sources.list
+echo "deb https://cran.rstudio.com/bin/linux/ubuntu xenial/" >> /etc/apt/sources.list
 
 # bring apt database up to date with R packages
 apt-get update
