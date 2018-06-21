@@ -8,7 +8,7 @@ shiny-server 1.5.8
 * X-Powered-By response header now reports "Shiny Server" instead of "Express".
 
 * Resolve permissions issues when log directory is on an NFS mount with root
-  squash. The `log_as_dir` directive was intended to work for these situations,
+  squash. The `log_as_user` directive was intended to work for these situations,
   but would fail in common configurations. It should now work.
 
 * `log_file_mode` no longer respects the process umask, and the default has been
