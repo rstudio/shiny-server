@@ -14,6 +14,11 @@ shiny-server 1.5.8
 * `log_file_mode` no longer respects the process umask, and the default has been
   changed from `0660` to `0640`.
 
+* Exit code of shiny-server process was always 0, regardless of the reason the
+  process exited. Now a non-zero exit code is used if the process was terminated
+  by a signal, or an unhandled error crashed the process, or loading of the
+  shiny-server.conf config file failed during startup.
+
 shiny-server 1.5.7
 --------------------------------------------------------------------------------
 
