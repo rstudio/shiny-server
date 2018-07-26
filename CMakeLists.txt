@@ -97,13 +97,9 @@ if (NOT PACKAGE_ARCHITECTURE)
                    OUTPUT_VARIABLE PACKAGE_ARCHITECTURE)
       set(PACKAGE_DIST "")
    elseif(RPM_EXECUTABLE)
-      #RHEL/CentOS
+      #RHEL/CentOS/SuSE
       exec_program(arch OUTPUT_VARIABLE PACKAGE_ARCHITECTURE) 
-      execute_process(COMMAND sed -nr "s/.*\\ ([0-9]+)\\.[0-9]+(\\.[0-9]+)?\\ .*/\\1/p"
-                INPUT_FILE "/etc/redhat-release"
-                OUTPUT_VARIABLE RH_VER
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-      set(PACKAGE_DIST "-rh${RH_VER}")
+      set(PACKAGE_DIST "")
    endif()
 endif()
 
