@@ -32,7 +32,7 @@
     "qs": "^6.5.1",
     "rewire": "^3.0.2",
     "send": "^0.16.2",
-    "shiny-server-client": "https://github.com/rstudio/shiny-server-client/archive/a966800.tar.gz",
+    "shiny-server-client": "https://github.com/rstudio/shiny-server-client/archive/fb1aef1.tar.gz",
     "should": "^13.2.1",
     "sinon": "^4.3.0",
     "sockjs": "^0.3.19",
