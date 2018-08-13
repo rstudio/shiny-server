@@ -1293,8 +1293,8 @@
       "integrity": "sha512-BvE/TwpZX4FXExxOxZyRGQQv651MSwmWKZGqvmPcRIjDqWub67kTKuIMx43cZZrS/cBBzwBcNDWoFxt2XEFIpQ=="
     },
     "shiny-server-client": {
-      "version": "https://github.com/rstudio/shiny-server-client/archive/a966800.tar.gz",
-      "integrity": "sha512-fM4k4MHFQHcMvgC6AYVxUiXxhSFCmDTRX9EhFY0CFlKuKS2SN8z0+1QJKCAcZO6clcAoTND7oHsjY6WrcHrSqg==",
+      "version": "https://github.com/rstudio/shiny-server-client/archive/fb1aef1.tar.gz",
+      "integrity": "sha512-GMU9cYcXuO8fCaD2whPD5ZlitPDmrvBmWSQJpMa5mmiX1CxupoK4mcgw9+LceCtaDBXAadHdEcDv1naFjs5+wg==",
       "requires": {
         "inherits": "2.0.3",
         "pinkyswear": "2.2.3"
