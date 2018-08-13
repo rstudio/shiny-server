@@ -97,13 +97,9 @@ if (NOT PACKAGE_ARCHITECTURE)
                    OUTPUT_VARIABLE PACKAGE_ARCHITECTURE)
       set(PACKAGE_DIST "")
    elseif(RPM_EXECUTABLE)
-      #RHEL/CentOS
+      #RHEL/CentOS/SuSE
       exec_program(arch OUTPUT_VARIABLE PACKAGE_ARCHITECTURE) 
-      execute_process(COMMAND sed -nr "s/.*\\ ([0-9]+)\\.[0-9]+(\\.[0-9]+)?\\ .*/\\1/p"
-                INPUT_FILE "/etc/redhat-release"
-                OUTPUT_VARIABLE RH_VER
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-      set(PACKAGE_DIST "-rh${RH_VER}")
+      set(PACKAGE_DIST "")
    endif()
 endif()
 
@@ -182,7 +178,7 @@ set(CPACK_RPM_PACKAGE_DESCRIPTION "${PACKAGE_LONG_DESCRIPTION}")
 set(CPACK_RPM_PACKAGE_LICENSE "AGPL v.3.0")
 set(CPACK_RPM_PACKAGE_GROUP "System Environment/Daemons")
 set(CPACK_RPM_PACKAGE_ARCHITECTURE "${PACKAGE_ARCHITECTURE}")
-set(CPACK_RPM_PACKAGE_REQUIRES "libffi")
+set(CPACK_RPM_PACKAGE_REQUIRES "")
 
 
 include(CPack)
