@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 # Install R repo
 
 RUN echo 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/' >> /etc/apt/sources.list \
-  && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
+  && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
 
 # Install Java 8 PPA
 
