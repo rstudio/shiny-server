@@ -4,8 +4,8 @@ set -e
 
 # Config variables.
 # See e.g. https://nodejs.org/dist/v8.10.0/SHASUMS256.txt for checksum.
-NODE_VERSION=8.11.3
-NODE_SHA256=08e2fcfea66746bd966ea3a89f26851f1238d96f86c33eaf6274f67fce58421a
+NODE_VERSION=8.15.0
+NODE_SHA256=c1f0c5facdba78b5dec5136aec40dcb00b5c7cf404d9236a99c955994f91d969
 
 cd $(dirname $0)
 cd ../..
@@ -43,6 +43,7 @@ download_node () {
     exit 1
   fi
 
+  rm -rf ext/node
   mkdir -p ext/node
   echo "Extracting ${NODE_FILENAME}"
   tar xf "${NODE_ARCHIVE_DEST}" --strip-components=1 -C "ext/node"

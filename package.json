@@ -6,7 +6,8 @@
   "description": "Application server for the Shiny web framework for R",
   "bin": "./lib/main.js",
   "scripts": {
-    "start": "node ./lib/main.js"
+    "start": "bin/node ./lib/main.js",
+    "test": "bin/node ./node_modules/.bin/mocha test"
   },
   "repository": {
     "type": "git",
