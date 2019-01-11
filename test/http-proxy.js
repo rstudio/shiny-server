@@ -72,6 +72,10 @@ describe("http-proxy", () => {
       host: "localhost",
       port: 9112,
       agent: keepAliveAgent
+    }).on("error", err => {
+      if (err.code !== "ECONNRESET") {
+        console.error(err.stack);
+      }
     });
   });
 });
