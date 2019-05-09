@@ -34,7 +34,7 @@ void GetPwNam(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  String::Utf8Value pwnam(args[0]->ToString());
+  String::Utf8Value pwnam(isolate, args[0]->ToString());
 
   int err = 0;
   struct passwd pwd;
@@ -79,7 +79,7 @@ void GetPwUid(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  uid_t pwuid = args[0]->IntegerValue();
+  uid_t pwuid = args[0]->IntegerValue(isolate->GetCurrentContext()).ToChecked();
 
   int err = 0;
   struct passwd pwd;
@@ -125,7 +125,7 @@ void GetGroupList(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  String::Utf8Value name(args[0]);
+  String::Utf8Value name(isolate, args[0]);
 
   int err = 0;
   struct passwd pwd;
@@ -197,7 +197,7 @@ void GetGrNam(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  String::Utf8Value name(args[0]);
+  String::Utf8Value name(isolate, args[0]);
 
   errno = 0;
   struct group * group = getgrnam(*name);
@@ -238,11 +238,12 @@ void AcquireRecordLock(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  int fd = args[0]->IntegerValue();
-  short lockType = args[1]->IntegerValue();
-  short whence = args[2]->IntegerValue();
-  off_t start = args[3]->IntegerValue();
-  off_t len = args[4]->IntegerValue();
+  v8::Local<v8::Context> ctx = isolate->GetCurrentContext();
+  int fd = args[0]->IntegerValue(ctx).ToChecked();
+  short lockType = args[1]->IntegerValue(ctx).ToChecked();
+  short whence = args[2]->IntegerValue(ctx).ToChecked();
+  off_t start = args[3]->IntegerValue(ctx).ToChecked();
+  off_t len = args[4]->IntegerValue(ctx).ToChecked();
 
   struct flock flk;
   flk.l_type = lockType;
