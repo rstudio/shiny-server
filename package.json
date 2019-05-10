@@ -23,18 +23,14 @@
     "http-proxy": "^1.17.0",
     "ip-address": "^5.9.0",
     "log4js": "^4.1.1",
-    "mocha": "^6.1.4",
     "moment": "^2.24.0",
     "morgan": "^1.9.1",
     "optimist": "0.6.1",
     "pause": "0.1.0",
     "q": "^1.5.1",
     "qs": "^6.7.0",
-    "rewire": "^4.0.1",
     "send": "^0.17.0",
     "shiny-server-client": "https://github.com/rstudio/shiny-server-client/archive/fb1aef1.tar.gz",
-    "should": "^13.2.3",
-    "sinon": "^7.3.2",
     "sockjs": "^0.3.19",
     "split": "^1.0.1",
     "stable": "^0.1.8",
@@ -44,5 +40,11 @@
   "license": "AGPL-3.0",
   "engines": {
     "node": ">=6.6.0"
+  },
+  "devDependencies": {
+    "mocha": "^6.1.4",
+    "rewire": "^4.0.1",
+    "should": "^13.2.3",
+    "sinon": "^7.3.2"
   }
 }
