@@ -39,7 +39,6 @@ describe("http-proxy", () => {
         done(err);
       } finally {
         res.end();
-        cleanup();
       }
     });
     upstreamServer.listen(9111);
@@ -48,6 +47,9 @@ describe("http-proxy", () => {
       target: "http://localhost:9111"
     });
 
+    upstreamServer.on('error', function(err) {});
+    proxy.on('error', function(err) {});
+
     const proxyServer = http.createServer((req, res) => {
       try {
         assert.equal(req.headers.connection, "keep-alive");
@@ -55,7 +57,6 @@ describe("http-proxy", () => {
       } catch (err) {
         done(err);
         res.end();
-        cleanup();
       }
     });
     proxyServer.listen(9112);
@@ -68,10 +69,14 @@ describe("http-proxy", () => {
       keepAliveAgent.destroy();
     }
 
-    http.get({
+    let req = http.get({
       host: "localhost",
       port: 9112,
       agent: keepAliveAgent
+    }, res => {
+      res.on("data", () => {});
+      res.on("end", cleanup);
     });
+    req.on("error", done);
   });
 });
