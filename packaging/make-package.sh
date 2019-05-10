@@ -72,7 +72,7 @@ make
 pushd ../..
 
 ./external/node/install-node.sh
-./bin/npm --python="${PYTHON}" install --no-optional
+./bin/npm --python="${PYTHON}" install --production
 ./bin/npm --python="${PYTHON}" rebuild
 
 # Need to rebuild ourselves since 'npm install' won't run gyp for us.
