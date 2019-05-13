@@ -15,9 +15,7 @@ RUN echo 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/' >> /etc/apt/sour
 
 # Install Java 8 PPA
 
-RUN apt-add-repository -y ppa:webupd8team/java \
-    && echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections \
-    && echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
+RUN apt-add-repository -y ppa:openjdk-r/ppa
 
 # Install gcc 4.9 PPA
 
@@ -35,7 +33,7 @@ RUN apt-get update && apt-get install -y \
   libpam0g-dev \
   libssl-dev \
   make \
-  oracle-java8-installer \
+  openjdk-8-jdk \
   python \
   r-base \
   sudo \
