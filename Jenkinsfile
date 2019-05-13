@@ -87,7 +87,8 @@ try {
                               """
                           }
                           stage('run tests') {
-                              sh './bin/node ./node_modules/mocha/bin/mocha test'
+                              // Need npm install so npm modules required for testing are available
+                              sh './bin/npm install && ./bin/node ./node_modules/mocha/bin/mocha test'
                           }
                         }
                     }
