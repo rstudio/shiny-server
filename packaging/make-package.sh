@@ -82,3 +82,7 @@ popd
 # END: building in project root ----------------------------
 
 "$CPACK" -G "$GENERATOR"
+
+# Now that installer is built, install the devDependencies as well
+./bin/npm --python="${PYTHON}" install
+
