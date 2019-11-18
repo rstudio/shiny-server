@@ -1626,6 +1626,11 @@
       "integrity": "sha1-MHXOk7whuPq0PhvE2n6BFe0ee6s=",
       "dev": true
     },
+    "nan": {
+      "version": "2.14.0",
+      "resolved": "https://registry.npmjs.org/nan/-/nan-2.14.0.tgz",
+      "integrity": "sha512-INOFj37C7k3AfaNTtX8RhsTw7qRy7eLET14cROi9+5HAVbbHuIWUHEauBv5qT4Av2tWasiTY1Jw6puUNqRJXQg=="
+    },
     "natural-compare": {
       "version": "1.4.0",
       "resolved": "https://registry.npmjs.org/natural-compare/-/natural-compare-1.4.0.tgz",
@@ -2555,10 +2560,6 @@
       "version": "0.1.2",
       "resolved": "https://registry.npmjs.org/universalify/-/universalify-0.1.2.tgz",
       "integrity": "sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg=="
-    },
-    "unixgroups": {
-      "version": "https://github.com/rstudio/node-unixgroups/tarball/e6dfefe",
-      "integrity": "sha512-mm63AT0Vuoj77hfjGzBRFjWZdhiMmaoHIVDuPyEOErXY/EbVhdUbkn2WHvxcLpxe43oWVOq59uN0kueOAhWAfw=="
     },
     "unpipe": {
       "version": "1.0.0",
