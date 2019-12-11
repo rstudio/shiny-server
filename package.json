@@ -19,7 +19,7 @@
     "express": "^4.16.4",
     "faye-websocket": "^0.11.0",
     "graceful-fs": "^4.1.15",
-    "handlebars": "^4.1.2",
+    "handlebars": "^4.5.3",
     "http-proxy": "^1.17.0",
     "ip-address": "^5.9.0",
     "log4js": "^4.1.1",
