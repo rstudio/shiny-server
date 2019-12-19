@@ -8,6 +8,11 @@ shiny-server 1.5.13
 * The `disable_protocols` directive now has `streaming` and `polling` options
   for easily disabling families of protocols.
 
+* Now able to redirect R logs to the main shiny-server process's stderr, which
+  is useful for containerized deployments and other scenarios where log files on
+  disk are inconvenient to access. Enable this functionality by setting the
+  environment variable `SHINY_LOG_STDERR` to a non-empty value.
+
 shiny-server 1.5.12
 --------------------------------------------------------------------------------
 
