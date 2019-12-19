@@ -3,6 +3,9 @@ shiny-server 1.5.13
 
 * Upgrade dependencies to latest versions.
 
+* The `disable_protocols` directive now has `streaming` and `polling` options
+  for easily disabling families of protocols.
+
 shiny-server 1.5.12
 --------------------------------------------------------------------------------
 
