@@ -238,6 +238,7 @@ if (is.na(port)) {
   attr(port, 'mask') <- strtoi('0077', 8)
 }
 cat(paste("\nStarting Shiny with process ID: '",Sys.getpid(),"'\n", sep=""))
+cat("==END==\n")
 
 if (identical(Sys.getenv('SHINY_MODE'), "shiny")){
   runApp(Sys.getenv('SHINY_APP'),port=port,launch.browser=FALSE)
