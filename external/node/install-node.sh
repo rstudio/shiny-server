@@ -4,19 +4,20 @@ set -e
 
 # Config variables.
 # See e.g. https://nodejs.org/dist/v8.10.0/SHASUMS256.txt for checksum.
-NODE_VERSION=10.15.3
-NODE_SHA256=faddbe418064baf2226c2fcbd038c3ef4ae6f936eb952a1138c7ff8cfe862438
+NODE_SHA256=82ae74ee0a204de7ebf7767eaa8e382518d9b49668dcbb5bd7fd003154445d1f
 
 cd $(dirname $0)
 cd ../..
+
+NODE_VERSION=$(cat .nvmrc)
 
 check_node_needed () {
   if [ -x ext/node/bin/node ]
   then
     local CURRENT_NODE_VERSION=$(ext/node/bin/node --version 2>/dev/null)
-    if [[ "$CURRENT_NODE_VERSION" == "v$NODE_VERSION" ]]
+    if [[ "$CURRENT_NODE_VERSION" == "$NODE_VERSION" ]]
     then
-      echo "Node v$NODE_VERSION is already installed, skipping" >&2
+      echo "Node $NODE_VERSION is already installed, skipping" >&2
       exit 0
     fi
   fi
@@ -31,10 +32,10 @@ verify_checksum () {
 }
 
 download_node () {
-  local NODE_FILENAME="node-v${NODE_VERSION}-linux-x64.tar.xz"
-  local NODE_URL="https://nodejs.org/dist/v${NODE_VERSION}/${NODE_FILENAME}"
+  local NODE_FILENAME="node-${NODE_VERSION}-linux-x64.tar.xz"
+  local NODE_URL="https://nodejs.org/dist/${NODE_VERSION}/${NODE_FILENAME}"
   local NODE_ARCHIVE_DEST="/tmp/${NODE_FILENAME}"
-  echo "Downloading Node v${NODE_VERSION} from ${NODE_URL}"
+  echo "Downloading Node ${NODE_VERSION} from ${NODE_URL}"
 
   wget -O "$NODE_ARCHIVE_DEST" "$NODE_URL"
   if verify_checksum "$NODE_ARCHIVE_DEST" "$NODE_SHA256"
@@ -43,6 +44,7 @@ download_node () {
     exit 1
   fi
 
+  rm -rf ext/node
   mkdir -p ext/node
   echo "Extracting ${NODE_FILENAME}"
   tar xf "${NODE_ARCHIVE_DEST}" --strip-components=1 -C "ext/node"
