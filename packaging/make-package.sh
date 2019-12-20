@@ -5,24 +5,6 @@ set -x
 
 env
 
-if [ "$PYTHON" == "" ]
-then
-	# python26 is required for RedHat/CentOS 5
-	if [ -x /usr/bin/python26 ]
-	then
-		PYTHON=python26
-	else
-		PYTHON=python
-	fi
-fi
-
-if [ "$PYTHON" != "python" ]
-then
-	mkdir -p $(readlink --canonicalize .)/fake_python
-	ln -sf $(which $PYTHON) ./fake_python/python
-	export PATH=$(readlink --canonicalize  .)/fake_python:$PATH
-fi
-
 GENERATOR="$1"
 if [ "$GENERATOR" == "" ]
 then
@@ -65,18 +47,18 @@ DIR=`pwd`
 PATH=$DIR/../bin:$PATH
 mkdir -p build
 cd build
-"$CMAKE" -DCMAKE_INSTALL_PREFIX=/opt -DPYTHON="$PYTHON" ../..
+"$CMAKE" -DCMAKE_INSTALL_PREFIX=/opt ../..
 make
 
 # START: building in project root --------------------------
 pushd ../..
 
 ./external/node/install-node.sh
-./bin/npm --python="${PYTHON}" install --production
-./bin/npm --python="${PYTHON}" rebuild
+./bin/npm install --production
+./bin/npm rebuild
 
 # Need to rebuild ourselves since 'npm install' won't run gyp for us.
-./bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild
+./bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js rebuild
 
 popd
 # END: building in project root ----------------------------
@@ -84,4 +66,4 @@ popd
 "$CPACK" -G "$GENERATOR"
 
 # Now that installer is built, install the devDependencies as well
-(cd ../.. && ./bin/npm --python="${PYTHON}" install)
+(cd ../.. && ./bin/npm install)

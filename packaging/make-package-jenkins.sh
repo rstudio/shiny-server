@@ -13,9 +13,9 @@ cd "$(dirname $0)"
 # we must first blow it and any other files not in the repo away.
 git reset --hard && git clean -ffdx
 
-if (which scl && scl -l | grep -q devtoolset-2);
+if (which scl && scl -l | grep -q devtoolset-7);
 then
-	scl enable devtoolset-2 ./make-package.sh "$@"
+	scl enable devtoolset-7 python27 ./make-package.sh "$@"
 else
 	CC=gcc CXX=g++ ./make-package.sh "$@"
 fi

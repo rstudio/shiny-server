@@ -2,7 +2,7 @@ FROM centos:6
 MAINTAINER Chad Barraford <chad@rstudio.com>
 
 # EPEL
-RUN     rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+RUN yum -y install epel-release
 
 # RPMForge
 RUN     rpm -Uvh http://mirror.chpc.utah.edu/pub/repoforge/redhat/el6/en/x86_64/rpmforge/RPMS/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
@@ -24,12 +24,11 @@ RUN yum install -y python-setuptools python-unittest2
 RUN yum install -y R curl libcurl-devel
 
 # install cmake
-RUN curl -Lk http://www.cmake.org/files/v2.8/cmake-2.8.10.tar.gz | tar xz
-RUN cd cmake-2.8.10 && ./configure && make && make install
+RUN yum install -y cmake
 
-RUN wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
-RUN yum -y install devtoolset-2-gcc devtoolset-2-binutils
-RUN yum -y install devtoolset-2-gcc-gfortran devtoolset-2-gcc-c++
+RUN yum -y install centos-release-scl
+RUN yum -y install python27
+RUN yum -y install devtoolset-7
 
 # create jenkins user, make sudo. try to keep this toward the bottom for less cache busting
 ARG JENKINS_GID=999
