@@ -4,7 +4,7 @@ set -e
 
 # Config variables.
 # See e.g. https://nodejs.org/dist/v8.10.0/SHASUMS256.txt for checksum.
-NODE_SHA256=3b4a48388a6a0c13b0b56f2aff94d1ec3ef1b6030a99c125acdb705062ecbfad
+NODE_SHA256=bfde561278fbf3a9c8e3c5bb297eeacb2b2988f9ed63651952754d66884ef4d7
 
 cd $(dirname $0)
 cd ../..
