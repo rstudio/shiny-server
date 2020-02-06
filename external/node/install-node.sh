@@ -2,8 +2,9 @@
 
 set -e
 
-# Config variables.
-# See e.g. https://nodejs.org/dist/v8.10.0/SHASUMS256.txt for checksum.
+# From the relevant SHASUMS256.txt file at:
+# https://github.com/jcheng5/node-centos6/releases
+# The node-v{VERSION}-linux-x64.tar.xz checksum is the one we need.
 NODE_SHA256=b92bb9c73f6d0a316b05f591f21fdc3f10aafabf21bd11285180e2d9600fa714
 
 cd $(dirname $0)
