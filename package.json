@@ -19,30 +19,30 @@
     "express": "^4.16.4",
     "faye-websocket": "^0.11.3",
     "graceful-fs": "^4.1.15",
-    "handlebars": "^4.5.3",
-    "http-proxy": "^1.17.0",
+    "handlebars": "^4.7.6",
+    "http-proxy": "^1.18.1",
     "ip-address": "^5.9.0",
     "log4js": "^4.1.1",
     "moment": "^2.24.0",
-    "morgan": "^1.9.1",
-    "nan": "^2.14.0",
+    "morgan": "^1.10.0",
+    "nan": "^2.14.1",
     "optimist": "0.6.1",
     "pause": "0.1.0",
     "q": "^1.5.1",
-    "qs": "^6.7.0",
+    "qs": "^6.9.3",
     "send": "^0.17.0",
     "shiny-server-client": "https://github.com/rstudio/shiny-server-client/archive/fb1aef1.tar.gz",
-    "sockjs": "^0.3.19",
+    "sockjs": "^0.3.20",
     "split": "^1.0.1",
     "stable": "^0.1.8",
-    "underscore": "^1.9.1"
+    "underscore": "^1.10.2"
   },
   "license": "AGPL-3.0",
   "engines": {
     "node": ">=6.6.0"
   },
   "devDependencies": {
-    "mocha": "^6.1.4",
+    "mocha": "^6.2.3",
     "rewire": "^4.0.1",
     "should": "^13.2.3",
     "sinon": "^7.3.2"
