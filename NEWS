@@ -8,6 +8,10 @@ shiny-server 1.5.14
   you're using for `disable_protocols`, and especially try removing
   `xhr-polling` from the disabled list.)
 
+* Upgrade Node.js to 12.16.3.
+
+* Upgrade dependencies to latest versions.
+
 shiny-server 1.5.13
 --------------------------------------------------------------------------------
 
