@@ -10,6 +10,7 @@ body.disconnected {
 
 #ss-connect-dialog {
   opacity: 1 !important;
+  text-align: left;
   padding: 1em;
   position: fixed;
   bottom: 50px;
