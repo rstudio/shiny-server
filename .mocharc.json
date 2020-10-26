@@ -1,0 +1,5 @@
+{
+  "require": ["should", "./lib/core/log", "./lib/core/qutil"],
+  "reporter": "spec"
+}
+
