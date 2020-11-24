@@ -5,7 +5,7 @@ set -e
 # From the relevant SHASUMS256.txt file at:
 # https://github.com/jcheng5/node-centos6/releases
 # The node-v{VERSION}-linux-x64.tar.xz checksum is the one we need.
-NODE_SHA256=1f6a94d4f625b2f0d91c20de3322b8efa89f582761583f45a7197b06c2fcff70
+NODE_SHA256=cff4e4305bf31f0fd5e40b4e9bebc325b1ae10198ce0192a930d9aa1b0e046eb
 
 cd $(dirname $0)
 cd ../..
