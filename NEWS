@@ -1,6 +1,9 @@
 shiny-server 1.5.16
 --------------------------------------------------------------------------------
 
+* Support Shiny apps that use a ui.Rmd file to define their UI. To learn more,
+  see https://github.com/rstudio/rmarkdown/pull/1926.
+
 * Upgrade Node.js to 12.20.0.
 
 shiny-server 1.5.15
