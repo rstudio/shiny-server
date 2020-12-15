@@ -1,6 +1,10 @@
 shiny-server 1.5.16
 --------------------------------------------------------------------------------
 
+* Fix an issue where a failure in a certain phase of R process launching would
+  result in a broken process being treated as a normal process, and repeatedly
+  used to (unsuccessfully) serve new clients.
+
 * Upgrade Node.js to 12.20.0.
 
 shiny-server 1.5.15
