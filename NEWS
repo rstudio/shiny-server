@@ -7,6 +7,9 @@ shiny-server 1.5.16
 
 * Upgrade Node.js to 12.20.0.
 
+* Fix issue with Unicode characters being escaped incorrectly in directory
+  listings.
+
 shiny-server 1.5.15
 --------------------------------------------------------------------------------
 
