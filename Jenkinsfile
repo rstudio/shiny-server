@@ -62,7 +62,7 @@ try {
     timestamps {
         def containers = [
           [os: 'ubuntu-14.04', arch: 'x86_64'],
-          [os: 'centos6.3', arch: 'x86_64']
+          [os: 'centos7', arch: 'x86_64']
         ]
         def parallel_containers = [:]
         for (int i = 0; i < containers.size(); i++) {

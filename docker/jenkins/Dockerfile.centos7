@@ -1,11 +1,11 @@
-FROM centos:6
+FROM centos:7
 MAINTAINER Chad Barraford <chad@rstudio.com>
 
 # EPEL
 RUN yum -y install epel-release
 
 # RPMForge
-RUN     rpm -Uvh http://mirror.chpc.utah.edu/pub/repoforge/redhat/el6/en/x86_64/rpmforge/RPMS/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
+RUN     rpm -Uvh http://mirror.chpc.utah.edu/pub/repoforge/redhat/el7/en/x86_64/rpmforge/RPMS/rpmforge-release-0.5.3-1.el7.rf.x86_64.rpm
 
 # SSH
 EXPOSE 22
