@@ -1,6 +1,9 @@
 shiny-server 1.5.16
 --------------------------------------------------------------------------------
 
+* SECURITY: Fix a serious vulnerability where maliciously formed URLs can result
+  in source code disclosure. Please upgrade as soon as possible!
+
 * Fix an issue where a failure in a certain phase of R process launching would
   result in a broken process being treated as a normal process, and repeatedly
   used to (unsuccessfully) serve new clients.
