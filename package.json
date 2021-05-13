@@ -19,24 +19,24 @@
     "compression": "^1.7.4",
     "express": "^4.16.4",
     "faye-websocket": "^0.11.3",
-    "graceful-fs": "^4.2.4",
-    "handlebars": "^4.7.6",
+    "graceful-fs": "^4.2.6",
+    "handlebars": "^4.7.7",
     "http-proxy": "^1.18.1",
-    "ip-address": "^6.3.0",
-    "log4js": "^6.2.1",
-    "moment": "^2.26.0",
+    "ip-address": "^7.1.0",
+    "log4js": "^6.3.0",
+    "moment": "^2.29.1",
     "morgan": "^1.10.0",
-    "nan": "^2.14.1",
+    "nan": "^2.14.2",
     "optimist": "github:rstudio/node-optimist#dbbadda31e53b63225a57e172a528b1ddc52be52",
     "pause": "0.1.0",
     "q": "^1.5.1",
-    "qs": "^6.9.4",
+    "qs": "^6.10.1",
     "send": "^0.17.0",
     "shiny-server-client": "github:rstudio/shiny-server-client#d63e91ef06ce3de04761912590decd63c719cdb5",
-    "sockjs": "^0.3.20",
+    "sockjs": "^0.3.21",
     "split": "^1.0.1",
     "stable": "^0.1.8",
-    "underscore": "^1.10.2"
+    "underscore": "^1.13.1"
   },
   "license": "AGPL-3.0",
   "engines": {
@@ -44,9 +44,9 @@
     "npm": ">=2.8.0"
   },
   "devDependencies": {
-    "mocha": "^8.2.0",
+    "mocha": "^8.4.0",
     "rewire": "^5.0.0",
     "should": "^13.2.3",
-    "sinon": "^9.0.2"
+    "sinon": "^10.0.0"
   }
 }
