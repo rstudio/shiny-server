@@ -22,7 +22,7 @@
     "graceful-fs": "^4.2.6",
     "handlebars": "^4.7.7",
     "http-proxy": "^1.18.1",
-    "ip-address": "^6.4.0",
+    "ip-address": "^7.1.0",
     "log4js": "^6.3.0",
     "moment": "^2.29.1",
     "morgan": "^1.10.0",

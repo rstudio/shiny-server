@@ -94,4 +94,14 @@ describe("iputil", () => {
     // Again, not legal, but whatever.
     assert.equal(iputil.hostnameToAddr("a[::1]b"), "a[::1]b");
   });
+
+  it("detects zones", () => {
+    assert(iputil.hasZone("fe80::1ff:fe23:4567:890a%eth2"));
+    assert(!iputil.hasZone("fe80::1ff:fe23:4567:890a"));
+
+    // invalid
+    assert(!iputil.hasZone("whatever"));
+    assert(!iputil.hasZone("8.8.8.8"));
+    assert(!iputil.hasZone("8.8.8.8%eth2"));
+  });
 });
