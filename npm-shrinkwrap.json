@@ -2143,8 +2143,8 @@
       "dev": true
     },
     "shiny-server-client": {
-      "version": "github:rstudio/shiny-server-client#d63e91ef06ce3de04761912590decd63c719cdb5",
-      "from": "github:rstudio/shiny-server-client#d63e91ef06ce3de04761912590decd63c719cdb5",
+      "version": "github:rstudio/shiny-server-client#5ee5aac7194b42d495eba9bde89d899c683af181",
+      "from": "github:rstudio/shiny-server-client#v1.2.0",
       "requires": {
         "inherits": "^2.0.4",
         "pinkyswear": "~2.2"
