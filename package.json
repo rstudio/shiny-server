@@ -32,7 +32,7 @@
     "q": "^1.5.1",
     "qs": "^6.10.1",
     "send": "^0.17.0",
-    "shiny-server-client": "github:rstudio/shiny-server-client#d63e91ef06ce3de04761912590decd63c719cdb5",
+    "shiny-server-client": "github:rstudio/shiny-server-client#v1.2.0",
     "sockjs": "^0.3.21",
     "split": "^1.0.1",
     "stable": "^0.1.8",

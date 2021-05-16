@@ -10,7 +10,19 @@
  * AGPL (http://www.gnu.org/licenses/agpl-3.0.txt) for more details.
  *
  */
+
+// See https://github.com/nodejs/nan/issues/807#issuecomment-581536991
+#if defined(__GNUC__) && __GNUC__ >= 8
+#define DISABLE_WCAST_FUNCTION_TYPE _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wcast-function-type\"")
+#define DISABLE_WCAST_FUNCTION_TYPE_END _Pragma("GCC diagnostic pop")
+#else
+#define DISABLE_WCAST_FUNCTION_TYPE
+#define DISABLE_WCAST_FUNCTION_TYPE_END
+#endif
+
+DISABLE_WCAST_FUNCTION_TYPE
 #include <nan.h>
+DISABLE_WCAST_FUNCTION_TYPE_END
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -274,4 +286,6 @@ NAN_MODULE_INIT(Initialize) {
   Nan::Export(target, "getgrnam", GetGrNam);
   Nan::Export(target, "acquireRecordLock", AcquireRecordLock);
 }
+DISABLE_WCAST_FUNCTION_TYPE
 NODE_MODULE(posix, Initialize)
+DISABLE_WCAST_FUNCTION_TYPE_END
