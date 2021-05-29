@@ -21,16 +21,30 @@ var KNOWN_LICENSES = {
   "samsam@1.1.2":         "BSD-3-Clause",
 };
 
+// Some licenses are ambiguous and require manual investigation
+// to prove they are both GPL- and commercial-compatible
+
+var OVERRIDE_LICENSES = {
+  "argparse@2.0.1":       "BSD-3-Clause", // Actually Python-2.0 is in the package.json but the real license is GPL compatible whereas Python-2.0 is ambiguous
+};
+
 function readJSON(file) {
   return JSON.parse(fs.readFileSync(file));
 }
 
 function getLicense(packageJson) {
+  var pkgKey = packageJson.name + "@" + packageJson.version;
+
+  var overrideLicense = OVERRIDE_LICENSES[pkgKey];
+  if (typeof(overrideLicense) !== "undefined") {
+    return overrideLicense;
+  }
+
   var license = packageJson.license ||
     (packageJson.licenses && packageJson.licenses[0]) ||
     (packageJson.licenses && packageJson.licenses.type);
   if (typeof(license) === "undefined") {
-    return KNOWN_LICENSES[packageJson.name + "@" + packageJson.version];
+    return KNOWN_LICENSES[pkgKey];
   }
   if (typeof(license) === "string") {
     return license;
