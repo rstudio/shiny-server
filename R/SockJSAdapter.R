@@ -43,6 +43,7 @@ local({
     disableProtocols <- paste('"', disableProtocols, '"', sep = '', collapse = ',')
   }
   reconnect <- if (identical("true", tolower(input[11]))) "true" else "false"
+  reconnectTimeout <- as.numeric(input[14]) * 1000
   options(shiny.sanitize.errors = identical("true", tolower(input[12])))
 
   # Top-level bookmarking directory (for all users)
@@ -191,8 +192,8 @@ local({
       tags$script(src='__assets__/sockjs-0.3.4.min.js'),
       tags$script(src='__assets__/shiny-server-client.min.js'),
       tags$script(
-        sprintf("preShinyInit({reconnect:%s,disableProtocols:[%s]});",
-          reconnect, disableProtocols
+        sprintf("preShinyInit({reconnect:%s,disableProtocols:[%s],reconnectTimeout:%s});",
+          reconnect, disableProtocols, reconnectTimeout
         )
       ),
       tags$link(rel='stylesheet', type='text/css', href='__assets__/shiny-server.css'),
