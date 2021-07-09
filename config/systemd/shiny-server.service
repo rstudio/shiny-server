@@ -3,7 +3,7 @@ Description=ShinyServer
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/env bash -c 'exec /opt/shiny-server/bin/shiny-server >> /var/log/shiny-server.log 2>&1'
+ExecStart=/usr/bin/env bash -c 'exec /usr/bin/shiny-server >> /var/log/shiny-server.log 2>&1'
 KillMode=process
 ExecReload=/usr/bin/env kill -HUP $MAINPID
 ExecStopPost=/usr/bin/env sleep 5
