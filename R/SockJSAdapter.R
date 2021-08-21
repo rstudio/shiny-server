@@ -188,7 +188,7 @@ local({
    }
 
    inject <- paste(
-      tags$script(src='__assets__/sockjs-0.3.4.min.js'),
+      tags$script(src='__assets__/sockjs.min.js'),
       tags$script(src='__assets__/shiny-server-client.min.js'),
       tags$script(
         sprintf("preShinyInit({reconnect:%s,disableProtocols:[%s]});",
