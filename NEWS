@@ -5,6 +5,11 @@ shiny-server 1.5.17
   disk were causing errors during routing, even for requests intended for
   unrelated apps.
 
+* Fix an issue where entire R processes would leak if: 1) they ever called
+  `reticulate::source_python()`, and 2) were running at the time that Shiny
+  Server stopped (or restarted). Both conditions were required to trigger the
+  leak.
+
 * Upgrade Node.js to 12.22.5.
 
 shiny-server 1.5.16
