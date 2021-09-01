@@ -10,7 +10,7 @@ shiny-server 1.5.17
   Server stopped (or restarted). Both conditions were required to trigger the
   leak.
 
-* Upgrade Node.js to 12.22.5.
+* Upgrade Node.js to 12.22.6.
 
 * Major upgrade to SockJS client (from 0.3.4 to 1.5.0). Technically, this adds
   two new SockJS protocols, `eventsource` and `htmlfile`, but the vast majority
