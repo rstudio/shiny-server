@@ -34,7 +34,7 @@
     "send": "^0.17.0",
     "shiny-server-client": "github:rstudio/shiny-server-client#v1.2.0",
     "sockjs": "^0.3.21",
-    "sockjs-client": "^1.5.0",
+    "sockjs-client": "github:jcheng5/sockjs-client#v1.5.2-jcheng5",
     "split": "^1.0.1",
     "stable": "^0.1.8",
     "underscore": "^1.13.1"
