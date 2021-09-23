@@ -2324,8 +2324,8 @@
       }
     },
     "sockjs-client": {
-      "version": "github:jcheng5/sockjs-client#60024c7c57e0195e3796c64ec539606873cd1f8d",
-      "from": "github:jcheng5/sockjs-client#v1.5.2-jcheng5",
+      "version": "github:jcheng5/sockjs-client#dafe26bec4d0c7edf5cca256d8bcd86514a84def",
+      "from": "github:jcheng5/sockjs-client#v1.5.2.2-jcheng5",
       "requires": {
         "debug": "^3.2.6",
         "eventsource": "^1.0.7",
