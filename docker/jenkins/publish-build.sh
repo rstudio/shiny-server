@@ -7,13 +7,13 @@ if [ $# -eq 0 ]; then
     echo ""
     echo "Arguments:"
     echo ""
-    echo "--platform  The Linux platform, such as redhat or debian."
+    echo "--platform  The Linux platform. Example: centos7"
     echo ""
     echo "--url       A URL to a location where the build can be downloaded. Example:"
-    echo "            https://s3.amazonaws.com/rstudio-ide-build/desktop/windows/RStudio-pro.exe"
+    echo "            https://s3.amazonaws.com/rstudio-shiny-server-os-build/ubuntu-14.04/x86_64/shiny-server-1.5.18.974-amd64.deb"
     echo ""
     echo "--file      A path to a local copy of the build file. Example:"
-    echo "            /tmp/RStudio-pro.exe"
+    echo "            /tmp/shiny-server-1.5.18.974-amd64.deb"
     echo ""
     echo "--pat       The Github Personal Access Token (PAT) to be used to authorize the commit."
     echo "            May be specified in the environment variable GITHUB_PAT instead."
@@ -162,7 +162,7 @@ else
   base64_contents=$(echo "$md_contents" | base64 --wrap=0)
 fi
 
-payload="{\"message\":\"Add Shiny Server build $version in $build\",\"content\":\"$base64_contents\"}"
+payload="{\"message\":\"Add Shiny Server $product build $version for $platform\",\"content\":\"$base64_contents\"}"
 echo "Sending to Github: $payload"
 
 curl \
