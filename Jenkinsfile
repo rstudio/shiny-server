@@ -42,20 +42,34 @@ def getPackageTypeFromOs(os) {
 }
 
 def s3_upload(os, arch) {
+
+  // Derive path components from job name and OS
   def bucket = getBucketFromJobName(env.JOB_NAME)
   def path = getPathFromBranch(env.BRANCH_NAME)
   def type = getPackageTypeFromOs(os)
+
+  // Determine the name of the file we just built
+  def file = sh("ls packaging/build/*.${type}", returnStdout: true).trim()
+
   if (path.empty) {
     // If the path is empty, we're on master and don't want 'master' to appear
     // in the object paths.
-    sh "aws s3 cp packaging/build/*.${type} s3://${bucket}/${os}/${arch}/"
+    sh "aws s3 cp packaging/build/${file} s3://${bucket}/${os}/${arch}/"
     sh "aws s3 cp packaging/build/VERSION s3://${bucket}/${os}/${arch}/"
+
+    // Publish the uploaded build to the dailies page (only for builds from
+    // master)
+    withCredentials([usernamePassword(credentialsId: 'github-rstudio-jenkins', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_PAT')]) {
+        sh "docker/jenkins/publish-build.sh --platform ${os} --url https://s3.amazonaws.com/${bucket}/${os}/${arch}/${file} --pat ${GITHUB_PAT} --file packaging/build/${file}"
+    }
+  
   } else {
     // If the path is non-empty, we're on a branch other than master, and its
     // name should be included in the object paths.
-    sh "aws s3 cp packaging/build/*.${type} s3://${bucket}/${path}/${os}/${arch}/"
+    sh "aws s3 cp packaging/build/${file} s3://${bucket}/${path}/${os}/${arch}/"
     sh "aws s3 cp packaging/build/VERSION s3://${bucket}/${path}/${os}/${arch}/"
   }
+
 }
 
 try {
