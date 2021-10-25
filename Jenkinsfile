@@ -50,7 +50,7 @@ def s3_upload(os, arch) {
 
   // Determine the name of the file we just built
   def file = sh(
-    script: "ls packaging/build/*.${type}",
+    script: "basename $(ls packaging/build/*.${type})",
     returnStdout: true
   ).trim()
 
