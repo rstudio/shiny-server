@@ -49,7 +49,10 @@ def s3_upload(os, arch) {
   def type = getPackageTypeFromOs(os)
 
   // Determine the name of the file we just built
-  def file = sh("ls packaging/build/*.${type}", returnStdout: true).trim()
+  def file = sh(
+    script: "ls packaging/build/*.${type}",
+    returnStdout: true
+  ).trim()
 
   if (path.empty) {
     // If the path is empty, we're on master and don't want 'master' to appear
