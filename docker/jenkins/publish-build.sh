@@ -110,9 +110,8 @@ timestamp=$(date +"%Y-%m-%dT%H:%M:%S%z")
 root="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && cd ../.. && pwd )"
 version="$(cat "$root/packaging/build/VERSION")"
 
-# Determine which product is being built by looking at the base name of the repository
-product=$(basename $root)
-if [[ "$product" == "shiny-server-pro" ]]; then
+# Determine which product is being built by checking for the overlay make script
+if [[ -f "$root/CMakeOverlay.txt" ]]; then
   product="professional"
 else
   product="open-source"
