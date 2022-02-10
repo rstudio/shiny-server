@@ -17,27 +17,27 @@
     "bash": "0.0.1",
     "client-sessions": "^0.8.0",
     "compression": "^1.7.4",
-    "express": "^4.16.4",
+    "express": "^4.17.2",
     "faye-websocket": "^0.11.4",
-    "graceful-fs": "^4.2.8",
+    "graceful-fs": "^4.2.9",
     "handlebars": "^4.7.7",
     "http-proxy": "^1.18.1",
-    "ip-address": "^7.1.0",
-    "log4js": "^6.3.0",
+    "ip-address": "^8.1.0",
+    "log4js": "^6.4.1",
     "moment": "^2.29.1",
     "morgan": "^1.10.0",
     "nan": "^2.15.0",
     "optimist": "github:rstudio/node-optimist#dbbadda31e53b63225a57e172a528b1ddc52be52",
     "pause": "0.1.0",
     "q": "^1.5.1",
-    "qs": "^6.10.1",
-    "send": "^0.17.0",
+    "qs": "^6.10.3",
+    "send": "^0.17.2",
     "shiny-server-client": "github:rstudio/shiny-server-client#v1.2.0",
-    "sockjs": "^0.3.21",
+    "sockjs": "^0.3.24",
     "sockjs-client": "github:jcheng5/sockjs-client#v1.5.2.2-jcheng5",
     "split": "^1.0.1",
     "stable": "^0.1.8",
-    "underscore": "^1.13.1"
+    "underscore": "^1.13.2"
   },
   "license": "AGPL-3.0",
   "engines": {
@@ -45,9 +45,9 @@
     "npm": ">=2.8.0"
   },
   "devDependencies": {
-    "mocha": "^9.1.0",
-    "rewire": "^5.0.0",
+    "mocha": "^9.2.0",
+    "rewire": "^6.0.0",
     "should": "^13.2.3",
-    "sinon": "^11.1.2"
+    "sinon": "^13.0.1"
   }
 }
