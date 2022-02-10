@@ -55,7 +55,6 @@ download_node () {
 
   cp ext/node/bin/node ext/node/bin/shiny-server
   rm ext/node/bin/npm
-  # (cd ext/node/lib/node_modules/npm && ./scripts/relocate.sh)
 }
 
 check_node_needed
