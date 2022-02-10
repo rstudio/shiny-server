@@ -5,7 +5,7 @@ set -e
 # From the relevant SHASUMS256.txt file at:
 # https://github.com/jcheng5/node-centos6/releases
 # The node-v{VERSION}-linux-x64.tar.xz checksum is the one we need.
-NODE_SHA256=80fc80cdb3d829ea4d752c2e52067a426f6c4fd629ecca5a858d268af8d5ec7e
+NODE_SHA256=0570b9354959f651b814e56a4ce98d4a067bf2385b9a0e6be075739bc65b0fae
 
 cd $(dirname $0)
 cd ../..
@@ -55,7 +55,7 @@ download_node () {
 
   cp ext/node/bin/node ext/node/bin/shiny-server
   rm ext/node/bin/npm
-  (cd ext/node/lib/node_modules/npm && ./scripts/relocate.sh)
+  # (cd ext/node/lib/node_modules/npm && ./scripts/relocate.sh)
 }
 
 check_node_needed
