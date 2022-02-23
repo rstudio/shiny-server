@@ -1,7 +1,7 @@
 var util = require('util');
 require('../lib/core/log')
 var fs = require('fs');
-var AppSpec = require('../lib/worker/app-spec');
+var { AppSpec } = require('../lib/worker/app-spec');
 var WorkerRegistry = require('../lib/worker/worker-registry');
 
 SHINY_SERVER_VERSION = "0.3.4";

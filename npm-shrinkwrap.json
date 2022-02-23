@@ -2237,7 +2237,7 @@
     "node_modules/optimist": {
       "version": "0.6.1",
       "resolved": "git+ssh://git@github.com/rstudio/node-optimist.git#dbbadda31e53b63225a57e172a528b1ddc52be52",
-      "integrity": "sha512-ZwrJM2WaOJesJGZlejLqAiBAE6Ts2PZNk1pQ/x1uTMsQw83BaXWShjqCbhh5bPQUNrlx2Ijz1dOr0hLmlkxKag==",
+      "integrity": "sha512-3RAVyfbptsR6HOFA0BFNLyw8ZXXDRWf5P3tIslbNt12kTikaRWepRR9vLHMyibIZeNfScI9uGqcn1KfbIAeuXA==",
       "license": "MIT/X11",
       "dependencies": {
         "minimist": "~1.2.3",
@@ -4966,7 +4966,7 @@
     },
     "optimist": {
       "version": "git+ssh://git@github.com/rstudio/node-optimist.git#dbbadda31e53b63225a57e172a528b1ddc52be52",
-      "integrity": "sha512-ZwrJM2WaOJesJGZlejLqAiBAE6Ts2PZNk1pQ/x1uTMsQw83BaXWShjqCbhh5bPQUNrlx2Ijz1dOr0hLmlkxKag==",
+      "integrity": "sha512-3RAVyfbptsR6HOFA0BFNLyw8ZXXDRWf5P3tIslbNt12kTikaRWepRR9vLHMyibIZeNfScI9uGqcn1KfbIAeuXA==",
       "from": "optimist@github:rstudio/node-optimist#dbbadda31e53b63225a57e172a528b1ddc52be52",
       "requires": {
         "minimist": "~1.2.3",

@@ -11,7 +11,7 @@
  *
  */
 
-var AppSpec = require('../lib/worker/app-spec.js');
+var { AppSpec } = require('../lib/worker/app-spec.js');
 var sinon = require('sinon');
 var Q = require('q');
 var _ = require('underscore');

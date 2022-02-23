@@ -52,13 +52,10 @@ interface Passwd {
   home?: string;
 }
 
-async function exists(path: string): Promise<boolean> {
-  try {
-    await fs_promises.access(path);
-    return true;
-  } catch {
-    return false;
-  }
+function exists(path: string): Q.Promise<boolean> {
+  return Q.resolve(fs_promises.access(path)).then(
+    () => true, () => false
+  );
 }
 
 function spawnUserLog_p(
@@ -67,8 +64,8 @@ function spawnUserLog_p(
   endpoint: Endpoint,
   logFilePath: string,
   workerId: string
-) {
-  var prom = Q.defer();
+): Q.Promise<AppWorker> {
+  var prom = Q.defer<AppWorker>();
 
   let mode = appSpec.settings.appDefaults.logFileMode;
 
@@ -118,7 +115,7 @@ function launchWorker_p(
   endpoint: Endpoint,
   logFilePath: string,
   workerId: string
-) {
+): Q.Promise<AppWorker> {
   if (!pw)
     return Q.reject(new Error("User " + appSpec.runAs + " does not exist"));
 
@@ -129,7 +126,7 @@ function launchWorker_p(
 
   if (!appSpec.appDir) return Q.reject(new Error("No app directory specified"));
 
-  return exists(appSpec.appDir).then(function (exists) {
+  return exists(appSpec.appDir).then(function (exists): Q.Promise<AppWorker> {
     // TODO: does this need to be as user?
     if (!exists) {
       var err = new Error("App dir " + appSpec.appDir + " does not exist");
@@ -160,8 +157,7 @@ function launchWorker_p(
 
       // Manage the log file as root
       // Open the log file asynchronously, then create the worker
-      return fs_promises
-        .open(logFilePath, "a", mode)
+      return Q.resolve(fs_promises.open(logFilePath, "a", mode))
         .then(function (logStream: fs_promises.FileHandle) {
           fs.fchown(logStream.fd, pw.uid, pw.gid, function (err) {
             if (err)
@@ -271,6 +267,8 @@ function createBookmarkStateDirectory_p(
               )
             );
           }
+          // We couldn't create it because it already existed--that's fine.
+          return;
         } catch {}
 
         logger.error(
