@@ -52,9 +52,26 @@ interface Passwd {
   home?: string;
 }
 
+interface ShinyInput {
+  appDir: string;
+  port: string;
+  gaTrackingId?: string;
+  sharedSecret: string;
+  shinyServerVersion: string;
+  workerId: string;
+  mode: string;
+  pandocPath: string;
+  logFilePath?: string;
+  disableProtocols: string;
+  reconnect: boolean;
+  sanitizeErrors: boolean;
+  bookmarkStateDir?: string;
+}
+
 function exists(path: string): Q.Promise<boolean> {
   return Q.resolve(fs_promises.access(path)).then(
-    () => true, () => false
+    () => true,
+    () => false
   );
 }
 
@@ -157,57 +174,58 @@ function launchWorker_p(
 
       // Manage the log file as root
       // Open the log file asynchronously, then create the worker
-      return Q.resolve(fs_promises.open(logFilePath, "a", mode))
-        .then(function (logStream: fs_promises.FileHandle) {
-          fs.fchown(logStream.fd, pw.uid, pw.gid, function (err) {
-            if (err)
-              logger.error(
-                "Error attempting to change ownership of log file at " +
-                  logFilePath +
-                  ": " +
-                  err.message
-              );
-          });
-          fs.fchmod(logStream.fd, mode, function (err) {
-            if (err)
-              logger.error(
-                "Error attempting to change permissions on log file at " +
-                  logFilePath +
-                  ": " +
-                  err.message
-              );
-          });
-
-          // We got a file descriptor and have chowned the file which is great, but
-          // we actually want a writeStream for this file so we can handle async
-          // writes more cleanly.
-          var writeStream = fs.createWriteStream(null, {
-            fd: logStream,
-            flags: "w",
-            mode: parseInt(mode, 8),
-          });
-
-          // If we have problems writing to writeStream, report it at most once.
-          var warned = false;
-          writeStream.on("error", function (err) {
-            if (!warned) {
-              warned = true;
-              logger.warn("Error writing to log stream: ", err);
-            }
-          });
-
-          // Create the worker; when it exits (or fails to start), close
-          // the logStream.
-          var worker = new AppWorker(
-            appSpec,
-            endpoint,
-            writeStream,
-            workerId,
-            pw.home
-          );
-
-          return worker;
+      return Q.resolve(fs_promises.open(logFilePath, "a", mode)).then(function (
+        logStream: fs_promises.FileHandle
+      ) {
+        fs.fchown(logStream.fd, pw.uid, pw.gid, function (err) {
+          if (err)
+            logger.error(
+              "Error attempting to change ownership of log file at " +
+                logFilePath +
+                ": " +
+                err.message
+            );
         });
+        fs.fchmod(logStream.fd, mode, function (err) {
+          if (err)
+            logger.error(
+              "Error attempting to change permissions on log file at " +
+                logFilePath +
+                ": " +
+                err.message
+            );
+        });
+
+        // We got a file descriptor and have chowned the file which is great, but
+        // we actually want a writeStream for this file so we can handle async
+        // writes more cleanly.
+        var writeStream = fs.createWriteStream(null, {
+          fd: logStream,
+          flags: "w",
+          mode: parseInt(mode, 8),
+        });
+
+        // If we have problems writing to writeStream, report it at most once.
+        var warned = false;
+        writeStream.on("error", function (err) {
+          if (!warned) {
+            warned = true;
+            logger.warn("Error writing to log stream: ", err);
+          }
+        });
+
+        // Create the worker; when it exits (or fails to start), close
+        // the logStream.
+        var worker = new AppWorker(
+          appSpec,
+          endpoint,
+          writeStream,
+          workerId,
+          pw.home
+        );
+
+        return worker;
+      });
     } else {
       return spawnUserLog_p(pw, appSpec, endpoint, logFilePath, workerId);
     }
@@ -222,7 +240,7 @@ exports.launchWorker_p = launchWorker_p;
 function createBookmarkStateDirectory_p(
   bookmarkStateDir: string,
   username: string
-) {
+): Q.Promise<void> {
   if (bookmarkStateDir === null || bookmarkStateDir === "") {
     return Q();
   }
@@ -341,12 +359,6 @@ class AppWorker {
         );
       }
 
-      // Set mode to either 'shiny' or 'rmd'
-      var mode = "shiny";
-      if (appSpec.settings && appSpec.settings.mode) {
-        mode = appSpec.settings.mode;
-      }
-
       if (!switchUser && permissions.isSuperuser())
         throw new Error("Aborting attempt to launch R process as root");
 
@@ -384,6 +396,11 @@ class AppWorker {
         logStream = "ignore"; // Tell the child process to drop stderr
         logger.trace("Asking R to send stderr to " + logFile);
       }
+
+      const shinyInput = JSON.stringify(
+        createShinyInput(appSpec, endpoint, workerId, logFile)
+      );
+      console.log(shinyInput);
 
       var self = this;
 
@@ -423,34 +440,7 @@ class AppWorker {
             );
             self.kill();
           });
-          self.$proc.stdin.end(
-            appSpec.appDir +
-              "\n" +
-              endpoint.getAppWorkerPort() +
-              "\n" +
-              (appSpec.settings.gaTrackingId || "") +
-              "\n" +
-              endpoint.getSharedSecret() +
-              "\n" +
-              SHINY_SERVER_VERSION +
-              "\n" +
-              workerId +
-              "\n" +
-              mode +
-              "\n" +
-              paths.projectFile("ext/pandoc") +
-              "\n" +
-              logFile +
-              "\n" +
-              appSpec.settings.appDefaults.disableProtocols.join(",") +
-              "\n" +
-              appSpec.settings.appDefaults.reconnect +
-              "\n" +
-              appSpec.settings.appDefaults.sanitizeErrors +
-              "\n" +
-              appSpec.settings.appDefaults.bookmarkStateDir +
-              "\n"
-          );
+          self.$proc.stdin.end(shinyInput);
           var stdoutSplit = self.$proc.stdout.pipe(split());
           stdoutSplit.on("data", function stdoutSplitListener(line) {
             var match = null;
@@ -595,4 +585,33 @@ class AppWorker {
       logger.trace(`Failure sending ${signal}: ` + e);
     }
   }
+}
+
+function createShinyInput(
+  appSpec: AppSpec,
+  endpoint: Endpoint,
+  workerId: string,
+  logFile?: string
+): ShinyInput {
+  // Set mode to either 'shiny' or 'rmd'
+  var mode = "shiny";
+  if (appSpec.settings && appSpec.settings.mode) {
+    mode = appSpec.settings.mode;
+  }
+
+  return {
+    appDir: appSpec.appDir,
+    port: endpoint.getAppWorkerPort(),
+    gaTrackingId: appSpec.settings.gaTrackingId ?? "",
+    sharedSecret: endpoint.getSharedSecret(),
+    shinyServerVersion: SHINY_SERVER_VERSION,
+    workerId,
+    mode,
+    pandocPath: paths.projectFile("ext/pandoc"),
+    logFilePath: logFile ?? "",
+    disableProtocols: appSpec.settings.appDefaults.disableProtocols.join(","),
+    reconnect: appSpec.settings.appDefaults.reconnect,
+    sanitizeErrors: appSpec.settings.appDefaults.sanitizeErrors,
+    bookmarkStateDir: appSpec.settings.appDefaults.bookmarkStateDir,
+  };
 }
