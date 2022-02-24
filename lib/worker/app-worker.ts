@@ -68,6 +68,16 @@ interface ShinyInput {
   bookmarkStateDir?: string;
 }
 
+interface ShinyOutput {
+  pid: number;
+  versions: {
+    r: string;
+    shiny: string;
+    rmarkdown: string;
+    knitr: string;
+  };
+}
+
 function exists(path: string): Q.Promise<boolean> {
   return Q.resolve(fs_promises.access(path)).then(
     () => true,
@@ -399,8 +409,7 @@ class AppWorker {
 
       const shinyInput = JSON.stringify(
         createShinyInput(appSpec, endpoint, workerId, logFile)
-      );
-      console.log(shinyInput);
+      ) + "\n";
 
       var self = this;
 
@@ -443,48 +452,17 @@ class AppWorker {
           self.$proc.stdin.end(shinyInput);
           var stdoutSplit = self.$proc.stdout.pipe(split());
           stdoutSplit.on("data", function stdoutSplitListener(line) {
-            var match = null;
-            if (line.match(/^Starting Shiny with process ID: '(\d+)'$/)) {
-              var pid = parseInt(
-                line.match(/^Starting Shiny with process ID: '(\d+)'$/)[1]
-              );
-              self.$pid = pid;
-              logger.trace("R process spawned with PID " + pid);
-            } else if (
-              (match = line.match(
-                /^Shiny version: (\d+)\.(\d+)\.(\d+)(\.(\d+))?$/
-              ))
-            ) {
-              logger.trace(
-                "Using shiny version: " +
-                  match[1] +
-                  "." +
-                  match[2] +
-                  "." +
-                  match[3] +
-                  (match[5] ? "." + match[5] : "")
-              );
-            } else if (
-              (match = line.match(/^R version: (\d+)\.(\d+)\.(\d+)$/))
-            ) {
-              logger.trace(
-                "Using R version: " + match[1] + "." + match[2] + "." + match[3]
-              );
-            } else if (
-              (match = line.match(
-                /^rmarkdown version: (\d+)\.(\d+)\.(\d+)(\.(\d+))?$/
-              ))
-            ) {
-              logger.trace(
-                "Using rmarkdown version: " +
-                  match[1] +
-                  "." +
-                  match[2] +
-                  "." +
-                  match[3] +
-                  (match[5] ? "." + match[5] : "")
-              );
-            } else if ((match = line.match(/^==END==$/))) {
+            const match = line.match(/^shiny_launch_info: (.*)$/);
+            if (match) {
+              console.log(match[1])
+              const shinyOutput: ShinyOutput = JSON.parse(match[1]) as ShinyOutput;
+              self.$pid = shinyOutput.pid;
+              logger.trace(`R process spawned with pid ${shinyOutput.pid}`);
+              logger.trace(`R version: ${shinyOutput.versions.r}`);
+              logger.trace(`Shiny version: ${shinyOutput.versions.shiny}`);
+              logger.trace(`rmarkdown version: ${shinyOutput.versions.rmarkdown}`);
+              logger.trace(`knitr version: ${shinyOutput.versions.knitr}`);
+            } else if (line.match(/^==END==$/)) {
               stdoutSplit.off("data", stdoutSplitListener);
               logger.trace("Closing backchannel");
             }

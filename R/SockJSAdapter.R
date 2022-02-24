@@ -107,16 +107,24 @@ local({
   rVer <- as.character(getRversion());
   shinyVer <- tryCatch({as.character(packageVersion("shiny"))},
       error=function(e){"0.0.0"});
-  cat(paste("R version: ", rVer, "\n", sep=""))
-  cat(paste("Shiny version: ", shinyVer, "\n", sep=""))
 
   markdownVer <- tryCatch({as.character(packageVersion("rmarkdown"))},
       error=function(e){"0.0.0"});
-  cat(paste("rmarkdown version: ", markdownVer, "\n", sep=""))
 
   knitrVer <- tryCatch({as.character(packageVersion("knitr"))},
       error=function(e){"0.0.0"});
-  cat(paste("knitr version: ", knitrVer, "\n", sep=""))
+
+  cat("shiny_launch_info: ")
+  cat(jsonlite::toJSON(pretty = FALSE, list(
+    pid = Sys.getpid(),
+    versions = list(
+      r = rVer,
+      shiny = shinyVer,
+      rmarkdown = markdownVer,
+      knitr = knitrVer
+    )
+  )))
+  cat("\n")
 
   if (compareVersion(MIN_R_VERSION,rVer)>0){
     # R is out of date
@@ -239,7 +247,6 @@ if (is.na(port)) {
   port <- Sys.getenv('SHINY_PORT')
   attr(port, 'mask') <- strtoi('0077', 8)
 }
-cat(paste("\nStarting Shiny with process ID: '",Sys.getpid(),"'\n", sep=""))
 cat("==END==\n")
 
 if (identical(Sys.getenv('SHINY_MODE'), "shiny")){
