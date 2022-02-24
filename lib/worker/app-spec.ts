@@ -17,7 +17,6 @@ export class AppSpec {
   prefix: string;
   logDir: string;
   settings: AppSettings;
-  logAsUser: boolean;
 
   constructor(appDir: string, runAs: string | ReadonlyArray<string> | undefined, prefix: string, logDir: string, settings: AppSettings) {
     this.appDir = appDir;

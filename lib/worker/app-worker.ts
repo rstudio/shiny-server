@@ -85,45 +85,6 @@ function exists(path: string): Q.Promise<boolean> {
   );
 }
 
-function spawnUserLog_p(
-  pw: Passwd,
-  appSpec: AppSpec,
-  endpoint: Endpoint,
-  logFilePath: string,
-  workerId: string
-): Q.Promise<AppWorker> {
-  var prom = Q.defer<AppWorker>();
-
-  let mode = appSpec.settings.appDefaults.logFileMode;
-
-  // Create the log file (and directory if needed)
-  var rm = child_process.spawn(
-    paths.projectFile("scripts/create-log.sh"),
-    [logFilePath, mode],
-    { uid: pw.uid, gid: pw.gid }
-  );
-  rm.on("close", function (code: number) {
-    if (code != 0) {
-      var err = "Failed to create log file: " + logFilePath + ", " + mode;
-      logger.error(err);
-      prom.reject(err);
-      return;
-    }
-
-    // Have R do the logging
-    var worker = new AppWorker(
-      appSpec,
-      endpoint,
-      logFilePath,
-      workerId,
-      pw.home
-    );
-    prom.resolve(worker);
-  });
-
-  return prom.promise;
-}
-
 /**
  * Begins launching the worker; returns a promise that resolves when
  * the worker is constructed (doesn't necessarily mean the process has
@@ -136,7 +97,7 @@ function spawnUserLog_p(
  *   listen on.
  * @param {String} logFilePath - The file path to write stderr to.
  */
-function launchWorker_p(
+export function launchWorker_p(
   appSpec: AppSpec,
   pw: Passwd,
   endpoint: Endpoint,
@@ -153,7 +114,9 @@ function launchWorker_p(
 
   if (!appSpec.appDir) return Q.reject(new Error("No app directory specified"));
 
-  return exists(appSpec.appDir).then(function (exists): Q.Promise<AppWorker> {
+  return exists(appSpec.appDir).then(async function (
+    exists
+  ): Promise<AppWorker> {
     // TODO: does this need to be as user?
     if (!exists) {
       var err = new Error("App dir " + appSpec.appDir + " does not exist");
@@ -161,87 +124,107 @@ function launchWorker_p(
       throw err;
     }
 
-    if (!appSpec.logAsUser) {
-      var logDir = path.dirname(logFilePath);
-      // Ensure that the log directory exists.
-      try {
-        fs.mkdirSync(logDir, "755");
-        fs.chownSync(logDir, pw.uid, pw.gid);
-      } catch (ex) {
-        try {
-          var stat = fs.statSync(logDir);
-          if (!stat.isDirectory()) {
-            logger.error("Log directory existed, was a file: " + logDir);
-            logDir = null;
-          }
-        } catch (ex2) {
-          logger.error("Log directory creation failed: " + ex2.message);
-          logDir = null;
-        }
-      }
-
-      let mode = appSpec.settings.appDefaults.logFileMode;
-
-      // Manage the log file as root
-      // Open the log file asynchronously, then create the worker
-      return Q.resolve(fs_promises.open(logFilePath, "a", mode)).then(function (
-        logStream: fs_promises.FileHandle
-      ) {
-        fs.fchown(logStream.fd, pw.uid, pw.gid, function (err) {
-          if (err)
-            logger.error(
-              "Error attempting to change ownership of log file at " +
-                logFilePath +
-                ": " +
-                err.message
-            );
-        });
-        fs.fchmod(logStream.fd, mode, function (err) {
-          if (err)
-            logger.error(
-              "Error attempting to change permissions on log file at " +
-                logFilePath +
-                ": " +
-                err.message
-            );
-        });
-
-        // We got a file descriptor and have chowned the file which is great, but
-        // we actually want a writeStream for this file so we can handle async
-        // writes more cleanly.
-        var writeStream = fs.createWriteStream(null, {
-          fd: logStream,
-          flags: "w",
-          mode: parseInt(mode, 8),
-        });
-
-        // If we have problems writing to writeStream, report it at most once.
-        var warned = false;
-        writeStream.on("error", function (err) {
-          if (!warned) {
-            warned = true;
-            logger.warn("Error writing to log stream: ", err);
-          }
-        });
-
-        // Create the worker; when it exits (or fails to start), close
-        // the logStream.
-        var worker = new AppWorker(
-          appSpec,
-          endpoint,
-          writeStream,
-          workerId,
-          pw.home
-        );
-
-        return worker;
-      });
+    let logStream: fs.WriteStream | string;
+    if (!appSpec.settings.logAsUser) {
+      logStream = await createLogFile(pw, appSpec, logFilePath);
+      // logStream is now a WriteStream; it is the responsibility of the
+      // AppWorker to close it, either on failure in the constructor or
+      // (if construction succeeds) when the worker process exits.
     } else {
-      return spawnUserLog_p(pw, appSpec, endpoint, logFilePath, workerId);
+      logStream = await createLogFileAsUser(pw, appSpec, logFilePath);
     }
+
+    var worker = new AppWorker(appSpec, endpoint, logStream, workerId, pw.home);
+
+    return worker;
   });
 }
-exports.launchWorker_p = launchWorker_p;
+
+async function createLogFileAsUser(
+  pw: Passwd,
+  appSpec: AppSpec,
+  logFilePath: string
+): Promise<string> {
+  logger.trace(`Creating ${logFilePath} as user`);
+  return new Promise<string>((resolve, reject) => {
+    let mode = appSpec.settings.appDefaults.logFileMode;
+
+    // Create the log file (and directory if needed)
+    var rm = child_process.spawn(
+      paths.projectFile("scripts/create-log.sh"),
+      [logFilePath, mode],
+      { uid: pw.uid, gid: pw.gid }
+    );
+    rm.on("close", function (code: number) {
+      if (code != 0) {
+        var err = "Failed to create log file: " + logFilePath + ", " + mode;
+        logger.error(err);
+        reject(err);
+      } else {
+        resolve(logFilePath);
+      }
+    });
+  });
+}
+
+async function createLogFile(
+  pw: Passwd,
+  appSpec: AppSpec,
+  logFilePath: string
+): Promise<fs.WriteStream> {
+  logger.trace(`Creating ${logFilePath}`);
+  var logDir = path.dirname(logFilePath);
+  // Ensure that the log directory exists.
+  try {
+    fs.mkdirSync(logDir, "755");
+    fs.chownSync(logDir, pw.uid, pw.gid);
+  } catch (ex) {
+    try {
+      var stat = fs.statSync(logDir);
+      if (!stat.isDirectory()) {
+        logger.error("Log directory existed, was a file: " + logDir);
+        logDir = null;
+      }
+    } catch (ex2) {
+      logger.error("Log directory creation failed: " + ex2.message);
+      logDir = null;
+    }
+  }
+
+  let mode = appSpec.settings.appDefaults.logFileMode;
+
+  const fileHandle = await fs_promises.open(logFilePath, "a", mode);
+  try {
+    await fileHandle.chown(pw.uid, pw.gid);
+  } catch (ex) {
+    logger.error(
+      `Error attempting to change ownership of log file at ${logFilePath}: ${ex.message}`
+    );
+  }
+  try {
+    await fileHandle.chmod(mode);
+  } catch (ex) {
+    logger.error(
+      `Error attempting to change permissions on log file at ${logFilePath}: ${ex.message}`
+    );
+  }
+
+  // We got a file descriptor and have chowned the file which is great, but
+  // we actually want a writeStream for this file so we can handle async
+  // writes more cleanly.
+  const writeStream = fileHandle.createWriteStream();
+
+  // If we have problems writing to writeStream, report it at most once.
+  var warned = false;
+  writeStream.on("error", function (err) {
+    if (!warned) {
+      warned = true;
+      logger.warn("Error writing to log stream: ", err);
+    }
+  });
+
+  return writeStream;
+}
 
 /**
  * Creates the top-level (system) bookmark state directory, then the user's
@@ -407,9 +390,9 @@ class AppWorker {
         logger.trace("Asking R to send stderr to " + logFile);
       }
 
-      const shinyInput = JSON.stringify(
-        createShinyInput(appSpec, endpoint, workerId, logFile)
-      ) + "\n";
+      const shinyInput =
+        JSON.stringify(createShinyInput(appSpec, endpoint, workerId, logFile)) +
+        "\n";
 
       var self = this;
 
@@ -454,13 +437,16 @@ class AppWorker {
           stdoutSplit.on("data", function stdoutSplitListener(line) {
             const match = line.match(/^shiny_launch_info: (.*)$/);
             if (match) {
-              console.log(match[1])
-              const shinyOutput: ShinyOutput = JSON.parse(match[1]) as ShinyOutput;
+              const shinyOutput: ShinyOutput = JSON.parse(
+                match[1]
+              ) as ShinyOutput;
               self.$pid = shinyOutput.pid;
               logger.trace(`R process spawned with pid ${shinyOutput.pid}`);
               logger.trace(`R version: ${shinyOutput.versions.r}`);
               logger.trace(`Shiny version: ${shinyOutput.versions.shiny}`);
-              logger.trace(`rmarkdown version: ${shinyOutput.versions.rmarkdown}`);
+              logger.trace(
+                `rmarkdown version: ${shinyOutput.versions.rmarkdown}`
+              );
               logger.trace(`knitr version: ${shinyOutput.versions.knitr}`);
             } else if (line.match(/^==END==$/)) {
               stdoutSplit.off("data", stdoutSplitListener);
