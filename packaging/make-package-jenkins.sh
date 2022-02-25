@@ -12,3 +12,9 @@ then
 else
 	CC=gcc CXX=g++ ./make-package.sh "$@"
 fi
+
+if [[ $(git diff --stat) != '' ]]; then
+  echo "Repo is dirty, possibly tsc output was not checked in?" >&2
+	git status >&2
+	exit 1
+fi
