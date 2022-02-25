@@ -19,7 +19,7 @@
  * - Returning a promise that resolves when the worker process exits
  */
 
-var child_process = require("child_process");
+import * as child_process from "child_process";
 import * as fs from "fs";
 import * as fs_promises from "fs/promises";
 import { Endpoint } from "../transport/tcp";
@@ -31,7 +31,6 @@ var map = require("../core/map");
 var paths = require("../core/paths");
 var permissions = require("../core/permissions");
 import split = require("split");
-import { ChildProcess } from "child_process";
 var posix = require("../../build/Release/posix");
 
 var rprog = process.env.R || "R";
@@ -134,7 +133,13 @@ export function launchWorker_p(
       logStream = await createLogFileAsUser(pw, appSpec, logFilePath);
     }
 
-    var worker = new AppWorker(appSpec, endpoint, logStream, workerId, pw.home);
+    var worker = await createAppWorker(
+      appSpec,
+      endpoint,
+      logStream,
+      workerId,
+      pw.home!
+    );
 
     return worker;
   });
@@ -178,14 +183,14 @@ async function createLogFile(
   try {
     fs.mkdirSync(logDir, "755");
     fs.chownSync(logDir, pw.uid, pw.gid);
-  } catch (ex) {
+  } catch (ex: any) {
     try {
       var stat = fs.statSync(logDir);
       if (!stat.isDirectory()) {
         logger.error("Log directory existed, was a file: " + logDir);
         logDir = null;
       }
-    } catch (ex2) {
+    } catch (ex2: any) {
       logger.error("Log directory creation failed: " + ex2.message);
       logDir = null;
     }
@@ -196,14 +201,14 @@ async function createLogFile(
   const fileHandle = await fs_promises.open(logFilePath, "a", mode);
   try {
     await fileHandle.chown(pw.uid, pw.gid);
-  } catch (ex) {
+  } catch (ex: any) {
     logger.error(
       `Error attempting to change ownership of log file at ${logFilePath}: ${ex.message}`
     );
   }
   try {
     await fileHandle.chmod(mode);
-  } catch (ex) {
+  } catch (ex: any) {
     logger.error(
       `Error attempting to change permissions on log file at ${logFilePath}: ${ex.message}`
     );
@@ -281,6 +286,179 @@ async function createBookmarkStateDirectory(
   await createDir(userBookmarkStateDir, "700", username, "user");
 }
 
+async function createAppWorker(
+  appSpec: AppSpec,
+  endpoint: Endpoint,
+  logStream: fs.WriteStream | string,
+  workerId: string,
+  home: string
+): Promise<AppWorker> {
+  // Spawn worker process via su, to ensure proper setgid, initgroups, setuid,
+  // etc. are called correctly.
+  //
+  // We use stdin to tell SockJSAdapter what app dir, port, etc. to use, so
+  // that non-root users on the system can't use ps to discover what apps are
+  // available and on what ports.
+
+  logger.trace("Starting R");
+
+  // Run R
+  var executable: string, args: Array<string>;
+  var switchUser =
+    appSpec.runAs !== null && permissions.getProcessUser() !== appSpec.runAs;
+
+  if (typeof appSpec.runAs === "object") {
+    throw new Error(
+      "Assertion error: appSpec.runAs should be a string or null at this point"
+    );
+  }
+
+  if (!switchUser && permissions.isSuperuser())
+    throw new Error("Aborting attempt to launch R process as root");
+
+  if (switchUser) {
+    executable = "su";
+    args = [
+      "-p",
+      "--",
+      appSpec.runAs!,
+      "-c",
+      "cd " +
+        bash.escape(appSpec.appDir) +
+        " && " +
+        bash.escape(rprog) +
+        " --no-save --slave -f " +
+        bash.escape(scriptPath),
+    ];
+
+    if (process.platform === "linux") {
+      // -s option not supported by OS X (or FreeBSD, or Sun)
+      args = ["-s", "/bin/bash", "--login"].concat(args);
+    } else {
+      // Other platforms don't clear out env vars, so simulate user env
+      args.unshift("-");
+    }
+  } else {
+    executable = rprog;
+    args = ["--no-save", "--slave", "-f", scriptPath];
+  }
+
+  // The file where R should send stderr, or empty if it should leave it alone.
+  var logFile = "";
+  if (typeof logStream === "string") {
+    logFile = logStream;
+    logStream = "ignore"; // Tell the child process to drop stderr
+    logger.trace("Asking R to send stderr to " + logFile);
+  }
+
+  const shinyInput =
+    JSON.stringify(createShinyInput(appSpec, endpoint, workerId, logFile)) +
+    "\n";
+
+  try {
+    const stat = await fs_promises.stat(appSpec.appDir);
+    if (!stat.isDirectory()) {
+      throw new Error(
+        "Trying to launch an application that is not a directory: " +
+          appSpec.appDir
+      );
+    }
+
+    await createBookmarkStateDirectory(
+      appSpec.settings.appDefaults.bookmarkStateDir,
+      appSpec.runAs as string
+    );
+
+    const proc = child_process.spawn(executable, args, {
+      stdio: ["pipe", "pipe", "pipe"],
+      cwd: appSpec.appDir,
+      env: map.compact({
+        HOME: home,
+        LANG: process.env["LANG"],
+        PATH: process.env["PATH"],
+      }),
+      detached: true, // So that we can send SIGINT not just to su but to the
+      // R process that it spawns as well
+    });
+
+    const dfEnd = Q.defer<ExitStatus>();
+    const appWorker = new AppWorker(dfEnd.promise, proc);
+
+    try {
+      proc.on("exit", function (code: number, signal: string) {
+        appWorker.exited = true;
+        dfEnd.resolve({ code: code, signal: signal });
+      });
+      proc.stdin.on("error", function () {
+        logger.warn("Unable to write to Shiny process. Attempting to kill it.");
+        proc.kill();
+      });
+      proc.stdin.end(shinyInput);
+      var stdoutSplit = proc.stdout.pipe(split());
+      stdoutSplit.on("data", function stdoutSplitListener(line) {
+        const match = line.match(/^shiny_launch_info: (.*)$/);
+        if (match) {
+          const shinyOutput: ShinyOutput = JSON.parse(match[1]) as ShinyOutput;
+          appWorker.pid = shinyOutput.pid;
+          logger.trace(`R process spawned with pid ${shinyOutput.pid}`);
+          logger.trace(`R version: ${shinyOutput.versions.r}`);
+          logger.trace(`Shiny version: ${shinyOutput.versions.shiny}`);
+          logger.trace(`rmarkdown version: ${shinyOutput.versions.rmarkdown}`);
+          logger.trace(`knitr version: ${shinyOutput.versions.knitr}`);
+        } else if (line.match(/^==END==$/)) {
+          stdoutSplit.off("data", stdoutSplitListener);
+          logger.trace("Closing backchannel");
+        }
+      });
+      proc.stderr
+        .on("error", function (e: any) {
+          logger.error("Error on proc stderr: " + e);
+        })
+        .pipe(split())
+        .on("data", function (line) {
+          if (STDERR_PASSTHROUGH) {
+            logger.info(`[${appSpec.appDir}:${appWorker.pid ?? "?"}] ${line}`);
+          }
+          // Ensure that we, not R, are supposed to be handling logging.
+          if (typeof logStream !== "string") {
+            logStream.write(line + "\n");
+          }
+        })
+        .on("end", function () {
+          if (typeof logStream !== "string") {
+            logStream.end();
+          }
+        });
+
+      return appWorker;
+    } catch (ex2) {
+      try {
+        if (appWorker.pid) {
+          // If app initialization got far enough that we know the grandchild
+          // process, kill that one.
+          appWorker.kill();
+        } else {
+          // If not, kill the direct child process.
+          proc.kill();
+        }
+      } catch (ex3: any) {
+        logger.debug(
+          `Failed to cleanup after failure to launch child process: ${ex3.message}`
+        );
+      }
+      throw ex2;
+    }
+  } catch (ex) {
+    // We never got around to starting the process, so the normal code path
+    // that closes logStream won't run.
+    if (typeof logStream !== "string") {
+      logStream.end();
+    }
+
+    throw ex;
+  }
+}
+
 /**
  * An AppWorker models a single R process that is running a Shiny app.
  *
@@ -293,187 +471,16 @@ async function createBookmarkStateDirectory(
  *   to the R proc to have R handle the logging itself.
  */
 class AppWorker {
-  $dfEnded: Q.Deferred<ExitStatus>;
+  $end: Q.Promise<ExitStatus>;
+  $proc: child_process.ChildProcess;
   exited: boolean;
-  $pid: number;
-  $proc: ChildProcess;
+  pid: number | null;
 
-  constructor(
-    appSpec: AppSpec,
-    endpoint: Endpoint,
-    logStream: fs.WriteStream | string,
-    workerId: string,
-    home: string
-  ) {
-    this.$dfEnded = Q.defer();
-    var self = this;
-
+  constructor(end: Q.Promise<ExitStatus>, proc: child_process.ChildProcess) {
+    this.$end = end;
+    this.$proc = proc;
     this.exited = false;
-    this.$pid = null;
-
-    // Spawn worker process via su, to ensure proper setgid, initgroups, setuid,
-    // etc. are called correctly.
-    //
-    // We use stdin to tell SockJSAdapter what app dir, port, etc. to use, so
-    // that non-root users on the system can't use ps to discover what apps are
-    // available and on what ports.
-
-    logger.trace("Starting R");
-
-    try {
-      // Run R
-      var executable: string, args: Array<string>;
-      var switchUser =
-        appSpec.runAs !== null &&
-        permissions.getProcessUser() !== appSpec.runAs;
-
-      if (typeof appSpec.runAs === "object") {
-        throw new Error(
-          "Assertion error: appSpec.runAs should be a string or null at this point"
-        );
-      }
-
-      if (!switchUser && permissions.isSuperuser())
-        throw new Error("Aborting attempt to launch R process as root");
-
-      if (switchUser) {
-        executable = "su";
-        args = [
-          "-p",
-          "--",
-          appSpec.runAs,
-          "-c",
-          "cd " +
-            bash.escape(appSpec.appDir) +
-            " && " +
-            bash.escape(rprog) +
-            " --no-save --slave -f " +
-            bash.escape(scriptPath),
-        ];
-
-        if (process.platform === "linux") {
-          // -s option not supported by OS X (or FreeBSD, or Sun)
-          args = ["-s", "/bin/bash", "--login"].concat(args);
-        } else {
-          // Other platforms don't clear out env vars, so simulate user env
-          args.unshift("-");
-        }
-      } else {
-        executable = rprog;
-        args = ["--no-save", "--slave", "-f", scriptPath];
-      }
-
-      // The file where R should send stderr, or empty if it should leave it alone.
-      var logFile = "";
-      if (typeof logStream === "string") {
-        logFile = logStream;
-        logStream = "ignore"; // Tell the child process to drop stderr
-        logger.trace("Asking R to send stderr to " + logFile);
-      }
-
-      const shinyInput =
-        JSON.stringify(createShinyInput(appSpec, endpoint, workerId, logFile)) +
-        "\n";
-
-      var self = this;
-
-      Q.nfcall(fs.stat, appSpec.appDir)
-        .then(function (stat: fs.Stats) {
-          if (!stat.isDirectory()) {
-            throw new Error(
-              "Trying to launch an application that is not a directory: " +
-                appSpec.appDir
-            );
-          }
-
-          return createBookmarkStateDirectory(
-            appSpec.settings.appDefaults.bookmarkStateDir,
-            appSpec.runAs as string
-          );
-        })
-        .then(function () {
-          self.$proc = child_process.spawn(executable, args, {
-            stdio: ["pipe", "pipe", "pipe"],
-            cwd: appSpec.appDir,
-            env: map.compact({
-              HOME: home,
-              LANG: process.env["LANG"],
-              PATH: process.env["PATH"],
-            }),
-            detached: true, // So that we can send SIGINT not just to su but to the
-            // R process that it spawns as well
-          });
-          self.$proc.on("exit", function (code: number, signal: string) {
-            self.exited = true;
-            self.$dfEnded.resolve({ code: code, signal: signal });
-          });
-          self.$proc.stdin.on("error", function () {
-            logger.warn(
-              "Unable to write to Shiny process. Attempting to kill it."
-            );
-            self.kill();
-          });
-          self.$proc.stdin.end(shinyInput);
-          var stdoutSplit = self.$proc.stdout.pipe(split());
-          stdoutSplit.on("data", function stdoutSplitListener(line) {
-            const match = line.match(/^shiny_launch_info: (.*)$/);
-            if (match) {
-              const shinyOutput: ShinyOutput = JSON.parse(
-                match[1]
-              ) as ShinyOutput;
-              self.$pid = shinyOutput.pid;
-              logger.trace(`R process spawned with pid ${shinyOutput.pid}`);
-              logger.trace(`R version: ${shinyOutput.versions.r}`);
-              logger.trace(`Shiny version: ${shinyOutput.versions.shiny}`);
-              logger.trace(
-                `rmarkdown version: ${shinyOutput.versions.rmarkdown}`
-              );
-              logger.trace(`knitr version: ${shinyOutput.versions.knitr}`);
-            } else if (line.match(/^==END==$/)) {
-              stdoutSplit.off("data", stdoutSplitListener);
-              logger.trace("Closing backchannel");
-            }
-          });
-          self.$proc.stderr
-            .on("error", function (e) {
-              logger.error("Error on proc stderr: " + e);
-            })
-            .pipe(split())
-            .on("data", function (line) {
-              if (STDERR_PASSTHROUGH) {
-                logger.info(`[${appSpec.appDir}:${self.$pid}] ${line}`);
-              }
-              // Ensure that we, not R, are supposed to be handling logging.
-              if (typeof logStream !== "string") {
-                logStream.write(line + "\n");
-              }
-            })
-            .on("end", function () {
-              if (typeof logStream !== "string") {
-                logStream.end();
-              }
-            });
-        })
-        .fail(function (err) {
-          // An error occured spawning the process, could be we tried to launch a file
-          // instead of a directory.
-          logger.warn(err.message);
-
-          if (!self.$proc) {
-            // We never got around to starting the process, so the normal code path
-            // that closes logStream won't run.
-            if (typeof logStream !== "string") {
-              logStream.end();
-            }
-          }
-
-          self.$dfEnded.resolve({ code: -1, signal: null });
-        })
-        .done();
-    } catch (e) {
-      logger.trace(e);
-      this.$dfEnded.reject(e);
-    }
+    this.pid = null;
   }
 
   /**
@@ -484,7 +491,7 @@ class AppWorker {
    * name of the signal, otherwise null.
    */
   getExit_p(): Q.Promise<ExitStatus> {
-    return this.$dfEnded.promise;
+    return this.$end;
   }
 
   isRunning() {
@@ -502,7 +509,11 @@ class AppWorker {
 
     const signal = force ? "SIGTERM" : "SIGINT";
 
-    var pid = this.$pid;
+    const pid = this.pid || this.$proc.pid;
+    if (!pid) {
+      return;
+    }
+
     logger.trace(`Sending ${signal} to ${pid}`);
 
     try {
