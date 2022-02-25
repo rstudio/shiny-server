@@ -34,10 +34,12 @@ import split = require("split");
 var posix = require("../../build/Release/posix");
 
 var rprog = process.env.R || "R";
-var scriptPath = paths.projectFile("R/SockJSAdapter.R");
+var shinyScriptPath = paths.projectFile("R/SockJSAdapter.R");
 
 const STDERR_PASSTHROUGH = !!process.env["SHINY_LOG_STDERR"];
 
+// The status code that resulted from, and/or signal that caused, a process
+// exit.
 interface ExitStatus {
   code: number;
   signal: string;
@@ -49,6 +51,7 @@ interface Passwd {
   home?: string;
 }
 
+// JSON object to be passed from the server to the R process running Shiny.
 interface ShinyInput {
   appDir: string;
   port: string;
@@ -65,6 +68,7 @@ interface ShinyInput {
   bookmarkStateDir?: string;
 }
 
+// JSON object to be passed back from the R process to the server.
 interface ShinyOutput {
   pid: number;
   versions: {
@@ -73,6 +77,17 @@ interface ShinyOutput {
     rmarkdown: string;
     knitr: string;
   };
+}
+
+// Specifies the process to be launched by child_process.spawn.
+// It helps to have this be a first-class object so it can be
+// manipulated by different functions, like wrapWithUserSwitch().
+interface SpawnSpec {
+  command: string;
+  args: ReadonlyArray<string>;
+  cwd: string;
+  env: Record<string, string>;
+  stdinInput: string;
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -316,33 +331,6 @@ async function createAppWorker(
   if (!switchUser && permissions.isSuperuser())
     throw new Error("Aborting attempt to launch R process as root");
 
-  if (switchUser) {
-    executable = "su";
-    args = [
-      "-p",
-      "--",
-      appSpec.runAs!,
-      "-c",
-      "cd " +
-        bash.escape(appSpec.appDir) +
-        " && " +
-        bash.escape(rprog) +
-        " --no-save --slave -f " +
-        bash.escape(scriptPath),
-    ];
-
-    if (process.platform === "linux") {
-      // -s option not supported by OS X (or FreeBSD, or Sun)
-      args = ["-s", "/bin/bash", "--login"].concat(args);
-    } else {
-      // Other platforms don't clear out env vars, so simulate user env
-      args.unshift("-");
-    }
-  } else {
-    executable = rprog;
-    args = ["--no-save", "--slave", "-f", scriptPath];
-  }
-
   // The file where R should send stderr, or empty if it should leave it alone.
   var logFile = "";
   if (typeof logStream === "string") {
@@ -351,9 +339,20 @@ async function createAppWorker(
     logger.trace("Asking R to send stderr to " + logFile);
   }
 
-  const shinyInput =
-    JSON.stringify(createShinyInput(appSpec, endpoint, workerId, logFile)) +
-    "\n";
+  let spawnSpec: SpawnSpec;
+
+  switch (appSpec.settings.mode) {
+    case "shiny":
+    case "rmd":
+      spawnSpec = createShinySpawnSpec(appSpec, endpoint, workerId, logFile, home);
+      break;
+    default:
+      throw new Error(`Tried to launch worker process with unknown mode: ${appSpec.settings.mode}`)
+  }
+
+  if (switchUser) {
+    spawnSpec = wrapWithUserSwitch(spawnSpec, appSpec.runAs!);
+  }
 
   try {
     const stat = await fs_promises.stat(appSpec.appDir);
@@ -369,14 +368,10 @@ async function createAppWorker(
       appSpec.runAs as string
     );
 
-    const proc = child_process.spawn(executable, args, {
+    const proc = child_process.spawn(spawnSpec.command, spawnSpec.args, {
       stdio: ["pipe", "pipe", "pipe"],
-      cwd: appSpec.appDir,
-      env: map.compact({
-        HOME: home,
-        LANG: process.env["LANG"],
-        PATH: process.env["PATH"],
-      }),
+      cwd: spawnSpec.cwd,
+      env: spawnSpec.env,
       detached: true, // So that we can send SIGINT not just to su but to the
       // R process that it spawns as well
     });
@@ -393,7 +388,7 @@ async function createAppWorker(
         logger.warn("Unable to write to Shiny process. Attempting to kill it.");
         proc.kill();
       });
-      proc.stdin.end(shinyInput);
+      proc.stdin.end(spawnSpec.stdinInput);
       var stdoutSplit = proc.stdout.pipe(split());
       stdoutSplit.on("data", function stdoutSplitListener(line) {
         const match = line.match(/^shiny_launch_info: (.*)$/);
@@ -549,12 +544,6 @@ function createShinyInput(
   workerId: string,
   logFile?: string
 ): ShinyInput {
-  // Set mode to either 'shiny' or 'rmd'
-  var mode = "shiny";
-  if (appSpec.settings && appSpec.settings.mode) {
-    mode = appSpec.settings.mode;
-  }
-
   return {
     appDir: appSpec.appDir,
     port: endpoint.getAppWorkerPort(),
@@ -562,12 +551,68 @@ function createShinyInput(
     sharedSecret: endpoint.getSharedSecret(),
     shinyServerVersion: SHINY_SERVER_VERSION,
     workerId,
-    mode,
+    mode: appSpec.settings.mode,
     pandocPath: paths.projectFile("ext/pandoc"),
     logFilePath: logFile ?? "",
     disableProtocols: appSpec.settings.appDefaults.disableProtocols.join(","),
     reconnect: appSpec.settings.appDefaults.reconnect,
     sanitizeErrors: appSpec.settings.appDefaults.sanitizeErrors,
     bookmarkStateDir: appSpec.settings.appDefaults.bookmarkStateDir,
+  };
+}
+
+function createShinySpawnSpec(
+  appSpec: AppSpec,
+  endpoint: Endpoint,
+  workerId: string,
+  logFile: "" | string,
+  home: string
+): SpawnSpec {
+  const shinyInput =
+    JSON.stringify(createShinyInput(appSpec, endpoint, workerId, logFile)) +
+    "\n";
+
+  let spawnSpec: SpawnSpec = {
+    command: rprog,
+    args: ["--no-save", "--slave", "-f", shinyScriptPath],
+    cwd: appSpec.appDir,
+    env: map.compact({
+      HOME: home,
+      LANG: process.env["LANG"],
+      PATH: process.env["PATH"],
+    }),
+    stdinInput: shinyInput,
+  };
+
+  return spawnSpec;
+}
+
+function wrapWithUserSwitch(spec: SpawnSpec, user: string): SpawnSpec {
+  const command = "su";
+  let args = [
+    "-p",
+    "--",
+    user,
+    "-c",
+    "cd " +
+      bash.escape(spec.cwd) +
+      " && " +
+      [spec.command, ...spec.args].map(arg => bash.escape(arg)).join(" "),
+  ];
+
+  if (process.platform === "linux") {
+    // -s option not supported by OS X (or FreeBSD, or Sun)
+    args = ["-s", "/bin/bash", "--login"].concat(args);
+  } else {
+    // Other platforms don't clear out env vars, so simulate user env
+    args.unshift("-");
+  }
+
+  return {
+    command,
+    args,
+    cwd: spec.cwd,
+    env: spec.env,
+    stdinInput: spec.stdinInput,
   };
 }
