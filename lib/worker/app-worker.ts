@@ -25,10 +25,8 @@ import * as fs_promises from "fs/promises";
 import { Endpoint } from "../transport/tcp";
 import { AppSpec } from "./app-spec";
 var path = require("path");
-var util = require("util");
 var bash = require("bash");
 import Q = require("q");
-var _ = require("underscore");
 var map = require("../core/map");
 var paths = require("../core/paths");
 var permissions = require("../core/permissions");
@@ -78,11 +76,13 @@ interface ShinyOutput {
   };
 }
 
-function exists(path: string): Q.Promise<boolean> {
-  return Q.resolve(fs_promises.access(path)).then(
-    () => true,
-    () => false
-  );
+async function exists(path: string): Promise<boolean> {
+  try {
+    await fs_promises.access(path);
+    return true;
+  } catch (ex) {
+    return false;
+  }
 }
 
 /**
@@ -114,7 +114,7 @@ export function launchWorker_p(
 
   if (!appSpec.appDir) return Q.reject(new Error("No app directory specified"));
 
-  return exists(appSpec.appDir).then(async function (
+  return Q.resolve(exists(appSpec.appDir)).then(async function (
     exists
   ): Promise<AppWorker> {
     // TODO: does this need to be as user?
@@ -230,74 +230,55 @@ async function createLogFile(
  * Creates the top-level (system) bookmark state directory, then the user's
  * bookmark state directory, and then the app's bookmark state directory.
  */
-function createBookmarkStateDirectory_p(
+async function createBookmarkStateDirectory(
   bookmarkStateDir: string,
   username: string
-): Q.Promise<void> {
+): Promise<void> {
   if (bookmarkStateDir === null || bookmarkStateDir === "") {
-    return Q();
+    return;
   }
 
-  // Capitalize first character
-  function capFirst(str: string) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
-  function createDir_p(
+  async function createDir(
     dir: string,
     mode: string,
     username?: string,
     label?: string
-  ): Q.Promise<void> {
+  ): Promise<void> {
     if (label) {
       label = label + " ";
     } else {
       label = "";
     }
 
-    return Q.nfcall(fs.mkdir, dir, mode)
-      .then(function () {
-        logger.info(
-          capFirst("created " + label + "bookmark state directory: " + dir)
-        );
-      })
-      .then(function () {
-        // chown if username was supplied
-        if (typeof username === "string") {
-          var pw = posix.getpwnam(username);
-          return Q.nfcall(fs.chown, dir, pw.uid, pw.gid);
-        }
-      })
-      .fail(async function (err: Error) {
-        try {
-          const stat = await fs_promises.stat(dir);
-          if (!stat.isDirectory()) {
-            logger.error(
-              capFirst(
-                label + "bookmark state directory existed, was a file: " + dir
-              )
-            );
-          }
-          // We couldn't create it because it already existed--that's fine.
-          return;
-        } catch {}
+    try {
+      await fs_promises.mkdir(dir, mode);
+      logger.info(`created ${label}bookmark state directory: ${dir}`);
 
-        logger.error(
-          capFirst(label + "bookmark state directory creation failed: " + dir)
-        );
-        throw err;
-      });
+      if (typeof username === "string") {
+        var pw = posix.getpwnam(username);
+        await fs_promises.chown(dir, pw.uid, pw.gid);
+      }
+    } catch (ex) {
+      try {
+        const stat = await fs_promises.stat(dir);
+        if (!stat.isDirectory()) {
+          logger.error(
+            `${label}bookmark state directory existed, was a file: ${dir}`
+          );
+        }
+        // We couldn't create it because it already existed--that's fine.
+        return;
+      } catch {}
+
+      logger.error(`Failed to create ${label}bookmark state directory: ${dir}`);
+      throw ex;
+    }
   }
 
   var userBookmarkStateDir = path.join(bookmarkStateDir, username);
 
-  return createDir_p(bookmarkStateDir, "711")
-    .then(function () {
-      return createDir_p(userBookmarkStateDir, "700", username, "user");
-    })
-    .fail(function (err) {
-      throw err;
-    });
+  await createDir(bookmarkStateDir, "711");
+  await createDir(userBookmarkStateDir, "700", username, "user");
 }
 
 /**
@@ -405,7 +386,7 @@ class AppWorker {
             );
           }
 
-          return createBookmarkStateDirectory_p(
+          return createBookmarkStateDirectory(
             appSpec.settings.appDefaults.bookmarkStateDir,
             appSpec.runAs as string
           );
