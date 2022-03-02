@@ -7,13 +7,10 @@ python_version = (
 print(f"Using Python {python_version} at {sys.executable}", file=sys.stderr)
 
 import os
-from ast import Await
 import importlib
 import json
-from typing import TypedDict, cast, List
+from typing import TypedDict, cast, List, Optional, Literal
 from xmlrpc.client import boolean
-from shiny._main import resolve_app
-import shiny
 import uvicorn
 from asgiref.typing import (
     ASGI3Application,
@@ -36,6 +33,14 @@ class ShinyInput(TypedDict):
     sharedSecret: str
     reconnect: boolean
     disableProtocols: List[str]
+    gaTrackingId: Optional[str]
+    shinyServerVersion: str
+    workerId: str
+    mode: Literal["shiny-python"]
+    pandocPath: str
+    logFilePath: str
+    sanitizeErrors: boolean
+    bookmarkStateDir: Optional[str]
 
 
 # Do not allow any HTTP or WebSocket requests to succeed unless the
@@ -145,15 +150,21 @@ def wrap_shiny_app(app: ASGI3Application, input: ShinyInput) -> ASGI3Application
 
 
 def run():
-    # TODO: Write ShinyOutput to stdout
     shiny_output = {
         "pid": os.getpid(),
-        "versions": {"python": python_version, "shiny": metadata.version("shiny")},
+        "versions": {
+            "python": f"{python_version} ({sys.executable})",
+            "shiny": metadata.version("shiny"),
+        },
     }
     print("shiny_launch_info: " + json.dumps(shiny_output, indent=None))
     print("==END==")
 
     input: ShinyInput = json.load(sys.stdin)
+
+    if input["logFilePath"] != "":
+        log_file_handle = open(input["logFilePath"], "w")
+        sys.stderr = log_file_handle
 
     sys.path.insert(0, input["appDir"])
     app_module = importlib.import_module("app")
