@@ -318,7 +318,7 @@ async function createAppWorker(
   // that non-root users on the system can't use ps to discover what apps are
   // available and on what ports.
 
-  logger.trace("Starting R");
+  logger.trace("Starting worker");
 
   // Run R
   var executable: string, args: Array<string>;
