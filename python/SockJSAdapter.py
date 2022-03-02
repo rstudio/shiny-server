@@ -78,7 +78,7 @@ class SharedSecretMiddleware:
         return False
 
 
-class ShinySockJSMiddleware:
+class ShinyInjectHeadMiddleware:
     def __init__(self, app: ASGI3Application, input: ShinyInput):
         self.app = app
 
@@ -88,14 +88,33 @@ class ShinySockJSMiddleware:
         else:
             disable_protocols = ""
 
-        self.script = """
-    <script src="__assets__/sockjs.min.js"></script>
+        if input["gaTrackingId"]:
+            gaTrackingCode = """
+    <script type="text/javascript">
+
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', '{0}']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {{
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    }})();
+
+    </script>""".format(
+                input["gaTrackingId"]
+            )
+        else:
+            gaTrackingCode = ""
+
+        self.script = """  <script src="__assets__/sockjs.min.js"></script>
     <script src="__assets__/shiny-server-client.min.js"></script>
     <script>preShinyInit({{reconnect:{0},disableProtocols:[{1}]}});</script>
-    <link rel="stylesheet" type="text/css" href="__assets__/shiny-server.css">
+    <link rel="stylesheet" type="text/css" href="__assets__/shiny-server.css">{2}
   </head>
         """.format(
-            reconnect, disable_protocols
+            reconnect, disable_protocols, gaTrackingCode
         ).encode(
             "ascii"
         )
@@ -146,7 +165,7 @@ class ShinySockJSMiddleware:
 
 def wrap_shiny_app(app: ASGI3Application, input: ShinyInput) -> ASGI3Application:
     app = SharedSecretMiddleware(app, input["sharedSecret"])
-    app = ShinySockJSMiddleware(app, input)
+    app = ShinyInjectHeadMiddleware(app, input)
     return app
 
 
