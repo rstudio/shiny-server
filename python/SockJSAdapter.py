@@ -92,6 +92,7 @@ class ShinySockJSMiddleware:
     <script src="__assets__/sockjs.min.js"></script>
     <script src="__assets__/shiny-server-client.min.js"></script>
     <script>preShinyInit({{reconnect:{0},disableProtocols:[{1}]}});</script>
+    <link rel="stylesheet" type="text/css" href="__assets__/shiny-server.css">
   </head>
         """.format(
             reconnect, disable_protocols
