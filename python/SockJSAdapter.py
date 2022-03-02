@@ -166,6 +166,12 @@ def run():
         log_file_handle = open(input["logFilePath"], "w")
         sys.stderr = log_file_handle
 
+    if input["sanitizeErrors"]:
+        os.environ["SHINY_SANITIZE_ERRORS"] = "1"
+
+    if input["pandocPath"] != "":
+        os.environ["RSTUDIO_PANDOC"] = input["pandocPath"]
+
     sys.path.insert(0, input["appDir"])
     app_module = importlib.import_module("app")
     app = getattr(app_module, "app")
