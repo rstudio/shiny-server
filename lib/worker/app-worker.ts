@@ -22,19 +22,21 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as fs_promises from "fs/promises";
-import { Endpoint } from "../transport/tcp";
-import { AppSpec } from "./app-spec";
 var path = require("path");
 var bash = require("bash");
 import Q = require("q");
+import split = require("split");
 var map = require("../core/map");
 var paths = require("../core/paths");
 var permissions = require("../core/permissions");
-import split = require("split");
 var posix = require("../../build/Release/posix");
+import { Endpoint } from "../transport/tcp";
+import { AppSpec } from "./app-spec";
+import * as python from "../core/python";
 
 var rprog = process.env.R || "R";
-var shinyScriptPath = paths.projectFile("R/SockJSAdapter.R");
+const shinyScriptPath = paths.projectFile("R/SockJSAdapter.R");
+const pythonScriptPath = paths.projectFile("python/SockJSAdapter.py");
 
 const STDERR_PASSTHROUGH = !!process.env["SHINY_LOG_STDERR"];
 
@@ -51,7 +53,7 @@ interface Passwd {
   home?: string;
 }
 
-// JSON object to be passed from the server to the R process running Shiny.
+// JSON object to be passed from the server to the worker process running Shiny.
 interface ShinyInput {
   appDir: string;
   port: string;
@@ -62,20 +64,21 @@ interface ShinyInput {
   mode: string;
   pandocPath: string;
   logFilePath?: string;
-  disableProtocols: string;
+  disableProtocols: ReadonlyArray<string>;
   reconnect: boolean;
   sanitizeErrors: boolean;
   bookmarkStateDir?: string;
 }
 
-// JSON object to be passed back from the R process to the server.
+// JSON object to be passed back from the worker process to the server.
 interface ShinyOutput {
   pid: number;
   versions: {
-    r: string;
-    shiny: string;
-    rmarkdown: string;
-    knitr: string;
+    r?: string;
+    python?: string;
+    shiny?: string;
+    rmarkdown?: string;
+    knitr?: string;
   };
 }
 
@@ -329,14 +332,14 @@ async function createAppWorker(
   }
 
   if (!switchUser && permissions.isSuperuser())
-    throw new Error("Aborting attempt to launch R process as root");
+    throw new Error("Aborting attempt to launch worker process as root");
 
-  // The file where R should send stderr, or empty if it should leave it alone.
+  // The file where worker should send stderr, or empty if it should leave it alone.
   var logFile = "";
   if (typeof logStream === "string") {
     logFile = logStream;
     logStream = "ignore"; // Tell the child process to drop stderr
-    logger.trace("Asking R to send stderr to " + logFile);
+    logger.trace("Asking worker to send stderr to " + logFile);
   }
 
   let spawnSpec: SpawnSpec;
@@ -344,10 +347,27 @@ async function createAppWorker(
   switch (appSpec.settings.mode) {
     case "shiny":
     case "rmd":
-      spawnSpec = createShinySpawnSpec(appSpec, endpoint, workerId, logFile, home);
+      spawnSpec = createShinySpawnSpec(
+        appSpec,
+        endpoint,
+        workerId,
+        logFile,
+        home
+      );
+      break;
+    case "shiny-python":
+      spawnSpec = await createPyShinySpawnSpec(
+        appSpec,
+        endpoint,
+        workerId,
+        logFile,
+        home
+      );
       break;
     default:
-      throw new Error(`Tried to launch worker process with unknown mode: ${appSpec.settings.mode}`)
+      throw new Error(
+        `Tried to launch worker process with unknown mode: ${appSpec.settings.mode}`
+      );
   }
 
   if (switchUser) {
@@ -373,7 +393,7 @@ async function createAppWorker(
       cwd: spawnSpec.cwd,
       env: spawnSpec.env,
       detached: true, // So that we can send SIGINT not just to su but to the
-      // R process that it spawns as well
+      // worker process that it spawns as well
     });
 
     const dfEnd = Q.defer<ExitStatus>();
@@ -395,11 +415,10 @@ async function createAppWorker(
         if (match) {
           const shinyOutput: ShinyOutput = JSON.parse(match[1]) as ShinyOutput;
           appWorker.pid = shinyOutput.pid;
-          logger.trace(`R process spawned with pid ${shinyOutput.pid}`);
-          logger.trace(`R version: ${shinyOutput.versions.r}`);
-          logger.trace(`Shiny version: ${shinyOutput.versions.shiny}`);
-          logger.trace(`rmarkdown version: ${shinyOutput.versions.rmarkdown}`);
-          logger.trace(`knitr version: ${shinyOutput.versions.knitr}`);
+          logger.trace(`Worker process spawned with pid ${shinyOutput.pid}`);
+          for (const [key, value] of Object.entries(shinyOutput.versions)) {
+            logger.trace(`${key} version: ${value}`);
+          }
         } else if (line.match(/^==END==$/)) {
           stdoutSplit.off("data", stdoutSplitListener);
           logger.trace("Closing backchannel");
@@ -455,7 +474,7 @@ async function createAppWorker(
 }
 
 /**
- * An AppWorker models a single R process that is running a Shiny app.
+ * An AppWorker models a single worker process that is running a Shiny app.
  *
  * @constructor
  * @param {AppSpec} appSpec - Contains the basic details about the app to
@@ -463,7 +482,7 @@ async function createAppWorker(
  * @param {String} endpoint - The transport endpoint the app should listen on
  * @param {Stream} logStream - The stream to dump stderr to, or the path to
  *   the file where the logging should happen. If just the path, pass it in
- *   to the R proc to have R handle the logging itself.
+ *   to the worker proc to have it handle the logging itself.
  */
 class AppWorker {
   $end: Q.Promise<ExitStatus>;
@@ -554,7 +573,7 @@ function createShinyInput(
     mode: appSpec.settings.mode,
     pandocPath: paths.projectFile("ext/pandoc"),
     logFilePath: logFile ?? "",
-    disableProtocols: appSpec.settings.appDefaults.disableProtocols.join(","),
+    disableProtocols: appSpec.settings.appDefaults.disableProtocols,
     reconnect: appSpec.settings.appDefaults.reconnect,
     sanitizeErrors: appSpec.settings.appDefaults.sanitizeErrors,
     bookmarkStateDir: appSpec.settings.appDefaults.bookmarkStateDir,
@@ -587,6 +606,46 @@ function createShinySpawnSpec(
   return spawnSpec;
 }
 
+async function createPyShinySpawnSpec(
+  appSpec: AppSpec,
+  endpoint: Endpoint,
+  workerId: string,
+  logFile: "" | string,
+  home: string
+): Promise<SpawnSpec> {
+  const shinyInput =
+    JSON.stringify(createShinyInput(appSpec, endpoint, workerId, logFile)) +
+    "\n";
+
+  const pythonPath = appSpec.settings.appDefaults.python ?? "python3";
+  const pythonResult = await python.resolvePython_p(pythonPath, appSpec.appDir);
+
+  const env = map.compact(
+    Object.assign(
+      {
+        HOME: home,
+        LANG: process.env["LANG"],
+        PATH: process.env["PATH"],
+      },
+      pythonResult.env ?? {}
+    )
+  );
+
+  if (pythonResult.path_prepend) {
+    env["PATH"] = pythonResult.path_prepend + ":" + env["PATH"];
+  }
+
+  let spawnSpec: SpawnSpec = {
+    command: pythonResult.command ?? pythonResult.exec!,
+    args: [pythonScriptPath],
+    cwd: appSpec.appDir,
+    env,
+    stdinInput: shinyInput,
+  };
+
+  return spawnSpec;
+}
+
 function wrapWithUserSwitch(spec: SpawnSpec, user: string): SpawnSpec {
   const command = "su";
   let args = [
@@ -597,7 +656,7 @@ function wrapWithUserSwitch(spec: SpawnSpec, user: string): SpawnSpec {
     "cd " +
       bash.escape(spec.cwd) +
       " && " +
-      [spec.command, ...spec.args].map(arg => bash.escape(arg)).join(" "),
+      [spec.command, ...spec.args].map((arg) => bash.escape(arg)).join(" "),
   ];
 
   if (process.platform === "linux") {

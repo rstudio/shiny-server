@@ -38,7 +38,7 @@ export class AppSpec {
 export interface AppSettings {
   templateDir: string;
   restart?: number;
-  mode: "shiny" | "rmd";
+  mode: "shiny" | "rmd" | "shiny-python";
   scheduler: any;
   logAsUser: boolean;
   gaTrackingId?: string;
@@ -56,4 +56,5 @@ export interface AppDefaults {
   bookmarkStateDir: string;
   logFileMode: string;
   frameOptions?: string;
+  python?: string;
 }

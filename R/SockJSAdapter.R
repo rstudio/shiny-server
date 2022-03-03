@@ -38,7 +38,7 @@ local({
     sink(errFile, type="message")
   }
 
-  disableProtocols <- strsplit(input$disableProtocols, ",")[[1]]
+  disableProtocols <- input$disableProtocols
   if (length(disableProtocols) == 0) {
     disableProtocols <- ""
   } else {
