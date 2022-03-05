@@ -27,8 +27,7 @@ RUN yum install -y R curl libcurl-devel
 RUN yum install -y cmake
 
 RUN yum -y install centos-release-scl
-RUN yum -y install python27
-RUN yum -y install devtoolset-7
+RUN yum -y install devtoolset-11
 
 # create jenkins user, make sudo. try to keep this toward the bottom for less cache busting
 ARG JENKINS_GID=999

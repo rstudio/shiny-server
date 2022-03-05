@@ -3,7 +3,7 @@
 set -e
 set -x
 
-# This is needed for CentOS5/6 Jenkins workers to bootstrap the gcc-4.8 toolchain.
+# This is needed for CentOS5/6 Jenkins workers to bootstrap a newer gcc toolchain.
 cd "$(dirname $0)"
 
 # Repo checkout directories are re-used by Jenkins workers, and so a
@@ -13,9 +13,9 @@ cd "$(dirname $0)"
 # we must first blow it and any other files not in the repo away.
 git reset --hard && git clean -ffdx
 
-if (which scl && scl -l | grep -q devtoolset-7);
+if (which scl && scl -l | grep -q devtoolset-11);
 then
-	scl enable devtoolset-7 python27 ./make-package.sh "$@"
+	scl enable devtoolset-11 ./make-package.sh
 else
 	CC=gcc CXX=g++ ./make-package.sh "$@"
 fi
