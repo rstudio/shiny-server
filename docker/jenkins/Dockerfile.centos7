@@ -30,8 +30,8 @@ RUN yum -y install centos-release-scl
 RUN yum -y install devtoolset-11
 
 # create jenkins user, make sudo. try to keep this toward the bottom for less cache busting
-ARG JENKINS_GID=999
-ARG JENKINS_UID=999
+ARG JENKINS_GID=512
+ARG JENKINS_UID=512
 RUN groupadd -g $JENKINS_GID jenkins && \
     useradd -m -d /var/lib/jenkins -u $JENKINS_UID -g jenkins jenkins && \
     echo "jenkins ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
