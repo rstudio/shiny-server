@@ -25,18 +25,18 @@ fi
 if [ "$CMAKE" == "" ]
 then
 	CMAKE="cmake"
-	if which cmake28
+	if which cmake3
 	then
-		CMAKE="cmake28"
+		CMAKE="cmake3"
 	fi
 fi
 
 if [ "$CPACK" == "" ]
 then
 	CPACK="cpack"
-	if which cpack28
+	if which cpack3
 	then
-		CPACK="cpack28"
+		CPACK="cpack3"
 	fi
 fi
 

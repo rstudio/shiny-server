@@ -24,7 +24,7 @@ RUN yum install -y python3-setuptools python3-unittest2
 RUN yum install -y R curl libcurl-devel
 
 # install cmake
-RUN yum install -y cmake
+RUN yum install -y cmake3
 
 RUN yum -y install centos-release-scl
 RUN yum -y install devtoolset-11
