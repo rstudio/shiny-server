@@ -10,7 +10,7 @@ RUN     rpm -Uvh http://mirror.chpc.utah.edu/pub/repoforge/redhat/el7/en/x86_64/
 # SSH
 EXPOSE 22
 RUN yum -y groupinstall "Development tools"
-RUN yum -y install rsyslog screen passwd java-1.7.0-openjdk sudo wget git python26 tar python-devel mercurial gcc glibc-devel xorg-x11-server-Xvfb firefox pam-devel
+RUN yum -y install rsyslog screen passwd java-1.7.0-openjdk sudo wget git python3 tar python3-devel mercurial gcc glibc-devel xorg-x11-server-Xvfb firefox pam-devel
 
 
 # There's a networking bug with some versions of git which sometimes causes
@@ -20,7 +20,7 @@ RUN yum -y install rsyslog screen passwd java-1.7.0-openjdk sudo wget git python
 # https://groups.google.com/forum/#!topic/golang-nuts/RKz9ASmJm3o
 RUN yum -y --disablerepo=base,updates --enablerepo=rpmforge-extras update git
 
-RUN yum install -y python-setuptools python-unittest2
+RUN yum install -y python3-setuptools python3-unittest2
 RUN yum install -y R curl libcurl-devel
 
 # install cmake
