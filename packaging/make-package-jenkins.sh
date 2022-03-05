@@ -8,7 +8,7 @@ cd "$(dirname $0)"
 
 if (which scl && scl -l | grep -q devtoolset-11);
 then
-	CMAKE=cmake3 CPACK=cpack3 scl enable devtoolset-11 ./make-package.sh
+	scl enable devtoolset-11 ./make-package.sh
 else
 	CC=gcc CXX=g++ ./make-package.sh "$@"
 fi

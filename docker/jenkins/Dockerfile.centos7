@@ -23,11 +23,12 @@ RUN yum -y --disablerepo=base,updates --enablerepo=rpmforge-extras update git
 RUN yum install -y python3-setuptools python3-unittest2
 RUN yum install -y R curl libcurl-devel
 
-# install cmake
-RUN yum install -y cmake3
-
 RUN yum -y install centos-release-scl
 RUN yum -y install devtoolset-11
+
+# Use cmake 3.21.3 (newer is probably fine too). Must avoid 3.18-3.20 due to %posttrans issue
+RUN wget -q https://github.com/Kitware/CMake/releases/download/v3.21.3/cmake-3.21.3-linux-x86_64.tar.gz
+RUN tar xzf cmake-3.21.3-linux-x86_64.tar.gz -C /usr/local --strip-components=1
 
 # create jenkins user, make sudo. try to keep this toward the bottom for less cache busting
 ARG JENKINS_GID=512
