@@ -1,0 +1,42 @@
+FROM ubuntu:18.04
+
+# Setup, install tools for adding more repos
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update
+
+RUN apt-get install -y software-properties-common
+
+# Install R repo
+
+RUN echo 'deb http://cran.rstudio.com/bin/linux/ubuntu bionic-cran35/' >> /etc/apt/sources.list \
+  && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
+
+# Install packages
+
+RUN apt-get update && apt-get install -y \
+  build-essential \
+  curl \
+  g++ \
+  gcc \
+  git \
+  libpam0g-dev \
+  libssl-dev \
+  make \
+  openjdk-8-jdk \
+  python \
+  r-base \
+  sudo \
+  wget
+
+# Use cmake 3.21.3 (newer is probably fine too). Must avoid 3.18-3.20 due to %posttrans issue
+RUN wget -q https://github.com/Kitware/CMake/releases/download/v3.21.3/cmake-3.21.3-linux-x86_64.tar.gz
+RUN tar xzf cmake-3.21.3-linux-x86_64.tar.gz -C /usr/local --strip-components=1
+
+ARG JENKINS_GID=999
+ARG JENKINS_UID=999
+RUN groupadd -g $JENKINS_GID jenkins && \
+    useradd -m -d /var/lib/jenkins -u $JENKINS_UID -g jenkins jenkins && \
+    echo "jenkins ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
