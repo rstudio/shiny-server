@@ -5,7 +5,8 @@ const path = require("path");
 const { StringDecoder } = require("string_decoder");
 
 const rewire = require("rewire");
-var bash = require("bash");
+const bash = require("bash");
+const sinon = require("sinon");
 
 const app_worker = rewire("../lib/worker/app-worker");
 const AppSpec = require("../lib/worker/app-spec");
@@ -13,6 +14,7 @@ const paths = require("../lib/core/paths");
 const { Transport } = require("../lib/transport/tcp");
 const { Stream } = require("stream");
 const EventEmitter = require("events");
+const { reject } = require("underscore");
 
 if (!global["SHINY_SERVER_VERSION"]) {
   global["SHINY_SERVER_VERSION"] = "0.0.0.0";
@@ -22,24 +24,14 @@ if (!global["SHINY_SERVER_VERSION"]) {
  * Infrastructure for mocking child_process.spawn               *
  ****************************************************************/
 
-const mock_child_process = Object.assign(
-  Object.create(null),
-  app_worker.__get__("child_process"),
-  {
+const mock_spawn = sinon.stub();
+
+app_worker.__set__(
+  "child_process",
+  Object.assign(Object.create(null), app_worker.__get__("child_process"), {
     spawn: mock_spawn,
-  }
+  })
 );
-app_worker.__set__("child_process", mock_child_process);
-
-let mock_spawn_stack = [];
-
-function mock_spawn(command, args, options) {
-  logger.trace("mock_spawn called with:", { command, args, options });
-  if (mock_spawn_stack.length === 0) {
-    throw new Error("mock_spawn was called unexpectedly");
-  }
-  return mock_spawn_stack.shift()(command, args, options);
-}
 
 class MockChildProcess extends EventEmitter {
   constructor(command, args, options) {
@@ -74,6 +66,7 @@ class MockChildProcess extends EventEmitter {
  * Helper functions                                             *
  ****************************************************************/
 
+// Deletes the file/directory at path if it exists, otherwise no-op.
 async function rmIfExists(path, isDir) {
   if (!isDir) {
     await fs.rm(path, { force: true });
@@ -87,13 +80,20 @@ async function rmIfExists(path, isDir) {
   }
 }
 
+// Returns a promise that resolves when `fn()` returns truthy.
+// It will try calling fn() every `interval` milliseconds.
 async function poll(fn, interval = 10) {
-  return await new Promise((resolve) => {
+  return await new Promise((resolve, reject) => {
     const handle = setInterval(() => {
-      const value = fn();
-      if (value) {
+      try {
+        const value = fn();
+        if (value) {
+          clearInterval(handle);
+          resolve(value);
+        }
+      } catch (ex) {
         clearInterval(handle);
-        resolve(value);
+        reject(ex);
       }
     }, interval);
   });
@@ -127,7 +127,8 @@ async function testLaunchWorker_p(
     await rmIfExists(logFilePath, false);
     await rmIfExists(userBookmarkStateDir, true);
     await rmIfExists(appSpec.settings.appDefaults.bookmarkStateDir, true);
-    mock_spawn_stack = [];
+    // Reset both the history and behavior of spawn
+    mock_spawn.reset();
   }
 
   await cleanup();
@@ -135,12 +136,7 @@ async function testLaunchWorker_p(
   try {
     // Create-log
     if (appSpec.logAsUser) {
-      mock_spawn_stack.push((command, args, options) => {
-        assert.deepEqual(
-          { command, args, options },
-          expectedSpawnLogParams(logFilePath, pw)
-        );
-
+      mock_spawn.onCall(0).callsFake((command, args, options) => {
         const proc = new MockChildProcess(command, args, options);
         setTimeout(() => {
           proc.die(0);
@@ -150,29 +146,26 @@ async function testLaunchWorker_p(
     }
 
     // Launch R
-    mock_spawn_stack.push((command, args, options) => {
-      assert.deepEqual(
-        { command, args, options },
-        expectedSpawnRParams(appSpec, pw)
-      );
-
-      const proc = new MockChildProcess(command, args, options);
-      proc.stdout.end("==END==\n");
-      proc.stderr.end("This is the contents of stderr");
-      proc.on("exit", () => {
-        const stdin_str = new StringDecoder().end(proc.stdin.read());
-        assert.strictEqual(
-          stdin_str,
-          expectedRStdin({
-            appSpec,
-            endpoint,
-            workerId,
-            logFilePath: appSpec.logAsUser ? logFilePath : "",
-          })
-        );
+    mock_spawn
+      .onCall(appSpec.logAsUser ? 1 : 0)
+      .callsFake((command, args, options) => {
+        const proc = new MockChildProcess(command, args, options);
+        proc.stdout.end("==END==\n");
+        proc.stderr.end("This is the contents of stderr");
+        proc.on("exit", () => {
+          const stdin_str = new StringDecoder().end(proc.stdin.read());
+          assert.strictEqual(
+            stdin_str,
+            expectedRStdin({
+              appSpec,
+              endpoint,
+              workerId,
+              logFilePath: appSpec.logAsUser ? logFilePath : "",
+            })
+          );
+        });
+        return proc;
       });
-      return proc;
-    });
 
     const worker = await app_worker.launchWorker_p(
       appSpec,
@@ -190,6 +183,19 @@ async function testLaunchWorker_p(
     // that there's a window of time where $proc isn't populated)
     await poll(() => !!worker.$proc);
 
+    // Ensure that calls to child_process.spawn() had the expected values
+    assert(mock_spawn.callCount == (appSpec.logAsUser ? 2 : 1));
+    if (appSpec.logAsUser) {
+      assert.deepStrictEqual(
+        mock_spawn.firstCall.args,
+        expectedSpawnLogParams(logFilePath, pw)
+      );
+    }
+    assert.deepStrictEqual(
+      mock_spawn.lastCall.args,
+      expectedSpawnRParams(appSpec, pw)
+    );
+
     worker.$proc.kill();
 
     assert.deepEqual(await worker.getExit_p(), {
@@ -205,7 +211,6 @@ async function testLaunchWorker_p(
       const logContents = await fs.readFile(logFilePath, { encoding: "utf-8" });
       assert.deepEqual(logContents, "This is the contents of stderr\n");
     }
-    assert.strictEqual(mock_spawn_stack.length, 0);
 
     const stat = await fs.stat(userBookmarkStateDir);
     assert(stat.isDirectory());
@@ -269,21 +274,21 @@ async function createBaselineInput() {
  ****************************************************************/
 
 function expectedSpawnLogParams(logFilePath, pw) {
-  return {
-    command: paths.projectFile("scripts/create-log.sh"),
-    args: [logFilePath, "777"],
-    options: {
+  return [
+    paths.projectFile("scripts/create-log.sh"),
+    [logFilePath, "777"],
+    {
       uid: pw.uid,
       gid: pw.gid,
     },
-  };
+  ];
 }
 
 function expectedSpawnRParams(appSpec, pw) {
   if (appSpec.runAs !== process.env["USER"]) {
-    return {
-      command: "su",
-      args: [
+    return [
+      "su",
+      [
         "-",
         "-p",
         "--",
@@ -295,7 +300,7 @@ function expectedSpawnRParams(appSpec, pw) {
           paths.projectFile("R/SockJSAdapter.R")
         )}`,
       ],
-      options: {
+      {
         stdio: ["pipe", "pipe", "pipe"],
         cwd: appSpec.appDir,
         env: {
@@ -305,17 +310,12 @@ function expectedSpawnRParams(appSpec, pw) {
         },
         detached: true,
       },
-    };
+    ];
   } else {
-    return {
-      command: "R",
-      args: [
-        "--no-save",
-        "--slave",
-        "-f",
-        paths.projectFile("R/SockJSAdapter.R"),
-      ],
-      options: {
+    return [
+      "R",
+      ["--no-save", "--slave", "-f", paths.projectFile("R/SockJSAdapter.R")],
+      {
         cwd: appSpec.appDir,
         stdio: ["pipe", "pipe", "pipe"],
         env: {
@@ -325,7 +325,7 @@ function expectedSpawnRParams(appSpec, pw) {
         },
         detached: true,
       },
-    };
+    ];
   }
 }
 
@@ -400,16 +400,37 @@ describe("app-worker", () => {
     }
   });
 
-  it("fails to launch when user is missing", async () => {
+  it("fails to launch when user's home dir is missing", async () => {
     const { appSpec, pw, endpoint, logFilePath, workerId } =
       await createBaselineInput();
-    appSpec.appDir = "/path/that/doesnt/exist";
+    pw.home = null;
 
     try {
       await testLaunchWorker_p(appSpec, logFilePath, pw, endpoint, workerId);
       assert.fail("Launch was supposed to fail but didn't");
     } catch (ex) {
+      assert.match(ex.message, /User .* does not have a home directory/);
+    }
+  });
+
+  it("fails to launch when app dir is incorrect", async () => {
+    const { appSpec, pw, endpoint, logFilePath, workerId } =
+      await createBaselineInput();
+
+    appSpec.appDir = "/path/that/doesnt/exist";
+    try {
+      await testLaunchWorker_p(appSpec, logFilePath, pw, endpoint, workerId);
+      assert.fail("Launch was supposed to fail but didn't");
+    } catch (ex) {
       assert.match(ex.message, /App dir .* does not exist/);
+    }
+
+    appSpec.appDir = null;
+    try {
+      await testLaunchWorker_p(appSpec, logFilePath, pw, endpoint, workerId);
+      assert.fail("Launch was supposed to fail but didn't");
+    } catch (ex) {
+      assert.strictEqual(ex.message, "No app directory specified");
     }
   });
 
