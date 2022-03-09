@@ -109,7 +109,10 @@ async function testLaunchWorker_p(
   logFilePath,
   pw,
   endpoint,
-  workerId
+  workerId,
+  // If true, assume the launch is supposed to be successful, and run some
+  // tests. If false, return the AppWorker once it's created.
+  wait = true
 ) {
   // These must always be equal--if not, the appSpec was malformed (i.e. bad test)
   assert.strictEqual(appSpec.logAsUser, appSpec.settings.logAsUser);
@@ -179,6 +182,10 @@ async function testLaunchWorker_p(
       workerId
     );
 
+    if (!wait) {
+      return worker;
+    }
+
     // Wait until worker.$proc is populated. (It feels like a flaw in launchWorker_p
     // that there's a window of time where $proc isn't populated)
     await poll(() => !!worker.$proc);
@@ -240,6 +247,21 @@ function createAppSpec() {
   };
 
   return new AppSpec(appDir, runAs, prefix, logDir, settings);
+}
+
+async function createBaselineInput() {
+  const appSpec = createAppSpec();
+  const pw = {
+    uid: process.getuid(),
+    gid: process.getgid(),
+    home: process.env["HOME"],
+  };
+
+  const endpoint = await new Transport().alloc_p();
+  const logFilePath = path.join(appSpec.logDir, "app-worker-test.log");
+  const workerId = "abcd1234";
+
+  return { appSpec, pw, endpoint, logFilePath, workerId };
 }
 
 /****************************************************************
@@ -333,23 +355,21 @@ function expectedRStdin({ appSpec, endpoint, workerId, logFilePath }) {
 
 describe("app-worker", () => {
   it("works with logAsUser:false and current user", async () => {
-    const appSpec = createAppSpec();
-
-    const pw = {
-      uid: process.getuid(),
-      gid: process.getgid(),
-      home: process.env["HOME"],
-    };
-
-    const endpoint = await new Transport().alloc_p();
-    const logFilePath = path.join(appSpec.logDir, "app-worker-test.log");
-    const workerId = "abcd1234";
+    const { appSpec, pw, endpoint, logFilePath, workerId } =
+      await createBaselineInput();
 
     await testLaunchWorker_p(appSpec, logFilePath, pw, endpoint, workerId);
   });
 
   it("works with logAsUser:true and switching user", async () => {
-    const appSpec = createAppSpec();
+    const {
+      appSpec,
+      pw: _,
+      endpoint,
+      logFilePath,
+      workerId,
+    } = await createBaselineInput();
+
     appSpec.logAsUser = appSpec.settings.logAsUser = true;
     appSpec.runAs = "someone_else";
 
@@ -359,10 +379,57 @@ describe("app-worker", () => {
       home: "/home/someone_else",
     };
 
-    const endpoint = await new Transport().alloc_p();
-    const logFilePath = path.join(appSpec.logDir, "app-worker-test.log");
-    const workerId = "abcd1234";
-
     await testLaunchWorker_p(appSpec, logFilePath, pw, endpoint, workerId);
+  });
+
+  it("fails to launch when user is missing", async () => {
+    const {
+      appSpec,
+      pw: _,
+      endpoint,
+      logFilePath,
+      workerId,
+    } = await createBaselineInput();
+    const pw = null;
+
+    try {
+      await testLaunchWorker_p(appSpec, logFilePath, pw, endpoint, workerId);
+      assert.fail("Launch was supposed to fail but didn't");
+    } catch (ex) {
+      assert.match(ex.message, /User .* does not exist/);
+    }
+  });
+
+  it("fails to launch when user is missing", async () => {
+    const { appSpec, pw, endpoint, logFilePath, workerId } =
+      await createBaselineInput();
+    appSpec.appDir = "/path/that/doesnt/exist";
+
+    try {
+      await testLaunchWorker_p(appSpec, logFilePath, pw, endpoint, workerId);
+      assert.fail("Launch was supposed to fail but didn't");
+    } catch (ex) {
+      assert.match(ex.message, /App dir .* does not exist/);
+    }
+  });
+
+  it("fails to launch when bookmark state dir is invalid", async () => {
+    const { appSpec, pw, endpoint, logFilePath, workerId } =
+      await createBaselineInput();
+    appSpec.settings.appDefaults.bookmarkStateDir = "/blah";
+
+    // This fails, but not with an unsuccessful testLaunchWorker_p(), but
+    // rather by returning an AppWorker that never launched its child process
+
+    const appWorker = await testLaunchWorker_p(
+      appSpec,
+      logFilePath,
+      pw,
+      endpoint,
+      workerId,
+      false // don't wait
+    );
+    const { code, signal } = await appWorker.getExit_p();
+    assert.strictEqual(code, -1);
   });
 });
