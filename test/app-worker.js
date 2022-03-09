@@ -134,8 +134,32 @@ async function testLaunchWorker_p(
   await cleanup();
 
   try {
-    // Create-log
+    // Launch R; the default behavior of the child_process.spawn stub.
+    // Receive input on stdin, write some canned stuff to stdout/err,
+    // then stay "alive" while waiting for someone to kill us with a
+    // signal.
+    mock_spawn.callsFake((command, args, options) => {
+      const proc = new MockChildProcess(command, args, options);
+      proc.stdout.end("==END==\n");
+      proc.stderr.end("This is the contents of stderr");
+      proc.on("exit", () => {
+        const stdin_str = new StringDecoder().end(proc.stdin.read());
+        assert.strictEqual(
+          stdin_str,
+          expectedRStdin({
+            appSpec,
+            endpoint,
+            workerId,
+            logFilePath: appSpec.logAsUser ? logFilePath : "",
+          })
+        );
+      });
+      return proc;
+    });
+
     if (appSpec.logAsUser) {
+      // Create log; the behavior of just the FIRST call to spawn.
+      // (Basically just exit right away with an exit code of 0.)
       mock_spawn.onCall(0).callsFake((command, args, options) => {
         const proc = new MockChildProcess(command, args, options);
         setTimeout(() => {
@@ -145,28 +169,7 @@ async function testLaunchWorker_p(
       });
     }
 
-    // Launch R
-    mock_spawn
-      .onCall(appSpec.logAsUser ? 1 : 0)
-      .callsFake((command, args, options) => {
-        const proc = new MockChildProcess(command, args, options);
-        proc.stdout.end("==END==\n");
-        proc.stderr.end("This is the contents of stderr");
-        proc.on("exit", () => {
-          const stdin_str = new StringDecoder().end(proc.stdin.read());
-          assert.strictEqual(
-            stdin_str,
-            expectedRStdin({
-              appSpec,
-              endpoint,
-              workerId,
-              logFilePath: appSpec.logAsUser ? logFilePath : "",
-            })
-          );
-        });
-        return proc;
-      });
-
+    // Finally, we can call the function we're trying to test.
     const worker = await app_worker.launchWorker_p(
       appSpec,
       pw,
@@ -176,6 +179,7 @@ async function testLaunchWorker_p(
     );
 
     if (!wait) {
+      // The caller just wants the worker right away
       return worker;
     }
 
@@ -183,7 +187,7 @@ async function testLaunchWorker_p(
     // that there's a window of time where $proc isn't populated)
     await poll(() => !!worker.$proc);
 
-    // Ensure that calls to child_process.spawn() had the expected values
+    // Ensure that calls to child_process.spawn() were exactly as expected
     assert(mock_spawn.callCount == (appSpec.logAsUser ? 2 : 1));
     if (appSpec.logAsUser) {
       assert.deepStrictEqual(
