@@ -38,9 +38,13 @@ Scheduler.__set__("app_worker", {launchWorker_p: function() {
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
 var scheduler;
 
-var clock = sinon.useFakeTimers();
-
 describe('Scheduler', function(){
+  var clock;
+
+  before(function() {
+    clock = sinon.useFakeTimers();
+  });
+
   beforeEach(function(){
     scheduler = new Scheduler(new SimpleEventBus(), appSpec.getKey());
     scheduler.setTransport({alloc_p: function(){
