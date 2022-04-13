@@ -3,19 +3,10 @@
 # errors shouldn't cause script to exit
 set +e
 
-# add upstart profile, or init.d/systemd script and start the server
-if test -d /etc/init/
-then
-   # remove any previously existing init.d based scheme
-   service shiny-server stop 2>/dev/null
-   rm -f /etc/init.d/shiny-server
 
-   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/upstart/shiny-server.conf /etc/init/
-   initctl reload-configuration
-   initctl stop shiny-server 2>/dev/null
-   sleep 1
-   initctl start shiny-server
-elif [ -d /etc/systemd/system ]
+
+# add upstart profile, or init.d/systemd script and start the server
+if [ -d /etc/systemd/system ]
 then
    # SLES 12 upgrades from pre-1.5.7 will be running shiny-server using SysV init scripts.
    # Make sure that the process is stopped before we proceed. Really this should be in the
@@ -29,6 +20,17 @@ then
    cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/systemd/shiny-server.service /etc/systemd/system/shiny-server.service
    systemctl enable shiny-server
    systemctl restart shiny-server
+elif test -d /etc/init/
+then
+   # remove any previously existing init.d based scheme
+   service shiny-server stop 2>/dev/null
+   rm -f /etc/init.d/shiny-server
+
+   cp ${CMAKE_INSTALL_PREFIX}/shiny-server/config/upstart/shiny-server.conf /etc/init/
+   initctl reload-configuration
+   initctl stop shiny-server 2>/dev/null
+   sleep 1
+   initctl start shiny-server
 else
    if test -e /etc/SuSE-release
    then
