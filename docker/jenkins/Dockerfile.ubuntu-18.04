@@ -36,8 +36,6 @@ RUN tar xzf cmake-3.21.3-linux-x86_64.tar.gz -C /usr/local --strip-components=1
 
 ARG JENKINS_GID=999
 ARG JENKINS_UID=999
-# $USER is expected by unit tests
-ENV USER jenkins
 RUN groupadd -g $JENKINS_GID jenkins && \
     useradd -m -d /var/lib/jenkins -u $JENKINS_UID -g jenkins jenkins && \
     echo "jenkins ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers

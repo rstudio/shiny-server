@@ -10,11 +10,13 @@ const sinon = require("sinon");
 
 const app_worker = rewire("../lib/worker/app-worker");
 const AppSpec = require("../lib/worker/app-spec");
+const map = require('../lib/core/map');
 const paths = require("../lib/core/paths");
 const { Transport } = require("../lib/transport/tcp");
 const { Stream } = require("stream");
 const EventEmitter = require("events");
-const { reject } = require("underscore");
+const permissions = require("../lib/core/permissions");
+const posix = require("../build/Release/posix");
 
 if (!global["SHINY_SERVER_VERSION"]) {
   global["SHINY_SERVER_VERSION"] = "0.0.0.0";
@@ -232,7 +234,7 @@ async function testLaunchWorker_p(
 
 function createAppSpec() {
   const appDir = paths.projectFile("test/apps/01_hello");
-  const runAs = process.env["USER"];
+  const runAs = permissions.getProcessUser();
   const prefix = "";
   const logDir = os.tmpdir();
   const settings = {
@@ -263,7 +265,7 @@ async function createBaselineInput() {
   const pw = {
     uid: process.getuid(),
     gid: process.getgid(),
-    home: process.env["HOME"],
+    home: posix.getpwuid(process.getuid()).home,
   };
 
   const endpoint = await new Transport().alloc_p();
@@ -289,7 +291,7 @@ function expectedSpawnLogParams(logFilePath, pw) {
 }
 
 function expectedSpawnRParams(appSpec, pw) {
-  if (appSpec.runAs !== process.env["USER"]) {
+  if (appSpec.runAs !== permissions.getProcessUser()) {
     const startArgs = (process.platform === 'linux') ? ["-s", "/bin/bash", "--login"] : ["-"];
 
     return [
@@ -309,11 +311,11 @@ function expectedSpawnRParams(appSpec, pw) {
       {
         stdio: ["pipe", "pipe", "pipe"],
         cwd: appSpec.appDir,
-        env: {
+        env: map.compact({
           HOME: pw.home,
           LANG: process.env["LANG"],
           PATH: process.env["PATH"],
-        },
+        }),
         detached: true,
       },
     ];
@@ -324,11 +326,11 @@ function expectedSpawnRParams(appSpec, pw) {
       {
         cwd: appSpec.appDir,
         stdio: ["pipe", "pipe", "pipe"],
-        env: {
-          HOME: process.env["HOME"],
+        env: map.compact({
+          HOME: posix.getpwuid(process.getuid()).home,
           LANG: process.env["LANG"],
           PATH: process.env["PATH"],
-        },
+        }),
         detached: true,
       },
     ];
