@@ -290,10 +290,12 @@ function expectedSpawnLogParams(logFilePath, pw) {
 
 function expectedSpawnRParams(appSpec, pw) {
   if (appSpec.runAs !== process.env["USER"]) {
+    const startArgs = (process.platform === 'linux') ? ["-s", "/bin/bash", "--login"] : ["-"];
+
     return [
       "su",
       [
-        "-",
+        ...startArgs,
         "-p",
         "--",
         appSpec.runAs,

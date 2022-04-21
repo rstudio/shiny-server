@@ -6,7 +6,7 @@
   "packages": {
     "": {
       "name": "shiny-server",
-      "version": "1.5.18",
+      "version": "1.5.19",
       "license": "AGPL-3.0",
       "dependencies": {
         "bash": "0.0.1",
