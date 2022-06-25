@@ -43,6 +43,7 @@ install(DIRECTORY assets
                   lib
                   manual.test
                   node_modules
+                  python
                   R
                   scripts
                   templates
