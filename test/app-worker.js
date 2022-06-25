@@ -9,7 +9,7 @@ const bash = require("bash");
 const sinon = require("sinon");
 
 const app_worker = rewire("../lib/worker/app-worker");
-const AppSpec = require("../lib/worker/app-spec");
+const { AppSpec } = require("../lib/worker/app-spec");
 const map = require('../lib/core/map');
 const paths = require("../lib/core/paths");
 const { Transport } = require("../lib/transport/tcp");
@@ -116,8 +116,9 @@ async function testLaunchWorker_p(
   // tests. If false, return the AppWorker once it's created.
   wait = true
 ) {
-  // These must always be equal--if not, the appSpec was malformed (i.e. bad test)
-  assert.strictEqual(appSpec.logAsUser, appSpec.settings.logAsUser);
+  // appSpec.logAsUser is obsolete
+  assert.strictEqual(appSpec.logAsUser, undefined);
+  assert.notStrictEqual(appSpec.settings.logAsUser, undefined);
 
   const userBookmarkStateDir = path.join(
     appSpec.settings.appDefaults.bookmarkStateDir,
@@ -152,14 +153,14 @@ async function testLaunchWorker_p(
             appSpec,
             endpoint,
             workerId,
-            logFilePath: appSpec.logAsUser ? logFilePath : "",
+            logFilePath: appSpec.settings.logAsUser ? logFilePath : "",
           })
         );
       });
       return proc;
     });
 
-    if (appSpec.logAsUser) {
+    if (appSpec.settings.logAsUser) {
       // Create log; the behavior of just the FIRST call to spawn.
       // (Basically just exit right away with an exit code of 0.)
       mock_spawn.onCall(0).callsFake((command, args, options) => {
@@ -190,8 +191,8 @@ async function testLaunchWorker_p(
     await poll(() => !!worker.$proc);
 
     // Ensure that calls to child_process.spawn() were exactly as expected
-    assert(mock_spawn.callCount == (appSpec.logAsUser ? 2 : 1));
-    if (appSpec.logAsUser) {
+    assert(mock_spawn.callCount == (appSpec.settings.logAsUser ? 2 : 1));
+    if (appSpec.settings.logAsUser) {
       assert.deepStrictEqual(
         mock_spawn.firstCall.args,
         expectedSpawnLogParams(logFilePath, pw)
@@ -209,7 +210,7 @@ async function testLaunchWorker_p(
       signal: "SIGTERM",
     });
 
-    if (appSpec.logAsUser) {
+    if (appSpec.settings.logAsUser) {
       // If logAsUser, then the logFilePath shouldn't exist (it's the responsibility
       // of the worker process to create it)
       assert.rejects(fs.access(logFilePath));
@@ -338,23 +339,23 @@ function expectedSpawnRParams(appSpec, pw) {
 }
 
 function expectedRStdin({ appSpec, endpoint, workerId, logFilePath }) {
-  return (
-    [
-      appSpec.appDir,
-      endpoint.getAppWorkerPort(),
-      appSpec.settings.gaTrackingId,
-      endpoint.getSharedSecret(),
-      SHINY_SERVER_VERSION,
+  return JSON.stringify(
+    {
+      appDir: appSpec.appDir,
+      port: endpoint.getAppWorkerPort(),
+      gaTrackingId: appSpec.settings.gaTrackingId,
+      sharedSecret: endpoint.getSharedSecret(),
+      shinyServerVersion: SHINY_SERVER_VERSION,
       workerId,
-      "shiny",
-      paths.projectFile("ext/pandoc"),
+      mode: "shiny",
+      pandocPath: paths.projectFile("ext/pandoc"),
       logFilePath,
-      "websocket,xhr-streaming", // disableProtocols
-      "true", // reconnect
-      "false", // sanitizeErrors
-      appSpec.settings.appDefaults.bookmarkStateDir, // bookmarkStateDir
-    ].join("\n") + "\n"
-  );
+      disableProtocols: ["websocket", "xhr-streaming"],
+      reconnect: true,
+      sanitizeErrors: false,
+      bookmarkStateDir: appSpec.settings.appDefaults.bookmarkStateDir,
+    }
+  ) + "\n";
 }
 
 /****************************************************************
@@ -378,7 +379,7 @@ describe("app-worker", () => {
       workerId,
     } = await createBaselineInput();
 
-    appSpec.logAsUser = appSpec.settings.logAsUser = true;
+    appSpec.settings.logAsUser = true;
     appSpec.runAs = "someone_else";
 
     const pw = {
@@ -450,15 +451,18 @@ describe("app-worker", () => {
     // This fails, but not with an unsuccessful testLaunchWorker_p(), but
     // rather by returning an AppWorker that never launched its child process
 
-    const appWorker = await testLaunchWorker_p(
-      appSpec,
-      logFilePath,
-      pw,
-      endpoint,
-      workerId,
-      false // don't wait
-    );
-    const { code, signal } = await appWorker.getExit_p();
-    assert.strictEqual(code, -1);
+    try {
+      const appWorker = await testLaunchWorker_p(
+        appSpec,
+        logFilePath,
+        pw,
+        endpoint,
+        workerId,
+        false // don't wait
+      );
+      assert.fail("Launch was supposed to fail but didn't")
+    } catch (ex) {
+      assert.strictEqual(ex.message, "EACCES: permission denied, mkdir '/blah'");
+    }
   });
 });
