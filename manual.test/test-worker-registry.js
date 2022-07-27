@@ -1,6 +1,6 @@
 var util = require('util');
 require('../lib/core/log')
-var AppSpec = require('../lib/worker/app-spec');
+var { AppSpec } = require('../lib/worker/app-spec');
 var WorkerRegistry = require('../lib/worker/worker-registry');
 
 var registry = new WorkerRegistry();

@@ -54,11 +54,13 @@ make
 pushd ../..
 
 ./external/node/install-node.sh
-./bin/npm install --production
-./bin/npm rebuild
 
-# Need to rebuild ourselves since 'npm install' won't run gyp for us.
-./bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js rebuild
+# Install all dependencies and devDependencies--latter needed for `npm run build`
+./bin/npm install
+./bin/npm run build
+
+# Remove devDependencies in preparation for building the installer
+./bin/npm install --only=production
 
 popd
 # END: building in project root ----------------------------

@@ -18,16 +18,18 @@ local({
   # Read config directives from stdin and put them in the environment.
   fd = file('stdin')
   input <- readLines(fd)
+  input <- jsonlite::fromJSON(input, simplifyVector = TRUE)
   Sys.setenv(
-  SHINY_APP=input[1],
-  SHINY_PORT=input[2],
-  SHINY_GAID=input[3],
-  SHINY_SHARED_SECRET=input[4],
-  SHINY_SERVER_VERSION=input[5],
-  WORKER_ID=input[6],
-  SHINY_MODE=input[7],
-  RSTUDIO_PANDOC=input[8],
-  LOG_FILE=input[9])
+    SHINY_APP=input$appDir,
+    SHINY_PORT=input$port,
+    SHINY_GAID=input$gaTrackingId,
+    SHINY_SHARED_SECRET=input$sharedSecret,
+    SHINY_SERVER_VERSION=input$shinyServerVersion,
+    WORKER_ID=input$workerId,
+    SHINY_MODE=input$mode,
+    RSTUDIO_PANDOC=input$pandocPath,
+    LOG_FILE=input$logFilePath
+  )
 
   if (!identical(Sys.getenv('LOG_FILE'), "")){
     # Redirect stderr to the given path.
@@ -36,23 +38,23 @@ local({
     sink(errFile, type="message")
   }
 
-  disableProtocols <- strsplit(input[10], ",")[[1]]
+  disableProtocols <- input$disableProtocols
   if (length(disableProtocols) == 0) {
     disableProtocols <- ""
   } else {
     disableProtocols <- paste('"', disableProtocols, '"', sep = '', collapse = ',')
   }
-  reconnect <- if (identical("true", tolower(input[11]))) "true" else "false"
-  options(shiny.sanitize.errors = identical("true", tolower(input[12])))
+  reconnect <- if (identical("true", tolower(input$reconnect))) "true" else "false"
+  options(shiny.sanitize.errors = identical("true", tolower(input$sanitizeErrors)))
 
   # Top-level bookmarking directory (for all users)
-  bookmarkStateDir <- input[13]
+  bookmarkStateDir <- input$bookmarkStateDir
   # Name of bookmark directory for this app. Uses the basename of the path and
   # appends a hash of the full path. So if the path is "/path/to/myApp", the
   # result is "myApp-6fbdbedc4c99d052b538b2bfc3c96550".
   bookmarkAppDir <- paste0(
-    basename(input[1]), "-",
-    digest::digest(input[1], algo = "md5", serialize = FALSE)
+    basename(input$appDir), "-",
+    digest::digest(input$appDir, algo = "md5", serialize = FALSE)
   )
 
   if (!is.null(asNamespace("shiny")$shinyOptions)) {
@@ -105,16 +107,24 @@ local({
   rVer <- as.character(getRversion());
   shinyVer <- tryCatch({as.character(packageVersion("shiny"))},
       error=function(e){"0.0.0"});
-  cat(paste("R version: ", rVer, "\n", sep=""))
-  cat(paste("Shiny version: ", shinyVer, "\n", sep=""))
 
   markdownVer <- tryCatch({as.character(packageVersion("rmarkdown"))},
       error=function(e){"0.0.0"});
-  cat(paste("rmarkdown version: ", markdownVer, "\n", sep=""))
 
   knitrVer <- tryCatch({as.character(packageVersion("knitr"))},
       error=function(e){"0.0.0"});
-  cat(paste("knitr version: ", knitrVer, "\n", sep=""))
+
+  cat("shiny_launch_info: ")
+  cat(jsonlite::toJSON(pretty = FALSE, list(
+    pid = Sys.getpid(),
+    versions = list(
+      r = rVer,
+      shiny = shinyVer,
+      rmarkdown = markdownVer,
+      knitr = knitrVer
+    )
+  )))
+  cat("\n")
 
   if (compareVersion(MIN_R_VERSION,rVer)>0){
     # R is out of date
@@ -237,7 +247,6 @@ if (is.na(port)) {
   port <- Sys.getenv('SHINY_PORT')
   attr(port, 'mask') <- strtoi('0077', 8)
 }
-cat(paste("\nStarting Shiny with process ID: '",Sys.getpid(),"'\n", sep=""))
 cat("==END==\n")
 
 if (identical(Sys.getenv('SHINY_MODE'), "shiny")){
