@@ -1,3 +1,17 @@
+shiny-server 1.5.20
+--------------------------------------------------------------------------------
+
+* Support hosting of prerendered Quarto `server: shiny` interactive documents.
+  Prerender the document before uploading by running `quarto serve index.qmd`,
+  then deploy the generated index.html, index_files directory, and the source
+  index.qmd together to be served by Shiny Server.
+
+shiny-server 1.5.19
+--------------------------------------------------------------------------------
+
+* Support hosting of Shiny for Python apps. For more information, see:
+  https://shiny.rstudio.com/py/docs/deploy.html
+
 shiny-server 1.5.18
 --------------------------------------------------------------------------------
 
