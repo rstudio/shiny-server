@@ -252,6 +252,11 @@ cat("==END==\n")
 if (identical(Sys.getenv('SHINY_MODE'), "shiny")){
   runApp(Sys.getenv('SHINY_APP'),port=port,launch.browser=FALSE)
 } else if (identical(Sys.getenv('SHINY_MODE'), "rmd")){
+  # If we might be rendering Quarto docs, it's important to suppress the
+  # prerender step (see https://github.com/rstudio/shiny-server/pull/531)
+  if (length(list.files(Sys.getenv('SHINY_APP'), pattern = "*.qmd")) > 0) {
+    Sys.setenv(RMARKDOWN_RUN_PRERENDER = "0")
+  }
   library(rmarkdown)
   rmarkdown::run(file=NULL, dir=Sys.getenv('SHINY_APP'),
     shiny_args=list(port=port,launch.browser=FALSE), auto_reload=FALSE)
