@@ -6,6 +6,8 @@ shiny-server 1.5.20
   then deploy the generated index.html, index_files directory, and the source
   index.qmd together to be served by Shiny Server.
 
+* Fix bug where Shiny for Python apps did not work for `app_dir` directives.
+
 shiny-server 1.5.19
 --------------------------------------------------------------------------------
 
