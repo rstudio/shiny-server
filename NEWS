@@ -6,6 +6,8 @@ shiny-server 1.5.20
   then deploy the generated index.html, index_files directory, and the source
   index.qmd together to be served by Shiny Server.
 
+* Upgrade Node.js to 16.18.1.
+
 shiny-server 1.5.19
 --------------------------------------------------------------------------------
 
