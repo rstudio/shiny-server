@@ -2,10 +2,10 @@
 
 set -e
 
-# From the relevant SHASUMS256.txt file at:
-# https://github.com/jcheng5/node-centos6/releases
+# Find the relevant checksum from:
+# https://nodejs.org/dist/v{VERSION}/SHASUMS256.txt
 # The node-v{VERSION}-linux-x64.tar.xz checksum is the one we need.
-NODE_SHA256=0570b9354959f651b814e56a4ce98d4a067bf2385b9a0e6be075739bc65b0fae
+NODE_SHA256=de2c694e7081c37022817d27a65b02f69ecf4c49699d65585e8e24431b7bc920
 
 cd $(dirname $0)
 cd ../..
