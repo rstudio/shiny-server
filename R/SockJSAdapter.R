@@ -115,7 +115,7 @@ local({
       error=function(e){"0.0.0"});
 
   cat("shiny_launch_info: ")
-  cat(jsonlite::toJSON(pretty = FALSE, list(
+  cat(jsonlite::toJSON(pretty = FALSE, auto_unbox = TRUE, list(
     pid = Sys.getpid(),
     versions = list(
       r = rVer,
