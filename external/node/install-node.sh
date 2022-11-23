@@ -5,7 +5,7 @@ set -e
 # Find the relevant checksum from:
 # https://nodejs.org/dist/v{VERSION}/SHASUMS256.txt
 # The node-v{VERSION}-linux-x64.tar.xz checksum is the one we need.
-NODE_SHA256=edcb6e9bb049ae365611aa209fc03c4bfc7e0295dbcc5b2f1e710ac70384a8ec
+NODE_SHA256=de2c694e7081c37022817d27a65b02f69ecf4c49699d65585e8e24431b7bc920
 
 cd $(dirname $0)
 cd ../..
