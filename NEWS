@@ -8,6 +8,8 @@ shiny-server 1.5.20
 
 * Fix spurious log warning about "--preserve-environment" in app logs.
 
+* Upgrade Node.js to 16.18.1.
+
 shiny-server 1.5.19
 --------------------------------------------------------------------------------
 
