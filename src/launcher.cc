@@ -23,6 +23,15 @@
 #include <vector>
 #include <algorithm>
 
+#ifdef __FreeBSD__
+#include <err.h>
+#include <sys/socket.h>
+#include <sys/queue.h>
+#include <libprocstat.h>
+#include <sysexits.h>
+#include <sys/sysctl.h>
+#endif
+
 #include "launcher.h"
 
 // The purpose of this executable is to provide a clean entry point for
@@ -63,7 +72,7 @@ int main(int argc, char **argv) {
   // This will actually never get called.
   free(newargs[0]);
   free(newargs[1]);
-  delete newargs;
+  delete[] newargs;
 
   return 0;
 }
@@ -73,6 +82,25 @@ int main(int argc, char **argv) {
 int findBaseDir(std::string* shinyServerPath) {
 
   char execPath[MAXPATHLEN + 1];
+#ifdef __FreeBSD__
+    struct kinfo_proc* p;
+    unsigned int cnt;
+    struct procstat *prstat = procstat_open_sysctl();
+    if(prstat == 0) {
+        fprintf(stderr, "Failed opening procstat\n");
+        return 2;
+    }
+    if((p = procstat_getprocs(prstat, KERN_PROC_PID, getpid(), &cnt)) == 0) {
+        fprintf(stderr, "Failed finding process %d\n", getpid());
+        procstat_close(prstat);
+        return 1;
+    }
+    (void)procstat_getpathname(prstat, p, execPath, sizeof(execPath));
+    procstat_freeprocs(prstat, p);
+    procstat_close(prstat);
+#endif
+
+#ifdef __linux__
   int cn = snprintf(execPath, MAXPATHLEN + 1, "/proc/%d/exe", getpid());
   if (cn < 0 || cn > MAXPATHLEN) {
     // Not expected
@@ -107,6 +135,7 @@ int findBaseDir(std::string* shinyServerPath) {
   }
   std::copy(execBuf.begin(), execBuf.begin() + cb, execPath);
   execPath[cb] = '\0';
+#endif
 
   *shinyServerPath = dirname(dirname(execPath));
 
