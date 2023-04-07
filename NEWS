@@ -1,6 +1,10 @@
 shiny-server 1.5.21
 --------------------------------------------------------------------------------
 
+* Increase the maximum allowable WebSocket message size that can be sent from
+  the Shiny server to the browser, from 64MB to 512MB. (The maximum message size
+  allowed from the browser to the server remains 64MB.)
+
 * Upgrade Node.js to 18.15.0.
 
 shiny-server 1.5.20
