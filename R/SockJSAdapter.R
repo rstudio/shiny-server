@@ -182,7 +182,11 @@ local({
 
    gaTrackingCode <- ''
    if (nzchar(Sys.getenv('SHINY_GAID'))) {
-      gaTrackingCode <- HTML(sprintf("<script type=\"text/javascript\">
+      gaID <- Sys.getenv('SHINY_GAID')
+      if (grepl('^UA-', gaID) {
+        # gaID is Universal Analytics style ID, deprecated 2023-07-01
+        # https://support.google.com/analytics/answer/11583528?hl=en&sjid=7400348922365190905-NA
+        gaTrackingTemplate <- "<script type=\"text/javascript\">
 
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', '%s']);
@@ -194,7 +198,19 @@ local({
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
 
-</script>", Sys.getenv('SHINY_GAID')))
+</script>"
+        gaTrackingCode <- HTML(sprintf(gaTrackingTemplate, gaID))
+      } else {
+        gaTrackingTemplate <- "<!-- Google tag (gtag.js) -->
+<script async src=\"https://www.googletagmanager.com/gtag/js?id=%s\"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '%s');
+</script>"
+        gaTrackingCode <- HTML(sprintf(gaTrackingTemplate, gaID, gaID))
+      }
    }
 
    inject <- paste(
