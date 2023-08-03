@@ -113,12 +113,12 @@ class ShinyInjectHeadMiddleware:
             else:
                 gaTrackingCode = """
                     <!-- Google tag (gtag.js) -->
-                    <script async src=\"https://www.googletagmanager.com/gtag/js?id=%s\"></script>
+                    <script async src=\"https://www.googletagmanager.com/gtag/js?id={0}\"></script>
                     <script>
                     window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
+                    function gtag(){{dataLayer.push(arguments);}}
                     gtag('js', new Date());
-                    gtag('config', '%s');
+                    gtag('config', '{1}');
                     </script>
                     """.format(
                     gaID, gaID
