@@ -183,7 +183,7 @@ local({
    gaTrackingCode <- ''
    if (nzchar(Sys.getenv('SHINY_GAID'))) {
       gaID <- Sys.getenv('SHINY_GAID')
-      if (grepl('^UA-', gaID) {
+      if (grepl('^UA-', gaID)) {
         # gaID is Universal Analytics style ID, deprecated 2023-07-01
         # https://support.google.com/analytics/answer/11583528?hl=en&sjid=7400348922365190905-NA
         gaTrackingTemplate <- "<script type=\"text/javascript\">
