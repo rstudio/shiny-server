@@ -1,3 +1,15 @@
+shiny-server 1.5.21
+--------------------------------------------------------------------------------
+
+* Increase the maximum allowable WebSocket message size that can be sent from
+  the Shiny server to the browser, from 64MB to 512MB. (The maximum message size
+  allowed from the browser to the server remains 64MB.)
+
+* Migrate google_analytics_id implementation from Universal Analytics to modern
+  gtag.js.
+
+* Upgrade Node.js to 16.20.0.
+
 shiny-server 1.5.20
 --------------------------------------------------------------------------------
 

@@ -88,25 +88,41 @@ class ShinyInjectHeadMiddleware:
         else:
             disable_protocols = ""
 
+        gaTrackingCode = ""
         if input["gaTrackingId"]:
-            gaTrackingCode = """
-    <script type="text/javascript">
+            gaID = input["gaTrackingId"]
+            if gaID[:3] == "UA-":
+                # Deprecated Google Analytics with Universal Analytics ID
+                gaTrackingCode = """
+                    <script type="text/javascript">
 
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', '{0}']);
-    _gaq.push(['_trackPageview']);
+                    var _gaq = _gaq || [];
+                    _gaq.push(['_setAccount', '{0}']);
+                    _gaq.push(['_trackPageview']);
 
-    (function() {{
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    }})();
+                    (function() {{
+                        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+                    }})();
 
-    </script>""".format(
-                input["gaTrackingId"]
-            )
-        else:
-            gaTrackingCode = ""
+                    </script>
+                    """.format(
+                    gaID
+                )
+            else:
+                gaTrackingCode = """
+                    <!-- Google tag (gtag.js) -->
+                    <script async src=\"https://www.googletagmanager.com/gtag/js?id={0}\"></script>
+                    <script>
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){{dataLayer.push(arguments);}}
+                    gtag('js', new Date());
+                    gtag('config', '{1}');
+                    </script>
+                    """.format(
+                    gaID, gaID
+                )
 
         self.script = """  <script src="__assets__/sockjs.min.js"></script>
     <script src="__assets__/shiny-server-client.min.js"></script>
