@@ -8,7 +8,7 @@ shiny-server 1.5.21
 * Migrate google_analytics_id implementation from Universal Analytics to modern
   gtag.js.
 
-* Upgrade Node.js to 16.20.0.
+* Upgrade Node.js to 18.17.1.
 
 shiny-server 1.5.20
 --------------------------------------------------------------------------------
