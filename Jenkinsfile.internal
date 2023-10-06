@@ -62,7 +62,7 @@ def s3_upload(os, arch) {
 
     // Publish the uploaded build to the dailies page (only for builds from
     // master)
-    withCredentials([usernamePassword(credentialsId: 'github-rstudio-jenkins', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_PAT')]) {
+    withCredentials([usernamePassword(credentialsId: 'posit-jenkins', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_PAT')]) {
         sh "docker/jenkins/publish-build.sh --platform ${os} --url https://s3.amazonaws.com/${bucket}/${os}/${arch}/${file} --pat ${GITHUB_PAT} --file packaging/build/${file}"
     }
   
