@@ -8,7 +8,7 @@ shiny-server 1.5.21
 * Migrate google_analytics_id implementation from Universal Analytics to modern
   gtag.js.
 
-* Upgrade Node.js to 18.18.0. We also moved from using the official Node.js
+* Upgrade Node.js to 18.18.2. We also moved from using the official Node.js
   binaries to building our own, for compatibility with the older version of
   glibc used in RedHat/CentOS 7 (which the official binaries no longer support).
 
