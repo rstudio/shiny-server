@@ -26,6 +26,8 @@ if sys.version_info >= (3, 8):
 else:
     import importlib_metadata as metadata
 
+from shiny_express import escape_to_var_name, is_express_app
+
 
 class ShinyInput(TypedDict):
     appDir: str
@@ -209,12 +211,21 @@ def run():
         os.environ["RSTUDIO_PANDOC"] = input["pandocPath"]
 
     sys.path.insert(0, input["appDir"])
-    app_module = importlib.import_module("app")
-    app = getattr(app_module, "app")
+
+    app_file = os.path.join(input["appDir"], "app.py")
+    if is_express_app(app_file, None):
+        print("Shiny Express detected")
+        app_module = importlib.import_module("shiny.express.app")
+        app = getattr(app_module, escape_to_var_name(app_file))
+    else:
+        print("Shiny Express not detected, assuming Shiny Core")
+        app_module = importlib.import_module("app")
+        app = getattr(app_module, "app")
 
     app = wrap_shiny_app(app, input)
 
     uvicorn.run(app, host="127.0.0.1", port=int(input["port"]))
+
 
 
 run()
