@@ -1,12 +1,12 @@
 {
   "name": "shiny-server",
-  "version": "1.5.21",
+  "version": "1.5.22",
   "lockfileVersion": 2,
   "requires": true,
   "packages": {
     "": {
       "name": "shiny-server",
-      "version": "1.5.21",
+      "version": "1.5.22",
       "license": "AGPL-3.0",
       "dependencies": {
         "bash": "0.0.1",
