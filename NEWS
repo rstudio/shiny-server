@@ -3,6 +3,10 @@ shiny-server 1.5.22
 
 * Implement support for Shiny Express syntax for Shiny for Python.
 
+* When running Shiny for Python apps, stdout and stderr output are both saved to
+  the app log file; previously, only stderr was logged (and this is still the
+  case for Shiny for R apps).
+
 shiny-server 1.5.21
 --------------------------------------------------------------------------------
 

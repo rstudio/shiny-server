@@ -198,6 +198,14 @@ def run():
     print("shiny_launch_info: " + json.dumps(shiny_output, indent=None))
     print("==END==")
 
+    # Shiny for Python currently logs some important info to stdout.
+    # Redirect stdout to stderr, so that those messages get captured
+    # by the app logs.
+    sys.stderr.flush()
+    sys.stdout.flush()
+    os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
+    sys.stdout = sys.stderr
+
     input: ShinyInput = json.load(sys.stdin)
 
     if input["logFilePath"] != "":
@@ -214,11 +222,9 @@ def run():
 
     app_file = os.path.join(input["appDir"], "app.py")
     if is_express_app(app_file, None):
-        print("Shiny Express detected")
         app_module = importlib.import_module("shiny.express.app")
         app = getattr(app_module, escape_to_var_name(app_file))
     else:
-        print("Shiny Express not detected, assuming Shiny Core")
         app_module = importlib.import_module("app")
         app = getattr(app_module, "app")
 
