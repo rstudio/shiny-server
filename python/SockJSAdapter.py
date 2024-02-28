@@ -203,9 +203,11 @@ def run():
     # by the app logs.
     sys.stderr.flush()
     sys.stdout.flush()
+    # Causes the file description at sys.stderr.fileno() to be pointed to by
+    # sys.stdout.fileno() as well. The original file descriptor at stdout is
+    # closed before reuse.
     os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
-    sys.stdout = sys.stderr
-
+    
     input: ShinyInput = json.load(sys.stdin)
 
     if input["logFilePath"] != "":
