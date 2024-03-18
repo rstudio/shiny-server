@@ -635,6 +635,11 @@ async function createPyShinySpawnSpec(
     env["PATH"] = pythonResult.path_prepend + ":" + env["PATH"];
   }
 
+  // Turn off buffering in sys.stdout/sys.stderr. This is necessary because
+  // SockJSAdapter.py redirects stdout to stderr, and if those objects buffer
+  // then you can get incorrect line ordering.
+  env["PYTHONUNBUFFERED"] = "1"
+
   let spawnSpec: SpawnSpec = {
     command: pythonResult.command ?? pythonResult.exec!,
     args: [pythonScriptPath],
