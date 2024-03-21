@@ -37,7 +37,6 @@
     "sockjs": "^0.3.24",
     "sockjs-client": "github:jcheng5/sockjs-client#v1.5.2.2-jcheng5",
     "split": "^1.0.1",
-    "stable": "^0.1.8",
     "underscore": "^1.13.2"
   },
   "license": "AGPL-3.0",
