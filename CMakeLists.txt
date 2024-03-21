@@ -11,7 +11,7 @@ else()
 endif()
 
 # Extract the shiny-server version number from package.json
-execute_process(COMMAND sed -n "s/\\s*\"version\": \"\\(.*\\)\",\\s*/\\1/p"
+execute_process(COMMAND sed '/^.*"version": .*$/!d;s/",//;s/^.*"//'
                 INPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/package.json"
                 OUTPUT_VARIABLE NPM_PACKAGE_VERSION
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
