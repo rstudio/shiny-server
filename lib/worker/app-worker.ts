@@ -654,7 +654,6 @@ async function createPyShinySpawnSpec(
 function wrapWithUserSwitch(spec: SpawnSpec, user: string): SpawnSpec {
   const command = "su";
   let args = [
-    "-p",
     "--",
     user,
     "-c",
@@ -669,6 +668,7 @@ function wrapWithUserSwitch(spec: SpawnSpec, user: string): SpawnSpec {
     args = ["-s", "/bin/bash", "--login"].concat(args);
   } else {
     // Other platforms don't clear out env vars, so simulate user env
+    args.unshift("-p");
     args.unshift("-");
   }
 
