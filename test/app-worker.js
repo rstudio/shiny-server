@@ -190,20 +190,22 @@ async function testLaunchWorker_p(
     // that there's a window of time where $proc isn't populated)
     await poll(() => !!worker.$proc);
 
-    // Ensure that calls to child_process.spawn() were exactly as expected
-    assert(mock_spawn.callCount == (appSpec.settings.logAsUser ? 2 : 1));
-    if (appSpec.settings.logAsUser) {
+    try {
+      // Ensure that calls to child_process.spawn() were exactly as expected
+      assert(mock_spawn.callCount == (appSpec.settings.logAsUser ? 2 : 1));
+      if (appSpec.settings.logAsUser) {
+        assert.deepStrictEqual(
+          mock_spawn.firstCall.args,
+          expectedSpawnLogParams(logFilePath, pw)
+        );
+      }
       assert.deepStrictEqual(
-        mock_spawn.firstCall.args,
-        expectedSpawnLogParams(logFilePath, pw)
+        mock_spawn.lastCall.args,
+        expectedSpawnRParams(appSpec, pw)
       );
+    } finally {
+      worker.$proc.kill();
     }
-    assert.deepStrictEqual(
-      mock_spawn.lastCall.args,
-      expectedSpawnRParams(appSpec, pw)
-    );
-
-    worker.$proc.kill();
 
     assert.deepEqual(await worker.getExit_p(), {
       code: null,
@@ -299,7 +301,6 @@ function expectedSpawnRParams(appSpec, pw) {
       "su",
       [
         ...startArgs,
-        "-p",
         "--",
         appSpec.runAs,
         "-c",
