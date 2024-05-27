@@ -22,6 +22,9 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#ifdef __APPLE__
+  #include <libproc.h>
+#endif
 
 #include "launcher.h"
 
@@ -72,6 +75,14 @@ int main(int argc, char **argv) {
 // by calling readlink on /proc/<pid>/exe.
 int findBaseDir(std::string* shinyServerPath) {
 
+#ifdef __APPLE__
+  char execPath[PROC_PIDPATHINFO_MAXSIZE];
+  if (!proc_pidpath(getpid(), execPath, sizeof(execPath))) {
+    perror("proc_pidpath");
+    // unexpected error
+    return 2;
+  }
+#else // assuming Linux
   char execPath[MAXPATHLEN + 1];
   int cn = snprintf(execPath, MAXPATHLEN + 1, "/proc/%d/exe", getpid());
   if (cn < 0 || cn > MAXPATHLEN) {
@@ -107,7 +118,7 @@ int findBaseDir(std::string* shinyServerPath) {
   }
   std::copy(execBuf.begin(), execBuf.begin() + cb, execPath);
   execPath[cb] = '\0';
-
+#endif
   *shinyServerPath = dirname(dirname(execPath));
 
   return 0;
