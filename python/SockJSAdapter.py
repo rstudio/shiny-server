@@ -26,6 +26,8 @@ if sys.version_info >= (3, 8):
 else:
     import importlib_metadata as metadata
 
+from shiny_express import escape_to_var_name, is_express_app
+
 
 class ShinyInput(TypedDict):
     appDir: str
@@ -196,6 +198,16 @@ def run():
     print("shiny_launch_info: " + json.dumps(shiny_output, indent=None))
     print("==END==")
 
+    # Shiny for Python currently logs some important info to stdout.
+    # Redirect stdout to stderr, so that those messages get captured
+    # by the app logs.
+    sys.stderr.flush()
+    sys.stdout.flush()
+    # Causes the file description at sys.stderr.fileno() to be pointed to by
+    # sys.stdout.fileno() as well. The original file descriptor at stdout is
+    # closed before reuse.
+    os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
+    
     input: ShinyInput = json.load(sys.stdin)
 
     if input["logFilePath"] != "":
@@ -209,12 +221,19 @@ def run():
         os.environ["RSTUDIO_PANDOC"] = input["pandocPath"]
 
     sys.path.insert(0, input["appDir"])
-    app_module = importlib.import_module("app")
-    app = getattr(app_module, "app")
+
+    app_file = os.path.join(input["appDir"], "app.py")
+    if is_express_app(app_file, None):
+        app_module = importlib.import_module("shiny.express.app")
+        app = getattr(app_module, escape_to_var_name(app_file))
+    else:
+        app_module = importlib.import_module("app")
+        app = getattr(app_module, "app")
 
     app = wrap_shiny_app(app, input)
 
     uvicorn.run(app, host="127.0.0.1", port=int(input["port"]))
+
 
 
 run()
