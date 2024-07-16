@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.10)
+cmake_minimum_required(VERSION 3.20.0)
 
 project(shiny-server)
 
@@ -94,12 +94,12 @@ find_program(DPKG_EXECUTABLE dpkg)
 find_program(RPM_EXECUTABLE rpm)
 if (NOT PACKAGE_ARCHITECTURE)
    if(DPKG_EXECUTABLE)
-      exec_program(dpkg ARGS --print-architecture
-                   OUTPUT_VARIABLE PACKAGE_ARCHITECTURE)
+      execute_process(COMMAND dpkg --print-architecture
+                      OUTPUT_VARIABLE PACKAGE_ARCHITECTURE)
       set(PACKAGE_DIST "")
    elseif(RPM_EXECUTABLE)
       #RHEL/CentOS/SuSE
-      exec_program(arch OUTPUT_VARIABLE PACKAGE_ARCHITECTURE) 
+      execute_process(COMMAND arch OUTPUT_VARIABLE PACKAGE_ARCHITECTURE) 
       set(PACKAGE_DIST "")
    endif()
 endif()
