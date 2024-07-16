@@ -94,12 +94,12 @@ find_program(DPKG_EXECUTABLE dpkg)
 find_program(RPM_EXECUTABLE rpm)
 if (NOT PACKAGE_ARCHITECTURE)
    if(DPKG_EXECUTABLE)
-      execute_process(dpkg --print-architecture
+      execute_process(COMMAND dpkg --print-architecture
                       OUTPUT_VARIABLE PACKAGE_ARCHITECTURE)
       set(PACKAGE_DIST "")
    elseif(RPM_EXECUTABLE)
       #RHEL/CentOS/SuSE
-      execute_process(arch OUTPUT_VARIABLE PACKAGE_ARCHITECTURE) 
+      execute_process(COMMAND arch OUTPUT_VARIABLE PACKAGE_ARCHITECTURE) 
       set(PACKAGE_DIST "")
    endif()
 endif()
