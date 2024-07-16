@@ -299,7 +299,7 @@ function expectedSpawnRParams(appSpec, pw) {
       "su",
       [
         ...startArgs,
-        "-p",
+        "-m",
         "--",
         appSpec.runAs,
         "-c",
