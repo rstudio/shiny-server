@@ -5,7 +5,11 @@ shiny-server 1.5.23 (Unreleased)
 
 * The undocumented `--daemonize` argument to `shiny-server` has been removed.
 
-* CentOS 7 is EOL as of July 1, 2024, and is no longer supported.
+* RedHat/CentOS 7 is EOL as of July 1, 2024, and is no longer supported.
+
+* Upgrade to Node.js v18.20.4. We also moved back to using the official Node.js
+  binaries, as we no longer need to build our own for compatibility with the
+  older version of glibc used in RedHat/CentOS 7.
 
 shiny-server 1.5.22
 --------------------------------------------------------------------------------
