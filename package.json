@@ -23,7 +23,7 @@
     "graceful-fs": "^4.2.11",
     "handlebars": "^4.7.8",
     "http-proxy": "^1.18.1",
-    "ip-address": "^8.1.0",
+    "ip-address": "^9.0.5",
     "log4js": "^6.9.1",
     "moment": "^2.29.1",
     "morgan": "^1.10.0",
@@ -45,13 +45,13 @@
     "npm": ">=2.8.0"
   },
   "devDependencies": {
-    "@types/node": "^20.6.2",
-    "@types/q": "^1.5.6",
-    "@types/split": "^1.0.0",
-    "mocha": "^10.2.0",
+    "@types/node": "^20.14.10",
+    "@types/q": "^1.5.8",
+    "@types/split": "^1.0.5",
+    "mocha": "^10.6.0",
     "rewire": "^7.0.0",
     "should": "^13.2.3",
-    "sinon": "^16.0.0",
-    "typescript": "^5.2.2"
+    "sinon": "^18.0.0",
+    "typescript": "^5.5.3"
   }
 }
