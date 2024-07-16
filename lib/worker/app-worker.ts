@@ -638,7 +638,7 @@ async function createPyShinySpawnSpec(
   // Turn off buffering in sys.stdout/sys.stderr. This is necessary because
   // SockJSAdapter.py redirects stdout to stderr, and if those objects buffer
   // then you can get incorrect line ordering.
-  env["PYTHONUNBUFFERED"] = "1"
+  env["PYTHONUNBUFFERED"] = "1";
 
   let spawnSpec: SpawnSpec = {
     command: pythonResult.command ?? pythonResult.exec!,
@@ -654,7 +654,7 @@ async function createPyShinySpawnSpec(
 function wrapWithUserSwitch(spec: SpawnSpec, user: string): SpawnSpec {
   const command = "su";
   let args = [
-    "-p",
+    "-m",
     "--",
     user,
     "-c",

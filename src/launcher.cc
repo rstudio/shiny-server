@@ -10,6 +10,7 @@
  * AGPL (http://www.gnu.org/licenses/agpl-3.0.txt) for more details.
  *
  */
+#include <iostream>
 #include <unistd.h>
 #include <sys/param.h>
 #include <stdio.h>
@@ -22,25 +23,20 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <limits.h> // for PATH_MAX
+#ifdef __APPLE__
+#include <mach-o/dyld.h> // for _NSGetExecutablePath
+#endif
 
 #include "launcher.h"
 
 // The purpose of this executable is to provide a clean entry point for
 // shiny-server, that is capable of running either daemonized or not.
 
-int findBaseDir(std::string* shinyServerPath);
+int findBaseDir(std::string *shinyServerPath);
 
-int main(int argc, char **argv) {
-
-  // If the caller requested daemonizing, do it.
-  for (int i = 1; i < argc; i++) {
-    if (strcmp(argv[i], "--daemonize") == 0) {
-      daemon(1, 0);
-      break;
-    }
-  }
-
-
+int main(int argc, char **argv)
+{
   std::string shinyServerPath;
   int result = findBaseDir(&shinyServerPath);
   if (result != 0)
@@ -50,37 +46,42 @@ int main(int argc, char **argv) {
   std::string mainPath = shinyServerPath + "/lib/main.js";
 
   // Two extra args: one for mainPath, one for NULL terminator
-  char** newargs = new char*[argc + 2];
+  char **newargs = new char *[argc + 2];
   newargs[0] = strdup(nodePath.c_str());
   newargs[1] = strdup(mainPath.c_str());
-  for (int i = 0; i < argc - 1; i++) {
+  for (int i = 0; i < argc - 1; i++)
+  {
     newargs[i + 2] = argv[i + 1];
   }
   newargs[argc + 1] = NULL;
 
   execv(nodePath.c_str(), newargs);
- 
+
   // This will actually never get called.
   free(newargs[0]);
   free(newargs[1]);
-  delete newargs;
+  delete[] newargs;
 
   return 0;
 }
 
 // Determines the base dir of the shiny-server instance that's being invoked,
 // by calling readlink on /proc/<pid>/exe.
-int findBaseDir(std::string* shinyServerPath) {
+int findBaseDir(std::string *shinyServerPath)
+{
+  char execPath[PATH_MAX + 1];
 
-  char execPath[MAXPATHLEN + 1];
-  int cn = snprintf(execPath, MAXPATHLEN + 1, "/proc/%d/exe", getpid());
-  if (cn < 0 || cn > MAXPATHLEN) {
+#ifdef __linux__
+  int cn = snprintf(execPath, PATH_MAX + 1, "/proc/%d/exe", getpid());
+  if (cn < 0 || cn > PATH_MAX)
+  {
     // Not expected
     return 2;
   }
 
   struct stat execStat;
-  if (lstat(execPath, &execStat)) {
+  if (lstat(execPath, &execStat))
+  {
     if (errno == ENOENT)
       fprintf(stderr, "/proc/%d/exe doesn't exist--got Linux?\n", getpid());
     else
@@ -88,12 +89,14 @@ int findBaseDir(std::string* shinyServerPath) {
     return 1;
   }
 
-  if (!S_ISLNK(execStat.st_mode)) {
+  if (!S_ISLNK(execStat.st_mode))
+  {
     fprintf(stderr, "/proc/%d/exe was not a symlink\n", getpid());
     return 1;
   }
 
-  if (execStat.st_size > MAXPATHLEN) {
+  if (execStat.st_size > MAXPATHLEN)
+  {
     fprintf(stderr, "Link resolved to an unexpectedly long path\n");
     return 1;
   }
@@ -101,12 +104,23 @@ int findBaseDir(std::string* shinyServerPath) {
 
   std::vector<char> execBuf(charsNeeded + 1, 0);
   ssize_t cb = readlink(execPath, &execBuf[0], execBuf.size());
-  if (cb < 0) {
+  if (cb < 0)
+  {
     fprintf(stderr, "Fatal error calling readlink: %d\n", errno);
     return 1;
   }
   std::copy(execBuf.begin(), execBuf.begin() + cb, execPath);
   execPath[cb] = '\0';
+#elif __APPLE__
+  uint32_t size = sizeof(execPath);
+  if (_NSGetExecutablePath(execPath, &size) != 0)
+  {
+    // Buffer too small
+    return 2;
+  }
+#else
+#error "Unsupported platform"
+#endif
 
   *shinyServerPath = dirname(dirname(execPath));
 
