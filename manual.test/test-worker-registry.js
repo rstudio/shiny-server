@@ -1,5 +1,5 @@
 var util = require('util');
-var log = require('../lib/core/log')
+require('../lib/core/log')
 var { AppSpec } = require('../lib/worker/app-spec');
 var WorkerRegistry = require('../lib/worker/worker-registry');
 
