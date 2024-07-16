@@ -1,0 +1,47 @@
+FROM ubuntu:20.04
+
+# Setup, install tools for adding more repos
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update
+
+RUN apt-get install -y --no-install-recommends software-properties-common dirmngr wget
+
+RUN apt-get update && apt-get install -y \
+  build-essential \
+  ca-certificates \
+  curl \
+  g++ \
+  gcc \
+  git \
+  gpg \
+  libpam0g-dev \
+  libssl-dev \
+  make \
+  openjdk-8-jdk \
+  python \
+  sudo \
+  wget
+
+# Install cmake
+
+RUN wget -qO- https://apt.kitware.com/keys/kitware-archive-latest.asc | tee -a /etc/apt/trusted.gpg.d/kitware-archive-latest.asc
+RUN add-apt-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+
+# Install R repo
+
+RUN wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+RUN add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
+
+# Install packages
+
+RUN apt-get update && apt-get install -y cmake r-base
+RUN cmake --version
+
+ARG JENKINS_GID=999
+ARG JENKINS_UID=999
+RUN groupadd -g $JENKINS_GID jenkins && \
+    useradd -m -d /var/lib/jenkins -u $JENKINS_UID -g jenkins jenkins && \
+    echo "jenkins ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+

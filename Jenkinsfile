@@ -78,8 +78,8 @@ def s3_upload(os, arch) {
 try {
     timestamps {
         def containers = [
-          [os: 'ubuntu-18.04', arch: 'x86_64'],
-          [os: 'centos7', arch: 'x86_64']
+          [os: 'ubuntu-20.04', arch: 'x86_64'],
+          [os: 'centos8', arch: 'x86_64']
         ]
         def parallel_containers = [:]
         for (int i = 0; i < containers.size(); i++) {

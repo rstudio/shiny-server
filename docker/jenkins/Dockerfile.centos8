@@ -1,0 +1,36 @@
+FROM rockylinux:8
+
+# SSH
+EXPOSE 22
+
+RUN dnf -y install epel-release
+# Needed for R
+RUN dnf -y install dnf-plugins-core
+RUN dnf config-manager --set-enabled powertools
+
+RUN dnf -y groupinstall "Development tools"
+RUN dnf -y install rsyslog
+RUN dnf -y install screen
+RUN dnf -y install passwd
+RUN dnf -y install java-1.8.0-openjdk
+RUN dnf -y install sudo
+RUN dnf -y install wget
+RUN dnf -y install pam-devel
+
+RUN dnf -y install python39
+RUN dnf -y install R
+RUN dnf -y install curl libcurl-devel
+
+RUN dnf -y install rpm-build
+RUN dnf -y install openssl
+
+# Use cmake 3.21.3 (newer is probably fine too). Must avoid 3.18-3.20 due to %posttrans issue
+RUN wget -q https://github.com/Kitware/CMake/releases/download/v3.21.3/cmake-3.21.3-linux-x86_64.tar.gz
+RUN tar xzf cmake-3.21.3-linux-x86_64.tar.gz -C /usr/local --strip-components=1
+
+# create jenkins user, make sudo. try to keep this toward the bottom for less cache busting
+ARG JENKINS_GID=9999
+ARG JENKINS_UID=9999
+RUN groupadd -g $JENKINS_GID jenkins && \
+    useradd -m -d /var/lib/jenkins -u $JENKINS_UID -g jenkins jenkins && \
+    echo "jenkins ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
