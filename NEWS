@@ -8,7 +8,7 @@ shiny-server 1.5.23 (Unreleased)
 * RedHat/CentOS 7 is EOL as of July 1, 2024, and is no longer supported.
   Ubuntu 18.04 is EOL as of May 31, 2024, and is no longer supported.
 
-* Upgrade to Node.js v18.20.4. We also moved back to using the official Node.js
+* Upgrade to Node.js v20.17.0. We also moved back to using the official Node.js
   binaries, as we no longer need to build our own for compatibility with the
   older version of glibc used in RedHat/CentOS 7.
 
