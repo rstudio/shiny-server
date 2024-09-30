@@ -1,4 +1,4 @@
-shiny-server 1.5.23 (Unreleased)
+shiny-server 1.5.23
 --------------------------------------------------------------------------------
 
 * Now works with macOS and with Linux ARM64, when built from source.
