@@ -1,0 +1,35 @@
+{
+    "name": "Ubuntu Node.js Development",
+    "image": "ubuntu:24.04",
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/git:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "latest"
+        },
+        "ghcr.io/rocker-org/devcontainer-features/r-apt:0": {
+            "version": "latest"
+        }
+    },
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y make gcc g++ libssl-dev cmake && npm install",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "REditorSupport.r"
+            ]
+        }
+    },
+    "remoteUser": "node",
+    "updateRemoteUserUID": true,
+    "hostRequirements": {
+        "cpus": 2,
+        "memory": "4gb",
+        "storage": "32gb"
+    }
+}
