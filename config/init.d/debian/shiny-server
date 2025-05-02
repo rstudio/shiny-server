@@ -18,7 +18,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="shiny server"
 NAME=shiny-server
-DAEMON=shiny-server
+DAEMON=/usr/bin/shiny-server
 SCRIPTNAME=/etc/init.d/shiny-server
 
 # Exit if the package is not installed
