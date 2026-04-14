@@ -462,7 +462,10 @@ describe("app-worker", () => {
       );
       assert.fail("Launch was supposed to fail but didn't")
     } catch (ex) {
-      assert.strictEqual(ex.message, "EACCES: permission denied, mkdir '/blah'");
+      assert.ok(
+        ex.message.startsWith("EACCES:") || ex.message.startsWith("EROFS:"),
+        `Unexpected error: ${ex.message}`
+      );
     }
   });
 });

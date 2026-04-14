@@ -12,7 +12,7 @@ interface PythonEnv {
   env?: Record<string, string | null>;
 }
 
-export async function resolvePython_p(pythonPath: string, baseDir?: string): Q.Promise<PythonEnv> {
+export async function resolvePython_p(pythonPath: string, baseDir?: string): Promise<PythonEnv> {
   if (path.isAbsolute(pythonPath)) {
     let stat = await fs_promises.stat(pythonPath);
     if (stat.isDirectory()) {
