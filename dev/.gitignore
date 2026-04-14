@@ -1,0 +1,9 @@
+# Runtime artifacts -- do not commit
+bookmarks/
+log/
+sockets/
+
+# App runtime caches
+**/app_cache/
+**/__pycache__/
+**/.venv/
