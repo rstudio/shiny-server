@@ -7,6 +7,7 @@
   "bin": "./lib/main.js",
   "scripts": {
     "start": "node ./lib/main.js",
+    "dev": "SHINY_LOG_STDERR=1 nodemon --ignore dev/bookmarks --ignore dev/log --ignore dev/sockets --ignore node_modules --ignore .git -e js,ts,json,conf,R,py ./lib/main.js -- dev/shiny-server.conf",
     "test": "mocha test",
     "build": "tsc"
   },
@@ -49,6 +50,7 @@
     "@types/q": "^1.5.8",
     "@types/split": "^1.0.5",
     "mocha": "^10.7.3",
+    "nodemon": "^3.1.14",
     "rewire": "^7.0.0",
     "should": "^13.2.3",
     "sinon": "^18.0.1",
