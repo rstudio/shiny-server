@@ -42,7 +42,7 @@ describe('Scheduler', function(){
   var clock;
 
   before(function() {
-    clock = sinon.useFakeTimers();
+    clock = sinon.useFakeTimers({toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date']});
   });
 
   beforeEach(function(){
