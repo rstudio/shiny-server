@@ -64,7 +64,7 @@ tools/preflight.sh
 npm start -- --config config/default.config
 ```
 
-> **Node ABI gotcha.** `build/Release/posix.node` is a native addon compiled against the Node version in `.nvmrc` (currently v20.17.0). If your ambient `node` is a different major version, *everything* fails immediately with `ERR_DLOPEN_FAILED` / `NODE_MODULE_VERSION` mismatch — including `npm test`. Either `nvm use`, or prefix with the vendored runtime: `PATH="$PWD/ext/node/bin:$PATH" npm test`.
+> **Node ABI gotcha.** `build/Release/posix.node` is a native addon compiled against the Node version in `.nvmrc` (currently v24.20.0). If your ambient `node` is a different major version, *everything* fails immediately with `ERR_DLOPEN_FAILED` / `NODE_MODULE_VERSION` mismatch — including `npm test`. Either `nvm use`, or prefix with the vendored runtime: `PATH="$PWD/ext/node/bin:$PATH" npm test`.
 
 ## Architecture
 

@@ -12,7 +12,17 @@
  */
 
 // See https://github.com/nodejs/nan/issues/807#issuecomment-581536991
-#if defined(__GNUC__) && __GNUC__ >= 8
+// Clang spells this warning -Wcast-function-type-mismatch and reports __GNUC__
+// as 4, so it needs a branch of its own; ignoring -Wunknown-warning-option
+// first keeps the pragma harmless on clangs that know neither spelling.
+#if defined(__clang__)
+#define DISABLE_WCAST_FUNCTION_TYPE \
+  _Pragma("clang diagnostic push") \
+  _Pragma("clang diagnostic ignored \"-Wunknown-warning-option\"") \
+  _Pragma("clang diagnostic ignored \"-Wcast-function-type\"") \
+  _Pragma("clang diagnostic ignored \"-Wcast-function-type-mismatch\"")
+#define DISABLE_WCAST_FUNCTION_TYPE_END _Pragma("clang diagnostic pop")
+#elif defined(__GNUC__) && __GNUC__ >= 8
 #define DISABLE_WCAST_FUNCTION_TYPE _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wcast-function-type\"")
 #define DISABLE_WCAST_FUNCTION_TYPE_END _Pragma("GCC diagnostic pop")
 #else
@@ -31,6 +41,7 @@ DISABLE_WCAST_FUNCTION_TYPE_END
 #include <grp.h>
 #include <fcntl.h>
 #include <string>
+#include <vector>
 
 using namespace node;
 //using namespace v8;
@@ -69,10 +80,10 @@ void GetPwNam(const Nan::FunctionCallbackInfo<v8::Value>& info) {
   int bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
   if (bufsize == -1)  // value was indeterminant
     bufsize = 16384;
-  char buf[bufsize];
+  std::vector<char> buf(bufsize);
 
   errno = 0;
-  if ((err = getpwnam_r(*pwnam, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
+  if ((err = getpwnam_r(*pwnam, &pwd, buf.data(), bufsize, &pwdp)) || pwdp == NULL) {
     if (errno == 0) {
       info.GetReturnValue().Set(Nan::Null());
       return;
@@ -111,10 +122,10 @@ void GetPwUid(const Nan::FunctionCallbackInfo<v8::Value>& info) {
   int bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
   if (bufsize == -1)  // value was indeterminant
     bufsize = 16384;
-  char buf[bufsize];
+  std::vector<char> buf(bufsize);
 
   errno = 0;
-  if ((err = getpwuid_r(pwuid, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
+  if ((err = getpwuid_r(pwuid, &pwd, buf.data(), bufsize, &pwdp)) || pwdp == NULL) {
     if (errno == 0) {
       info.GetReturnValue().Set(Nan::Null());
       return;
@@ -153,7 +164,7 @@ void GetGroupList(const Nan::FunctionCallbackInfo<v8::Value>& info) {
   int bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
   if (bufsize == -1)  // value was indeterminant
     bufsize = 16384;
-  char buf[bufsize];
+  std::vector<char> buf(bufsize);
 
 #ifdef __linux__
   typedef gid_t result_t;
@@ -162,7 +173,7 @@ void GetGroupList(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 #endif
 
   errno = 0;
-  if ((err = getpwnam_r(*name, &pwd, buf, bufsize, &pwdp)) || pwdp == NULL) {
+  if ((err = getpwnam_r(*name, &pwd, buf.data(), bufsize, &pwdp)) || pwdp == NULL) {
     if (errno == 0) {
       info.GetReturnValue().Set(Nan::Null());
       return;
@@ -178,10 +189,10 @@ void GetGroupList(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 
   for (int i = 0; i < 3; i++) {
 
-    result_t groups[ngrp];
+    std::vector<result_t> groups(ngrp);
 
     errno = 0;
-    err = getgrouplist(*name, gid, groups, &ngrp);
+    err = getgrouplist(*name, gid, groups.data(), &ngrp);
     if (err == -1) {
       // Not enough buffer space; ngrp has the necessary number
       continue;
