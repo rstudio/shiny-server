@@ -34,13 +34,26 @@ var testConfig = require('../support/config');
 var HELLO_APP = path.join(testConfig.projectRoot, 'test', 'apps', '01_hello');
 
 /**
- * True if `Rscript` exists and can load shiny.
+ * True if `Rscript` exists and can load shiny *as a worker would see it*.
+ *
+ * The environment matters. app-worker.ts launches R with only HOME, LANG and
+ * PATH, so a shiny installed somewhere only R_LIBS_USER points at is invisible
+ * to a worker. Checking with an inherited environment would let this skip guard
+ * pass while every test then failed with a 500 -- which is exactly what
+ * happened on CI, where r-lib/actions installs into R_LIBS_USER by default.
  */
 function hasShiny() {
   try {
     var result = child_process.spawnSync('Rscript', [
       '-e', 'quit(status = if (requireNamespace("shiny", quietly = TRUE)) 0 else 1)'
-    ], {timeout: 60000});
+    ], {
+      timeout: 60000,
+      env: {
+        HOME: process.env.HOME,
+        LANG: process.env.LANG,
+        PATH: process.env.PATH
+      }
+    });
     return result.status === 0;
   } catch (err) {
     return false;
@@ -87,7 +100,11 @@ describe('a real R Shiny app', function() {
 
   it('starts R and serves the app page', function() {
     return server.get_p('/hello/', {timeout: 110000}).then(function(r) {
-      assert.strictEqual(r.status, 200);
+      // On failure this is a rendered 500 whose body carries the tail of the
+      // worker's console log -- i.e. R's actual complaint. Surface all of it,
+      // because without it a CI failure here is pure archaeology.
+      assert.strictEqual(r.status, 200,
+        'expected 200, got ' + r.status + '. Response body:\n' + r.body);
       assert.ok(/<html/i.test(r.body),
         'expected an HTML page, got: ' + r.body.slice(0, 300));
       // Shiny's page always pulls in its own JS bundle.
