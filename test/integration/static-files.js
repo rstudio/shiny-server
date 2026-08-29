@@ -55,10 +55,12 @@ describe('static files', function() {
       // process-global mutations; this asserts the observable result.
       return server.get_p('/script.R').then(function(r) {
         assert.strictEqual(r.status, 200);
-        // Note the uppercase charset: that is what send 0.19's mime table
-        // produces. If this flips to "utf-8" it means the mime lookup changed,
-        // which is exactly the kind of drift this test exists to catch.
-        assert.strictEqual(r.headers.get('content-type'), 'text/R; charset=UTF-8');
+        // The charset spelling moved from "UTF-8" to "utf-8" when send 1.x
+        // handed mime lookups to mime-types 3. Charset names are
+        // case-insensitive (RFC 7231 3.1.1.2), so this is cosmetic -- but it
+        // is a real difference on the wire, and pinning it is how we notice
+        // the next one.
+        assert.strictEqual(r.headers.get('content-type'), 'text/R; charset=utf-8');
         assert.strictEqual(r.body, 'cat("hi")\n');
       });
     });
