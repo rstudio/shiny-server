@@ -1,6 +1,6 @@
 ---
 title: Proxy Layer
-description: How Shiny Server moves bytes between browsers and worker processes — ShinyProxy/http-proxy for plain HTTP, the SockJS server (native WebSocket + XHR/streaming/polling fallbacks) relayed to workers as faye-websocket clients, the robust-sockjs reconnection state machine, the multiplex channel protocol, SockJS close codes in errorcode.js, connection accounting (acquire/release of http/sock/pending), injected headers (shiny-shared-secret, x-frame-options), and the error pages users see.
+description: How Shiny Server moves bytes between browsers and worker processes — ShinyProxy/http-proxy-3 for plain HTTP, the SockJS server (native WebSocket + XHR/streaming/polling fallbacks) relayed to workers as faye-websocket clients, the robust-sockjs reconnection state machine, the multiplex channel protocol, SockJS close codes in errorcode.js, connection accounting (acquire/release of http/sock/pending), injected headers (shiny-shared-secret, x-frame-options), and the error pages users see.
 ---
 
 # Proxy Layer
@@ -102,13 +102,12 @@ Two handlers are attached:
   **removed**. The `shutdown`, `AppSpec`, `Q`, `util` and `http` requires at the
   top of the file are still unused.
 
-#### Pending: `http-proxy` → `http-proxy-3` (PR #596)
+#### `http-proxy` → `http-proxy-3`
 
-`node-http-proxy` is unmaintained. PR #596 replaces it with `http-proxy-3`, an
-API-compatible maintained fork (1.23.2). Verified against that branch, for when it
-lands:
+`node-http-proxy` was unmaintained (last release 1.18.1, May 2020). It has been
+replaced with `http-proxy-3`, an API-compatible maintained fork (1.23.x):
 
-- `http-proxy-3` **does not emit `proxySocket`**, so #596 drops it from `knownEvents`;
+- `http-proxy-3` **does not emit `proxySocket`**, so it is gone from `knownEvents`;
   the remaining nine names match its emit set exactly.
 - It keeps `outgoing.agent = false`, so the keepalive behavior above is unchanged
   (`node_modules/http-proxy-3/dist/lib/http-proxy/common.js:96-106`).

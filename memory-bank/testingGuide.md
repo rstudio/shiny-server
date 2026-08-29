@@ -63,7 +63,7 @@ lines into the spec output; `SHINY_LOG_LEVEL=OFF npm test` silences that noise.
 
 ## Current real state of `npm test`
 
-**291 passing, 0 failing, ~4s** on `master` (macOS, Node v20.17.0). `npm run test:r`
+**310 passing, 0 failing, ~4s** on `master` (macOS, Node v24.20.0). `npm run test:r`
 adds 8 more and takes about a second once R is warm.
 
 The macOS-only `test/app-worker.js` failure (the `/blah` mkdir case returns `EROFS`
@@ -74,9 +74,10 @@ rather than `EACCES` on darwin) is fixed — the assertion now accepts either er
   transitively. If your shell's `node` is not ABI-compatible with whatever built
   `build/Release/`, mocha dies before running a single test with
   `ERR_DLOPEN_FAILED ... NODE_MODULE_VERSION`. Run tests with a Node matching
-  `.nvmrc` (currently v20.17.0), or `npm rebuild` against the Node you're using.
-  Note that `master`'s `nan` (^2.18.0) **does not compile against Node 24** — that
-  bump lives on the #596 branch — so `npm ci` under Node 24 fails in node-gyp.
+  `.nvmrc` (currently v24.20.0), or `npm rebuild` against the Node you're using.
+  `nan` and `.nvmrc` move together for this reason: `nan` 2.20 does not compile
+  against Node 24's V8 headers, so bumping one without the other fails in
+  node-gyp before a single test runs.
 - The `app-worker` block prints four log4js lines mid-spec about bookmark state
   directories under `$TMPDIR/app-worker-test-bookmarks`. Expected, not a failure.
 

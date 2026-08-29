@@ -82,7 +82,7 @@ Two consequences worth remembering:
 ## The vendored Node runtime
 
 `external/node/install-node.sh` reads the desired version from `.nvmrc`
-(currently `v20.17.0`, including the leading `v`), maps `uname -s`/`uname -m`
+(currently `v24.20.0`, including the leading `v`), maps `uname -s`/`uname -m`
 to Node's own platform/arch tuples (`external/node/install-node.sh:24-44`),
 downloads `https://nodejs.org/dist/<ver>/node-<ver>-<os>-<arch>.tar.xz` with
 `wget`, and untars it into `ext/node/` with `--strip-components=1`

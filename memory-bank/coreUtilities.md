@@ -218,9 +218,9 @@ Non-obvious behaviors:
 package ... semver-major") is why the file has private `isValidIPv4`/`isValidIPv6`
 try/catch wrappers (`:38`, `:47`): from v7 on, the `Address4`/`Address6`
 constructors *throw* `AddressError` on invalid input, whereas the older API let
-you construct then call `.isValid()`. The package has since moved to `^9.0.5`;
-PR #596 takes it to `^10`, which keeps the throwing constructors. If you touch this file, keep every
-`new Address*` behind a validity check or a try/catch.
+you construct then call `.isValid()`. The package is now on `^10`, which keeps
+the throwing constructors. If you touch this file, keep every `new Address*`
+behind a validity check or a try/catch.
 
 **Bug worth fixing:** `iputil.js:70` reads
 ``throw new Error(`Invalid IP address: "addr"`)`` — the `${}` is missing, so the
