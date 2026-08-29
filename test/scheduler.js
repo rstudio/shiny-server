@@ -42,7 +42,15 @@ describe('Scheduler', function(){
   var clock;
 
   before(function() {
-    clock = sinon.useFakeTimers();
+    // Q drains its promise queue through process.nextTick, and it captures the
+    // "flushing" state in module scope. As of sinon 19 (fake-timers 13),
+    // useFakeTimers() fakes nextTick and queueMicrotask by default, so Q's
+    // drain gets queued on the fake clock -- and clock.restore() discards that
+    // queue without running it. Q is then wedged for the whole process, which
+    // hangs every Q-based test in every file mocha loads after this one, not
+    // just the ones here. Leave the microtask queue alone; these tests only
+    // ever wanted control of setTimeout.
+    clock = sinon.useFakeTimers({toNotFake: ['nextTick', 'queueMicrotask']});
   });
 
   beforeEach(function(){

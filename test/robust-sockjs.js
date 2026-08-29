@@ -56,7 +56,8 @@ describe('RobustSockJS', function(){
       (rob4 === undefined).should.be.true();
     });
     it('buffers disconnects', function(){
-      var clock = sinon.useFakeTimers();
+      // See the comment in test/scheduler.js: faking nextTick wedges Q.
+      var clock = sinon.useFakeTimers({toNotFake: ['nextTick', 'queueMicrotask']});
       var rsjs = new RobustSockJS(1); //Timeout after 1 sec
       var conn = {
         url: '/__sockjs__/n=1234/',
