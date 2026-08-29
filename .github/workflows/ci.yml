@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # .nvmrc is the version the native addon (build/Release/posix.node) is
+      # expected to compile against; using anything else here tends to fail in
+      # node-gyp rather than anywhere informative.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Also rebuilds src/posix.cc via node-gyp.
+      - name: Install dependencies
+        run: npm ci
+
+      # The compiled .js next to each .ts is committed, and the tests run
+      # against the compiled output -- so editing a .ts without running
+      # `npm run build` currently passes CI while changing nothing at runtime.
+      # This makes that a failure.
+      - name: Check the committed build output is current
+        run: |
+          npm run build
+          git diff --exit-code -- lib/ \
+            || (echo "::error::Compiled output in lib/ is stale. Run 'npm run build' and commit the result." && exit 1)
+
+      # Unit tests plus the fast integration tier (test/integration), which
+      # boots a real server on an ephemeral port against a stand-in worker.
+      # mocha is not recursive, so both directories are named in the "test"
+      # script; keep that in sync with Jenkinsfile.
+      - name: Run tests
+        run: npm test
+
+  licenses:
+    name: license check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # tools/check-upstream.sh fetches and compares refs.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # tools/preflight.sh invokes ./bin/node, which only exists after the full
+      # CMake build vendors a Node runtime. Run its two steps directly instead.
+      - name: Check dependency licenses
+        run: node tools/check-licenses.js
+
+      - name: Check for unmerged upstream changes
+        run: tools/check-upstream.sh
+
+  test-r:
+    name: integration with real R
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          # Serves binary packages, so installing shiny takes seconds rather
+          # than the many minutes a source build would.
+          use-public-rspm: true
+
+      # NOT into R_LIBS_USER, which is where setup-r would put it by default.
+      # lib/worker/app-worker.ts launches the R worker with a deliberately
+      # scrubbed environment -- HOME, LANG and PATH only -- so a worker never
+      # sees R_LIBS_USER and would fail to load shiny even though `Rscript` in
+      # this job can. Install into the site library, which R finds
+      # unconditionally. (The Jenkins image gets this for free: its Docker
+      # build runs as root, where .libPaths()[1] is already the site library.)
+      - name: Install the shiny R package where a worker can find it
+        env:
+          R_LIBS_USER: ""
+        run: |
+          # R searches R_HOME/site-library unconditionally, with no environment
+          # variable needed -- but setup-r's R ships without one, so
+          # .Library.site is NA and a plain install.packages() falls back to the
+          # read-only base library. Create it.
+          export SITE_LIB="$(Rscript -e 'cat(R.home())')/site-library"
+          echo "Installing into $SITE_LIB"
+          sudo mkdir -p "$SITE_LIB"
+          sudo chmod a+w "$SITE_LIB"
+          Rscript -e 'install.packages("shiny", lib = Sys.getenv("SITE_LIB"), repos = if (nzchar(Sys.getenv("RSPM"))) Sys.getenv("RSPM") else "https://cloud.r-project.org")'
+          # Prove it resolves with the same bare environment a worker gets.
+          # If this fails the job stops here, rather than after six confusing
+          # 500s from a crash-looping worker.
+          env -i HOME="$HOME" PATH="$PATH" Rscript -e 'stopifnot(requireNamespace("shiny", quietly = TRUE)); cat("worker-visible shiny:", as.character(packageVersion("shiny")), "\n")'
+
+      - run: npm ci
+
+      # Not part of `npm test`: this tier launches real R processes, so it is
+      # slower and needs R provisioned, as above. It skips itself rather than
+      # failing when shiny is missing -- convenient locally, useless here, so
+      # treat a skip as a provisioning failure.
+      - name: Run the real-R integration tier
+        run: |
+          set -o pipefail
+          npm run test:r 2>&1 | tee /tmp/r-tier.log
+          if grep -q "SKIPPING the real-R tier" /tmp/r-tier.log; then
+            echo "::error::The real-R tier skipped itself; R or the shiny package is missing."
+            exit 1
+          fi

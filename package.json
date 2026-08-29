@@ -7,8 +7,11 @@
   "bin": "./lib/main.js",
   "scripts": {
     "start": "node ./lib/main.js",
-    "test": "mocha test",
-    "build": "tsc"
+    "test": "mocha test test/integration",
+    "build": "tsc",
+    "test:unit": "mocha test",
+    "test:integration": "mocha test/integration",
+    "test:r": "mocha test/integration-r"
   },
   "repository": {
     "type": "git",
@@ -41,8 +44,8 @@
   },
   "license": "AGPL-3.0",
   "engines": {
-    "node": ">=6.6.0",
-    "npm": ">=2.8.0"
+    "node": ">=18.0.0",
+    "npm": ">=7.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.7.3",

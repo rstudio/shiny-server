@@ -1,21 +1,38 @@
 ---
 title: Testing Guide
-description: How Shiny Server is tested — the Mocha/Should.js/Sinon/Rewire automated suite in test/, what each test file covers and the large gaps it leaves, the bit-rotted manual.test/ scripts and load tests, the config and app fixtures plus tools/test-config.sh, Q-promise async conventions, and the traps (wrong Node ABI, no-op `.should.be.true`, root-only paths, fake timers vs. nextTick) to avoid when adding tests.
+description: How Shiny Server is tested — the three tiers (unit tests in test/, the in-process integration harness in test/integration/ built on test/support/, and the real-R tier in test/integration-r/), the Mocha/Should.js/Sinon/Rewire conventions, what each file covers and the gaps that remain, the bit-rotted manual.test/ scripts, fixtures and tools/test-config.sh, Q-promise async conventions, and the traps (wrong Node ABI, ephemeral-port shadowing, socket pooling across recycled ports, no-op `.should.be.true`, root-only paths, fake timers vs. nextTick) to avoid when adding tests.
 ---
 
 # Testing Guide
 
 ## Runner setup
 
-`npm test` runs `mocha test` (`package.json`, `"test": "mocha test"`). There is no
-watch mode, no coverage tooling, and no linting step. CI does the same thing but
-with the vendored interpreter: `Jenkinsfile:108` and `Jenkinsfile.internal:138` both
-run `./bin/node ./node_modules/mocha/bin/mocha test`.
+There are three tiers, and **mocha is not recursive**, so every test directory has to
+be named explicitly wherever tests are invoked:
 
-`.mocharc.json` is three lines and auto-requires three modules before any test file:
+| Command | What it runs | Needs |
+|---|---|---|
+| `npm test` | `mocha test test/integration` — unit tests **and** the fast integration tier | nothing beyond `npm ci` |
+| `npm run test:unit` | `mocha test` only | nothing |
+| `npm run test:integration` | `mocha test/integration` only | nothing |
+| `npm run test:r` | `mocha test/integration-r` — real R processes | R with the `shiny` package |
+
+`test/support/` holds the harness and is deliberately *not* a test directory, so mocha
+never loads it directly.
+
+There is no watch mode, no coverage tooling, and no linting step. Two CI systems run
+this: `.github/workflows/ci.yml` (Linux + macOS, plus a build-freshness check and the
+real-R tier) and Jenkins, which uses the vendored interpreter —
+`Jenkinsfile:108` runs `./bin/node ./node_modules/mocha/bin/mocha test test/integration`.
+**Keep that list of directories in sync with `package.json`'s `test` script**; a new
+test directory that isn't added in both places silently doesn't run.
+
+`.mocharc.json` auto-requires three modules before any test file, and sets a timeout
+that a server boot can survive (mocha's 2s default cannot):
 
 ```json
-{ "require": ["should", "./lib/core/log", "./lib/core/qutil"], "reporter": "spec" }
+{ "require": ["should", "./lib/core/log", "./lib/core/qutil"],
+  "reporter": "spec", "timeout": 20000 }
 ```
 
 Why each one is there:
@@ -37,21 +54,79 @@ lines into the spec output; `SHINY_LOG_LEVEL=OFF npm test` silences that noise.
 
 ## Current real state of `npm test`
 
-**63 passing, 0 failing, 0 pending, ~200ms** — measured on the PR #596 branch, not
-on `master`. #596 fixes a macOS-only failure in `test/app-worker.js` (the `/blah`
-mkdir case returns `EROFS` rather than `EACCES` on darwin), so a `master` checkout on
-a Mac is expected to show one failure. Re-measure before trusting this number. Clean
-otherwise, but with one caveat and one source of visual noise:
+**291 passing, 0 failing, ~4s** on `master` (macOS, Node v20.17.0). `npm run test:r`
+adds 8 more and takes about a second once R is warm.
 
-- **Node ABI trap (this bit me first try).** `test/app-worker.js:19` requires
+The macOS-only `test/app-worker.js` failure (the `/blah` mkdir case returns `EROFS`
+rather than `EACCES` on darwin) is fixed — the assertion now accepts either errno.
+
+- **Node ABI trap (the first thing that bites).** `test/app-worker.js:19` requires
   `../build/Release/posix.node` directly, and `lib/core/fsutil.js` requires it
   transitively. If your shell's `node` is not ABI-compatible with whatever built
   `build/Release/`, mocha dies before running a single test with
-  `ERR_DLOPEN_FAILED ... NODE_MODULE_VERSION`. Run tests with the vendored interpreter
-  (`./bin/node ./node_modules/mocha/bin/mocha test`, currently Node v20.17.0, matching
-  `.nvmrc`), or `npm rebuild` against the Node you're using.
+  `ERR_DLOPEN_FAILED ... NODE_MODULE_VERSION`. Run tests with a Node matching
+  `.nvmrc` (currently v20.17.0), or `npm rebuild` against the Node you're using.
+  Note that `master`'s `nan` (^2.18.0) **does not compile against Node 24** — that
+  bump lives on the #596 branch — so `npm ci` under Node 24 fails in node-gyp.
 - The `app-worker` block prints four log4js lines mid-spec about bookmark state
   directories under `$TMPDIR/app-worker-test-bookmarks`. Expected, not a failure.
+
+## The integration harness (`test/support/`)
+
+`test/integration/` boots a **real, complete server in-process** on an ephemeral port,
+for each test, in about 15ms. Three modules make that possible:
+
+- **`test/support/server.js`** — `start_p(configText, options)` resolves to a test
+  server with `.port`, `.baseUrl`, `.get_p(path, init)`, `.workerEntries()` and
+  `.stop_p()`. It is built on `lib/server-init.js`'s `createServer_p`.
+- **`test/support/config.js`** — writes a throwaway config into a fresh temp dir,
+  substituting `$USER` (the process user, which `run_as` must name), `$ROOT` (the
+  checkout) and `$DIR` (that temp dir). `siteDirConfig(opts)` is the shape most tests
+  want.
+- **`test/support/fake-worker.js`** — `install()` replaces the
+  `lib/worker/app-worker` module's `launchWorker_p` export with one that binds a real
+  `http.Server` on the endpoint's port. Everything else stays live: the real
+  `TcpTransport`, the real endpoint and shared secret, the real
+  `connectEndpoint_p` handshake, the real proxy. Only `su` and R are skipped.
+
+Pass `worker: false` to `start_p` to keep the real launcher and spawn actual R — that
+is what `test/integration-r/` does.
+
+### Why the seam is a module-export swap, not rewire
+
+`lib/scheduler/scheduler.js:28` declares `let app_worker` specifically so rewire can
+reach it, and `test/scheduler.js` uses that. The integration harness **cannot**: rewire
+loads a second copy of the module, and the server built by `lib/server-init.js` would
+still be using the first. What makes the plain assignment work is that
+`scheduler.js:176` resolves `app_worker.launchWorker_p` as a property *at call time*.
+
+Note also that `Scheduler.setTransport()` alone is not a sufficient seam:
+`scheduler.js:171` calls `posix.getpwnam(appSpec.runAs)` and `:175` calls
+`launchWorker_p` regardless of transport. That is why test configs must
+`run_as $USER` — so the real `getpwnam` succeeds.
+
+### Two traps that produced days of "impossible" flakiness
+
+Both are recorded here because the symptoms point nowhere near the cause.
+
+- **Ephemeral-port shadowing.** `TcpTransport.alloc_p` allocates a worker port by
+  binding `127.0.0.1:0`, reading the port, and *closing again* (`lib/transport/tcp.js`).
+  If a server listening on the wildcard `::` is started in that window, the kernel can
+  hand it the very port that was just released; the stand-in worker then binds
+  `127.0.0.1:<same port>`, **which succeeds** — a specific-address bind is permitted
+  alongside a wildcard one — and from then on shadows the server for all loopback
+  traffic. Requests silently reach the worker instead of Shiny Server, showing up as
+  inexplicable 404s and `Parse Error: Expected HTTP/`. The harness avoids it by
+  pinning the listener to `127.0.0.1` (`listen 0 127.0.0.1`), putting it in the same
+  address space as the worker ports so the allocator won't double-assign.
+- **Socket pooling across recycled ports.** `fetch()` pools keep-alive sockets per
+  origin. Test servers are torn down and restarted milliseconds apart and ephemeral
+  ports get recycled, so a pooled socket belonging to a dead server gets handed to the
+  next test — which then talks to the *previous* test's config. `Connection: close` is
+  not a fix: fetch treats `Connection` as a forbidden header and drops it silently.
+  The harness therefore uses `http.request` with `agent: false`, one connection per
+  request. It also destroys established connections at teardown, because
+  `Server#destroy()` deliberately does not (see `requestLifecycle.md`).
 
 ## Testing patterns in use
 
@@ -153,23 +228,26 @@ message with a regex (`test/nested-locations.js:27-43`); the newer style uses
 | `lib/router/config-router-util.js` | **Narrow.** Only `parseApplication`. |
 | `lib/router/config-router.js` | **Narrow.** Only `createRouter_p` against 3 fixtures, with permission checks rewired out. |
 | `lib/router/squash-run-as-router.js` | **Complete** (it's tiny). |
-| `lib/proxy/http.js` | **Almost none.** `test/proxy-events.js` only greps `node_modules/http-proxy` for `.emit(` calls and diffs them against `knownEvents` (`lib/proxy/http.js:61`) — a canary for upstream event churn, not a behavior test. |
+| `lib/proxy/http.js` | **Moderate.** `test/proxy-http.js` pins `httpListener`'s dispatch contract against a doubled router/registry: the strict `appSpec === true` check, the 404/500/503 paths, and the acquire/release accounting. `test/integration/proxy.js` covers the same ground against a live server. `test/proxy-events.js` separately greps `node_modules/http-proxy` for `.emit(` calls and diffs them against `knownEvents` (`lib/proxy/http.js:61`) — a canary for upstream event churn, not a behavior test. |
+| `lib/config/lexer.js`, `parser.js`, `config.js`, `schema.js` | **Good.** `test/config-lexer.js` (33), `test/config-parser.js` (32, incl. `ConfigNode` inheritance and `search` ordering), `test/config-schema.js` (46, incl. the real `shiny-server-rules.config`). Ported and expanded from the `manual.test/` scripts. |
+| `lib/core/qutil.js` | **Good.** `test/qutil.js` — `forEachPromise_p`, `map_p` sequencing, `serialized`, `wrap`, `.eat()`. |
+| `lib/server-init.js`, the Express stack | **Moderate.** `test/integration/` — `__assets__` rewriting, static/`send` behavior, the proxy path, the access log, `X-Powered-By`. |
+| `lib/server/server.js` | **Narrow.** Exercised by every integration test's startup and teardown; the `$close` leak has a direct regression test in `test/integration/harness.js`. |
 | Third-party behavior guards | `test/http-proxy.js` (http-proxy must send `Connection: close` upstream), `test/config-router-util.js:166-184` (`fs.fchmod` must accept a string mode). Both exist because a silent upstream change would break production. |
 
 **Zero automated coverage**, roughly in descending order of how much a test would be
 worth:
 
-- `lib/config/lexer.js`, `parser.js`, `config.js`, `schema.js` — the entire hand-written
-  config language. Only the (stale) `manual.test/` scripts touch it. **This is the
-  highest-value gap**: the manual scripts already contain usable assertions that could
-  be ported to mocha in an afternoon.
-- `lib/proxy/sockjs.js`, `lib/proxy/multiplex.js`, `lib/proxy/errorcode.js`, and all of
-  `ShinyProxy`'s actual request handling.
+- `lib/proxy/sockjs.js`, `lib/proxy/multiplex.js`, `lib/proxy/errorcode.js` — **now the
+  highest-value gap.** The SockJS and WebSocket paths are the only major traffic route
+  with no coverage at either tier. `test/support/fake-worker.js` already accepts an
+  `onUpgrade` handler, so the harness is ready for it.
 - `lib/router/directory-router.js`, `local-config-router.js`, `user-dirs-router.js`, and
   the combinators in `router.js` (`CompositeRouter`, `PrefixFilterRouter`, `RestartRouter`,
-  `RedirectRouter`) — pure-ish functions that would be easy to test.
+  `RedirectRouter`) — covered end-to-end by `test/integration/`, but not unit-tested;
+  they are pure-ish functions that would be easy to test directly.
 - `lib/transport/tcp.js`, `unix-socket.js`; `lib/worker/app-worker-handle.js`, `run-as.js`.
-- `lib/main.js`, `lib/server/server.js`, `lib/core/permissions.js`, `fsutil.js`,
+- `lib/main.js` (the CLI wrapper), `lib/core/permissions.js`, `fsutil.js`,
   `connect-util.js`, `url-util.js`, `python.ts`, `shutdown.js`.
 - `src/launcher.cc`, `src/posix.cc` — the native code is exercised only incidentally.
 
@@ -199,10 +277,10 @@ have bit-rotted.
 
 | Script | Purpose | State (verified) |
 |---|---|---|
-| `test-config-lexer.js` | Top-level `assert()`s over the config lexer's character classification and tokenization. | **Runs clean.** The best porting candidate. |
-| `test-config-parser.js` | Parses two snippets and `console.log`s the AST for eyeballing. Its "assertions" at lines 9-11 are bare expressions that assert nothing. | Runs; output is for humans. |
-| `test-config-config.js` | Config + schema validation, incl. good/bad fixtures under `manual.test/config/`. | **Fails.** Asserts `bad2.config` (`run_as;`) is rejected for "too few arguments", but the schema now declares `param String users...` (`config/shiny-server-rules.config:6`), so zero args is legal. Stale expectation, not a product bug. |
-| `test-serialized.js` | Demonstrates `qutil.serialized()` by interleaving sleeps; verify by reading the printed ordering. Takes ~10s. | Runs clean. |
+| `test-config-lexer.js` | Top-level `assert()`s over the config lexer's character classification and tokenization. | **Ported** to `test/config-lexer.js`. Kept for reference only. |
+| `test-config-parser.js` | Parses two snippets and `console.log`s the AST for eyeballing. Its "assertions" at lines 9-11 are bare expressions that assert nothing. | **Superseded** by `test/config-parser.js`. |
+| `test-config-config.js` | Config + schema validation, incl. good/bad fixtures under `manual.test/config/`. | **Fails**, and it is the script that is wrong: it asserts `bad2.config` (`run_as;`) is rejected for "too few arguments", but the schema declares `param String users...` (`config/shiny-server-rules.config:6`), so zero args is legal. `test/config-schema.js` pins the correct behaviour ("lets a vararg match zero arguments"). **Superseded.** |
+| `test-serialized.js` | Demonstrates `qutil.serialized()` by interleaving sleeps; verify by reading the printed ordering. Takes ~10s. | **Superseded** by `test/qutil.js`, which also pins the queued-caller defect below. |
 | `test-proxy.js` | Stands up a `ShinyProxy` on :8001. | **Dead.** Requires `lib/worker/worker-registry` and `router.AutouserRouter`, neither of which exists anymore. |
 | `test-worker-registry.js`, `test-worker-registry-leak.js` | Worker registry smoke test / memory-leak logger. | **Dead** — same missing `worker-registry` module; the leak script also wants `webkit-devtools-agent` and hardcodes `/Users/jcheng/...`. |
 | `loadtest.js` | Real load generator: N concurrent sessions, each fetching the static asset set plus a websocket session. Usage: `./bin/node manual.test/loadtest.js <shiny-url> [session-count]` (default 200). Requires a **running** Shiny Server hosting `01_hello`. The websocket `init` message is hardcoded for that app; retarget by capturing a new init frame from Chrome devtools. `SHINY_SERVER=false` at the top switches it to a bare Shiny process. | Should work; needs a live server. |
