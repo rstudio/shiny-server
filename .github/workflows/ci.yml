@@ -99,12 +99,18 @@ jobs:
         env:
           R_LIBS_USER: ""
         run: |
-          SITE=$(Rscript -e 'cat(.Library.site[1])')
-          echo "Installing into $SITE"
-          sudo mkdir -p "$SITE"
-          sudo chmod a+w "$SITE"
-          Rscript -e 'install.packages("shiny", repos = if (nzchar(Sys.getenv("RSPM"))) Sys.getenv("RSPM") else "https://cloud.r-project.org")'
+          # R searches R_HOME/site-library unconditionally, with no environment
+          # variable needed -- but setup-r's R ships without one, so
+          # .Library.site is NA and a plain install.packages() falls back to the
+          # read-only base library. Create it.
+          export SITE_LIB="$(Rscript -e 'cat(R.home())')/site-library"
+          echo "Installing into $SITE_LIB"
+          sudo mkdir -p "$SITE_LIB"
+          sudo chmod a+w "$SITE_LIB"
+          Rscript -e 'install.packages("shiny", lib = Sys.getenv("SITE_LIB"), repos = if (nzchar(Sys.getenv("RSPM"))) Sys.getenv("RSPM") else "https://cloud.r-project.org")'
           # Prove it resolves with the same bare environment a worker gets.
+          # If this fails the job stops here, rather than after six confusing
+          # 500s from a crash-looping worker.
           env -i HOME="$HOME" PATH="$PATH" Rscript -e 'stopifnot(requireNamespace("shiny", quietly = TRUE)); cat("worker-visible shiny:", as.character(packageVersion("shiny")), "\n")'
 
       - run: npm ci
