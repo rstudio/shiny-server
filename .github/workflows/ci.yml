@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # .nvmrc is the version the native addon (build/Release/posix.node) is
+      # expected to compile against; using anything else here tends to fail in
+      # node-gyp rather than anywhere informative.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Also rebuilds src/posix.cc via node-gyp.
+      - name: Install dependencies
+        run: npm ci
+
+      # The compiled .js next to each .ts is committed, and the tests run
+      # against the compiled output -- so editing a .ts without running
+      # `npm run build` currently passes CI while changing nothing at runtime.
+      # This makes that a failure.
+      - name: Check the committed build output is current
+        run: |
+          npm run build
+          git diff --exit-code -- lib/ \
+            || (echo "::error::Compiled output in lib/ is stale. Run 'npm run build' and commit the result." && exit 1)
+
+      # Unit tests plus the fast integration tier (test/integration), which
+      # boots a real server on an ephemeral port against a stand-in worker.
+      # mocha is not recursive, so both directories are named in the "test"
+      # script; keep that in sync with Jenkinsfile.
+      - name: Run tests
+        run: npm test
+
+  licenses:
+    name: license check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # tools/check-upstream.sh fetches and compares refs.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # tools/preflight.sh invokes ./bin/node, which only exists after the full
+      # CMake build vendors a Node runtime. Run its two steps directly instead.
+      - name: Check dependency licenses
+        run: node tools/check-licenses.js
+
+      - name: Check for unmerged upstream changes
+        run: tools/check-upstream.sh
+
+  test-r:
+    name: integration with real R
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          # Serves binary packages, so installing shiny takes seconds rather
+          # than the many minutes a source build would.
+          use-public-rspm: true
+
+      - name: Install the shiny R package
+        run: install.packages("shiny")
+        shell: Rscript {0}
+
+      - run: npm ci
+
+      # Not part of `npm test`: this tier launches real R processes, so it is
+      # slower and needs R provisioned, as above. It skips itself rather than
+      # failing when shiny is missing -- convenient locally, useless here, so
+      # treat a skip as a provisioning failure.
+      - name: Run the real-R integration tier
+        run: |
+          set -o pipefail
+          npm run test:r 2>&1 | tee /tmp/r-tier.log
+          if grep -q "SKIPPING the real-R tier" /tmp/r-tier.log; then
+            echo "::error::The real-R tier skipped itself; R or the shiny package is missing."
+            exit 1
+          fi

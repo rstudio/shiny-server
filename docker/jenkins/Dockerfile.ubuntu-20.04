@@ -39,6 +39,13 @@ RUN add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_r
 RUN apt-get update && apt-get install -y cmake r-base
 RUN cmake --version
 
+# The real-R integration tier (test/integration-r, run via `npm run test:r`)
+# launches actual Shiny apps, so the image needs the shiny package, not just
+# r-base. Without it that tier skips itself and the build looks green while
+# testing nothing.
+RUN Rscript -e 'install.packages("shiny", repos = "https://packagemanager.posit.co/cran/__linux__/focal/latest")'
+RUN Rscript -e 'stopifnot(requireNamespace("shiny", quietly = TRUE))'
+
 ARG JENKINS_GID=999
 ARG JENKINS_UID=999
 RUN groupadd -g $JENKINS_GID jenkins && \
