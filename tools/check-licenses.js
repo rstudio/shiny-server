@@ -74,7 +74,11 @@ function getPackageJson(basedir) {
 }
 
 function isApprovedLicense(license) {
-  return /^(MIT|MIT\/X11|BSD|0BSD|BSD-3-Clause|BSD-2-Clause|ISC|Apache[- ]2.0|Apache License, Version 2.0|WTFPL|Public Domain|MPL[- ]2.0|zlib|Unlicense|\(MIT OR CC0-1.0\))$/.test(license);
+  // BlueOak-1.0.0 is the Blue Oak Model License: OSI-approved and permissive,
+  // written to say what MIT/BSD say with fewer ambiguities. Compatible with
+  // AGPL distribution and with commercial use. Reached us via
+  // nodemon -> minimatch@10.
+  return /^(MIT|MIT\/X11|BSD|0BSD|BSD-3-Clause|BSD-2-Clause|ISC|Apache[- ]2.0|Apache License, Version 2.0|WTFPL|Public Domain|MPL[- ]2.0|zlib|Unlicense|BlueOak-1.0.0|\(MIT OR CC0-1.0\))$/.test(license);
 }
 
 function getLicenses(path) {
