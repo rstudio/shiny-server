@@ -28,7 +28,7 @@ describe("http-proxy", () => {
     let pipeline = [
       // Find all instances of ".emit(..."
       // Since we're using -o and -h, only the actual matches will be printed
-      ["grep", "-Roh", "\\.emit([^,]\\+", "node_modules/http-proxy"],
+      ["grep", "-Roh", "\\.emit([^,]\\+", "node_modules/http-proxy-3"],
       // Strip the ".emit(" prefix
       ["sed", "s/\\.emit(//"],
       // Strip quotation marks, whitespace
