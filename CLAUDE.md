@@ -6,6 +6,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Shiny Server is an open-source (AGPLv3) Node.js server for hosting R Shiny applications, R Markdown documents, and Python Shiny apps over the web. It manages worker processes, proxies HTTP/WebSocket traffic to them, and supports multi-user and multi-app configurations.
 
+## Memory Bank
+
+The `memory-bank/` directory contains architectural documentation, with YAML frontmatter (`title`, `description`) on each file. **Before exploring the codebase, invoke the `memory-bank` skill** to discover and read the relevant documents — they provide context that should guide any code exploration, and they record verified findings (including known bugs and dead code) that are expensive to rediscover.
+
+### Key Architecture Documents
+
+- `projectbrief.md` — What Shiny Server is, deployment model, subsystem map, maintenance posture. **Read first when orienting.**
+- `requestLifecycle.md` — The spine document: startup order, middleware stack, and the end-to-end dispatch of HTTP / WebSocket / SockJS requests. Read this when you need the whole story rather than one layer.
+- `systemPatterns.md` — Code conventions: the IIFE prototype block, inheritance styles, the global `logger`, Q and the `_p` suffix, the "commit the compiled `.js`" rule. **Read before writing or reviewing code in `lib/`.**
+- `techContext.md` — Dependency set and pinned forks, shrinkwrap policy, license compliance, TypeScript adoption, Node version pinning, day-to-day commands.
+- `configSystem.md` — The bespoke config language: lexer, parser, schema, inheritance, per-app overlays, adding a directive.
+- `routerChain.md` — URL → `AppSpec` resolution, the router wrapper stack, `AppSpec.getKey()` and scheduler pooling.
+- `proxyLayer.md` — `ShinyProxy`, the three traffic paths, connection accounting, SockJS robustness and multiplexing.
+- `schedulerSystem.md` — Worker pooling, `WorkerEntry` reference counting, idle reaping, capacity limits.
+- `appWorkers.md` — How an R/Python app process is actually launched, the stdin handshake, per-worker logging, teardown.
+- `transportLayer.md` — TCP vs. Unix socket endpoints, the per-worker shared secret.
+- `nativePrivileges.md` — The `posix` addon, the launcher binary, and the root/`run_as` privilege model.
+- `coreUtilities.md` — The `lib/core/` helper inventory and the Q promise idioms.
+- `loggingAndErrors.md` — The three log streams, error-to-HTTP-response path, `sanitize_errors`, template cascade.
+- `testingGuide.md` — Test runner setup, Rewire/Sinon patterns, the honest coverage map, traps.
+- `buildAndPackaging.md` — CMake, vendored Node and pandoc, deb/rpm, service registration, CI.
+
+### Updating the Memory Bank
+
+Update it when: discovering an architectural pattern worth recording, after significant changes to core architecture, when the user asks to **update memory bank**, or when important context needs clarifying. Keep the frontmatter `description` in sync with the content — it is what an agent reads to decide whether to open the file.
+
 ## Common Commands
 
 **Install dependencies:**
@@ -38,6 +64,8 @@ tools/preflight.sh
 npm start -- --config config/default.config
 ```
 
+> **Node ABI gotcha.** `build/Release/posix.node` is a native addon compiled against the Node version in `.nvmrc` (currently v20.17.0). If your ambient `node` is a different major version, *everything* fails immediately with `ERR_DLOPEN_FAILED` / `NODE_MODULE_VERSION` mismatch — including `npm test`. Either `nvm use`, or prefix with the vendored runtime: `PATH="$PWD/ext/node/bin:$PATH" npm test`.
+
 ## Architecture
 
 ### Request Flow
@@ -55,11 +83,11 @@ npm start -- --config config/default.config
 
 4. **Proxy layer (`lib/proxy/`)** — `ShinyProxy` (in `http.js`) takes an incoming request, resolves it to an `AppSpec` via the router, asks the scheduler for a worker, and proxies the request. Supports HTTP, WebSocket, and SockJS fallback.
 
-5. **Scheduler (`lib/scheduler/`)** — Manages pools of worker processes per app. Handles spawning with exponential backoff, health tracking, idle timeouts, and session counting. `SchedulerRegistry` maps `AppSpec` keys to scheduler instances.
+5. **Scheduler (`lib/scheduler/`)** — Manages pools of worker processes per app. Handles spawning, health tracking, idle timeouts, and session counting. `SchedulerRegistry` maps `AppSpec` keys to scheduler instances. Note there is *no* spawn backoff: a crash-looping app forks a fresh process per request (see `memory-bank/schedulerSystem.md`).
 
-6. **Workers (`lib/worker/`)** — `AppWorker` (TypeScript) launches Shiny app processes with correct user/group permissions, captures stderr to log files. Supports R Shiny, Python Shiny (`shiny-python` mode), and R Markdown (`rmd` mode).
+6. **Workers (`lib/worker/`)** — `AppWorker` (TypeScript) launches Shiny app processes as the configured `run_as` user by shelling out to `su`, and captures stderr to log files. Supports R Shiny, Python Shiny (`shiny-python` mode), and R Markdown (`rmd` mode).
 
-7. **Native code (`src/`)** — C++ launcher (`launcher.cc`) and POSIX bindings (`posix.cc`) compiled via node-gyp. Provides user/group switching and Unix permissions management.
+7. **Native code (`src/`)** — Two separate artifacts with two separate build systems. `posix.cc` is the only node-gyp target (`binding.gyp`); it exports `getpwnam`, `getpwuid`, `getgrnam`, `getgrouplist`, and `acquireRecordLock` — identity *lookups* and a pidfile lock, not privilege switching. `launcher.cc` is built by CMake (`src/CMakeLists.txt`) into the standalone `shiny-server` binary, a path-discovery trampoline that `execv`s the bundled Node; it is not setuid and does no user switching.
 
 ### Key Data Types
 
@@ -68,16 +96,16 @@ npm start -- --config config/default.config
 
 ### TypeScript
 
-The project is incrementally adopting TypeScript. `.ts` files live alongside `.js` files in `lib/`. TypeScript is configured with strict mode (`tsconfig.json`). Always run `npm run build` after editing `.ts` files.
+The project is incrementally adopting TypeScript. `.ts` files live alongside `.js` files in `lib/`, and **the compiled `.js` output is committed to git**. TypeScript is configured with strict mode (`tsconfig.json`). Always run `npm run build` after editing `.ts` files and commit the regenerated `.js` — an edit to a `.ts` file alone changes nothing at runtime.
 
 ### Testing
 
-Tests use Mocha with Should.js assertions, Sinon for mocking, and Rewire for module-level dependency injection. Mocha auto-requires `should`, `./lib/core/log`, and `./lib/core/qutil` (see `.mocharc.json`). Tests are plain `.js` files in `test/`.
+Tests use Mocha with Should.js assertions, Sinon for mocking, and Rewire for module-level dependency injection. Mocha auto-requires `should`, `./lib/core/log`, and `./lib/core/qutil` (see `.mocharc.json`) — the latter two install the global `logger` and the `.eat()` promise extension that modules under test assume are already present. Tests are plain `.js` files in `test/`.
 
 ### Node.js Version
 
-Specified in `.nvmrc`. The build system installs its own Node via `external/node/install-node.sh`.
+Specified in `.nvmrc`. The build system installs its own Node via `external/node/install-node.sh` into `ext/node`.
 
 ### Promises
 
-Legacy code uses the Q promise library (`lib/core/qutil.js` provides helpers). The `_p` suffix convention on method names indicates a function returns a promise (e.g., `getAppSpec_p`).
+Legacy code uses the Q promise library (`lib/core/qutil.js` provides helpers). The `_p` suffix convention on method names indicates a function returns a promise (e.g., `getAppSpec_p`). Newer TypeScript code uses native `async`/`await` internally but still returns `Q.Promise` at seams that JS callers touch.

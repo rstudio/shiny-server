@@ -12,3 +12,14 @@ node_modules/
 __pycache__/
 .aider*
 .env
+
+# Ignore .agents/ but allow specific tracked skills.
+# When adding or removing a skill under .agents/skills, update the allowlist
+# below to match its exact directory name. Otherwise `git add` warns "paths are
+# ignored" — the skill still commits, but the warning is noise. The
+# `!.agents/skills/` line re-includes the parent directory so the per-skill
+# negations below can take effect.
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/memory-bank/
