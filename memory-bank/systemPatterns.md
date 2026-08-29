@@ -86,7 +86,7 @@ TypeScript files. It is the one dependency deliberately excluded from the
 touch every file.
 
 **The `_p` suffix on a name means "returns a promise."** This is the single most
-important naming convention in the codebase: `getAppSpec_p`, `withTimeout_p`,
+important naming convention in the codebase: `getAppSpec_p`, `connectEndpoint_p`,
 `forEachPromise_p`. A function without `_p` is synchronous or callback-based.
 Preserve the convention on any new function.
 
@@ -100,10 +100,6 @@ Q's prototype:
 - **`qutil.serialized(func)`** (`lib/core/qutil.js:25`) — wraps a
   promise-returning function so that concurrent invocations queue rather than
   overlap. Used where reentrancy would corrupt state.
-- **`qutil.withTimeout_p(ms, promise, label)`** (`lib/core/qutil.js:52`) —
-  rejects with `err.code === 'ETIMEOUT'`. Note that the timeout timer is *not*
-  cancelled when the promise settles first; it simply rejects an
-  already-resolved deferred, which is a no-op.
 
 `lib/globals.d.ts` re-declares `eat()` and `done()` on Q's `Promise` so the
 TypeScript files can see the monkey-patched methods.
@@ -126,7 +122,7 @@ Two consequences worth knowing:
 - Any module that touches `logger` at load time depends on `lib/core/log` having
   been required first. `main.js` requires it early, and `.mocharc.json`
   auto-requires it for tests — that's *why* the test config requires it.
-- `SHINY_SERVER_VERSION` is a second global, set in `lib/main.js:51`. Both are
+- `SHINY_SERVER_VERSION` is a second global, set in `lib/core/version.js`. Both are
   declared in `lib/globals.d.ts` for TypeScript's benefit.
 
 Log level comes from `SHINY_LOG_LEVEL` (`lib/core/log.js:29`), defaulting to

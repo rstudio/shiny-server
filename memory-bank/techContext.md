@@ -73,7 +73,7 @@ manual, human-judgment operation.
 
 2. **`shiny-server-client` → `github:rstudio/shiny-server-client#v1.2.0`**
    This is a *first-party Posit package*, AGPL-3.0-licensed and never published
-   to npm. It is dual-purpose: `lib/main.js:178` serves its `dist/` bundle to
+   to npm. It is dual-purpose: `lib/server-init.js` serves its `dist/` bundle to
    browsers at `__assets__/shiny-server-client.js`, and the server itself
    `require`s four modules out of its `common/` directory
    (`lib/proxy/robust-sockjs.js:20-23`) so that both ends of the
@@ -87,7 +87,7 @@ manual, human-judgment operation.
    A personal fork of `sockjs-client@1.5.2` carrying a workaround for
    `sockjs/sockjs-client` issue #563 (commit `fba9e81`, "Work around bug in
    SockJS upgrade"). Its `dist/` is served to browsers at
-   `__assets__/sockjs.js` (`lib/main.js:180`).
+   `__assets__/sockjs.js` (`lib/server-init.js`).
    *Upgrade path:* check whether #563 has been fixed upstream before trying to
    move back to the registry version.
 

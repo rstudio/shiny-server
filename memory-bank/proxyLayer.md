@@ -23,7 +23,7 @@ Everything the browser does maps onto one of those two. Notably there is **no ra
 WebSocket proxying**: `http-proxy`'s `proxy.ws()` is never called anywhere in the
 codebase (the only mention of `proxyReqWs` is in the `knownEvents` list at
 `lib/proxy/http.js:66`). Browser WebSockets are terminated by the SockJS server
-(`server.on('upgrade')` → `sockjsHandler.upgrade` at `lib/main.js:231-240`), and the
+(`server.on('upgrade')` → `sockjsHandler.upgrade` at `lib/server-init.js`), and the
 worker-side WebSocket is a brand-new client connection. So "native WebSocket" and
 "SockJS fallback" are not two code paths in Shiny Server — they're two SockJS
 *transports* that converge on the same `lib/proxy/sockjs.js` code.
@@ -36,8 +36,8 @@ browser --xhr/polling/...-> sockjs server (express middleware)/ --> RobustSockJS
 
 ## ShinyProxy (`lib/proxy/http.js`)
 
-Constructed once in `lib/main.js:139-142` with `(metarouter, schedulerRegistry)` and
-installed as the last express middleware (`lib/main.js:200`). It is not really a
+Constructed once in `lib/server-init.js` with `(metarouter, schedulerRegistry)` and
+installed as the last express middleware (`lib/server-init.js`). It is not really a
 class — all the behavior lives in the closure-scoped `httpListener`
 (`lib/proxy/http.js:93-227`); the prototype block at `lib/proxy/http.js:281-283` is
 empty.
@@ -97,9 +97,10 @@ Two handlers are attached:
   this, with a comment explaining why: httpuv ≤ 1.3.6 didn't clear headers between
   keepalive requests on the same socket. If that test ever fails, Shiny Server must add
   its own header munging.
-- `lib/proxy/http.js:287-323` (`isKeepalive`, `stripConnectionHeaders`) is **dead
-  code** — neither is called nor exported. Likewise the `shutdown`, `AppSpec`, `Q`,
-  `util`, `http` requires at the top of the file are unused.
+- `isKeepalive` and `stripConnectionHeaders` used to sit at the bottom of
+  `lib/proxy/http.js`, called by nothing and exported by nothing; they have been
+  **removed**. The `shutdown`, `AppSpec`, `Q`, `util` and `http` requires at the
+  top of the file are still unused.
 
 #### Pending: `http-proxy` → `http-proxy-3` (PR #596)
 
@@ -131,8 +132,8 @@ What actually crosses the proxy boundary, verified rather than assumed:
 | `shiny-shared-secret` | to worker (WS) | `lib/transport/tcp.js:127`, `lib/transport/unix-socket.js:103` |
 | `connection: close` | to worker | forced by http-proxy (agent=false) |
 | `x-frame-options` | to browser | `lib/proxy/http.js:257`, from `appDefaults.frameOptions` |
-| `X-Powered-By: <serverName>` | to browser | `lib/main.js:160-163` (express's own is disabled) |
-| `session_state` cookie | to browser | `client-sessions` middleware, `lib/main.js:147-149,170` |
+| `X-Powered-By: <serverName>` | to browser | `lib/server-init.js` (express's own is disabled) |
+| `session_state` cookie | to browser | `client-sessions` middleware, `lib/server-init.js,170` |
 
 **There are no `X-Forwarded-*` headers.** `http-proxy` only adds them when
 `options.xfwd` is set (`passes/web-incoming.js:72`), and Shiny Server never sets it.
@@ -147,7 +148,7 @@ to the worker once at spawn time as JSON on stdin (`lib/worker/app-worker.ts:560
 and the R side injects it into the page for `shiny-server-client` to read.
 
 **Surprise:** the `client-sessions` middleware is applied to upgrade requests as
-`clientSessionMiddleware(request, null, cb)` (`lib/main.js:237`). With `res === null`
+`clientSessionMiddleware(request, null, cb)` (`lib/server-init.js`). With `res === null`
 the `Session` constructor throws on `res.socket`
 (`node_modules/client-sessions/lib/client-sessions.js:378`), the library catches it and
 calls `next(err)` on `process.nextTick`, and `lib/main.js` ignores the error argument.
@@ -220,10 +221,10 @@ timeout — which is exactly the behavior the `reconnect` config directive docum
 
 ## SockJS server (`lib/proxy/sockjs.js`)
 
-Created lazily, after the config is parsed (`lib/main.js:258-261`), because the
+Created lazily, after the config is parsed (`lib/server-init.js`), because the
 heartbeat/disconnect delays are config-driven. Two entry points into the same server:
-the express middleware (`lib/main.js:171-174`, returns truthy if it handled the
-request) and the `upgrade` handler (`lib/main.js:231-240`).
+the express middleware (`lib/server-init.js`, returns truthy if it handled the
+request) and the `upgrade` handler (`lib/server-init.js`).
 
 The SockJS `prefix` is the regex `.*/__sockjs__(/[no]=\w+)?`
 (`lib/proxy/sockjs.js:42`) — deliberately greedy, so *any* URL containing
@@ -440,7 +441,7 @@ per-server/app `template_dir` override):
 
 | What | Value | Where |
 |---|---|---|
-| Server socket idle timeout | 45s, config `http_keepalive_timeout` | `lib/main.js:202-220`, `config-router.js:116-119` |
+| Server socket idle timeout | 45s, config `http_keepalive_timeout` | `lib/server-init.js`, `config-router.js:116-119` |
 | SockJS heartbeat | 25s, config `sockjs_heartbeat_delay` | `sockjs.js:44`, `config-router.js:121-124` |
 | SockJS disconnect delay | 5s, config `sockjs_disconnect_delay` | `sockjs.js:45`, `config-router.js:126-129` |
 | Robust reconnect window | 15s, **hardcoded** | `robust-sockjs.js:43-47` (registry built with no arg at `sockjs.js:48`) |
@@ -448,7 +449,7 @@ per-server/app `template_dir` override):
 | Pending-session reservation | 45s, **hardcoded** | `http.js:171` |
 | Worker idle reap | 5s, config `app_idle_timeout` | `scheduler.js:127-137` |
 
-The socket timeout deserves a read of the comment at `lib/main.js:213-218`: Node's
+The socket timeout deserves a read of the comment at `lib/server-init.js`: Node's
 `socket.setTimeout` starts counting from the last `write()` *call*, not completion, so
 it can fire during genuinely active transfers. It's set deliberately longer than the
 SockJS heartbeat so that polling transports aren't culled.
@@ -466,7 +467,7 @@ SockJS heartbeat so that polling transports aren't culled.
   resolving/rejecting `exitPromise`, that proxy leaks.
 - **Routers must return a `prefix` that is a real prefix of `req.url`**; violations are
   logged as `logger.error` and 404'd (`http.js:123-127`).
-- The unix-socket transport is **not wired up** — `lib/main.js:136` always constructs
+- The unix-socket transport is **not wired up** — `lib/server-init.js` always constructs
   a `TcpTransport`. `lib/transport/unix-socket.js:99` references `this.$port`, which
   that class never sets, so `createWebSocketClient` would build a malformed URL. Treat
   that file as untested.

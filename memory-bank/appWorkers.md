@@ -183,7 +183,7 @@ returns `this.$port + ''`) precisely so it can also carry a Unix socket path
 `as.integer` and, if that yields `NA`, treat it as a socket path with a `0077`
 umask mask. **`SockJSAdapter.py` does `int(input["port"])`
 (`python/SockJSAdapter.py:235`), so Python mode cannot use socket transport.**
-This is moot today: `lib/main.js:136` unconditionally constructs a
+This is moot today: `lib/server-init.js` unconditionally constructs a
 `TcpTransport`; `UnixSocketTransport` is imported but never instantiated, and
 `transport.setSocketDir(...)` is a no-op on TCP (`lib/transport/tcp.js:27`).
 The `socket_dir` config directive is therefore currently inert.

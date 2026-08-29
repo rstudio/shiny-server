@@ -67,7 +67,7 @@ Notes and portability details worth knowing:
   `EACCES`/`EAGAIN` — i.e. "someone else holds it"
   (`src/posix.cc:268-275`). `createPidFile` (`lib/core/fsutil.js:141-155`) turns
   that into the "Is another instance of shiny-server running?" error at
-  `lib/main.js:85-88`. A record lock (not a lockfile) is used so the lock dies
+  `lib/main.js`. A record lock (not a lockfile) is used so the lock dies
   with the process, even on SIGKILL.
 - The addon is loaded by **absolute relative path** — `require('../../build/Release/posix')`
   in `lib/core/permissions.js:13`, `lib/core/fsutil.js:16`,
@@ -162,7 +162,7 @@ The construction of that command lives in `wrapWithUserSwitch`
   `runAs !== null && processUser !== runAs`.
 - **`appSpec.runAs` must be a plain string by launch time.** `run_as` in config
   can hold a *list* (including the `:HOME_USER:` keyword); `SquashRunAsRouter`
-  (`lib/router/squash-run-as-router.js`, wired at `lib/main.js:46`) collapses it,
+  (`lib/router/squash-run-as-router.js`, wired at `lib/main.js`) collapses it,
   and `app-worker.ts:328-332` asserts the collapse happened. A non-string here
   would reach the `su` command line.
 - **`permissions.canRunAs(user)`** (`lib/core/permissions.js:37-39`) is the
