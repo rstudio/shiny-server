@@ -462,7 +462,13 @@ describe("app-worker", () => {
       );
       assert.fail("Launch was supposed to fail but didn't")
     } catch (ex) {
-      assert.strictEqual(ex.message, "EACCES: permission denied, mkdir '/blah'");
+      // Which errno you get for mkdir'ing at the filesystem root depends on the
+      // platform: EACCES on Linux, EROFS on macOS, whose root volume is
+      // read-only. Either way the point is that the mkdir was refused.
+      assert.ok(
+        /^E(ACCES|ROFS): .*, mkdir '\/blah'$/.test(ex.message),
+        "unexpected error message: " + ex.message
+      );
     }
   });
 });
