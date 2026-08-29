@@ -1,7 +1,6 @@
 import * as fs_promises from "fs/promises";
 import * as fs from "fs";
 import * as path from "path";
-import Q = require("q");
 
 import fsutil = require("./fsutil");
 
@@ -12,7 +11,7 @@ interface PythonEnv {
   env?: Record<string, string | null>;
 }
 
-export async function resolvePython_p(pythonPath: string, baseDir?: string): Q.Promise<PythonEnv> {
+export async function resolvePython_p(pythonPath: string, baseDir?: string): Promise<PythonEnv> {
   if (path.isAbsolute(pythonPath)) {
     let stat = await fs_promises.stat(pythonPath);
     if (stat.isDirectory()) {

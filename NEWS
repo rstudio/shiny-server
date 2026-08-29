@@ -11,6 +11,9 @@ shiny-server 1.5.24
   `text/R; charset=UTF-8`; charset names are case-insensitive, so this should
   be invisible to clients.
 
+* Upgraded TypeScript from 5 to 6, and set an explicit `target` of ES2022 in
+  tsconfig.json.
+
 * Added `:PROCESS_USER:` token for the `run_as` directive, which resolves to the
   user running the shiny-server process. This enables running without root.
 
