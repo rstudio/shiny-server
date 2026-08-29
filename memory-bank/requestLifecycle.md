@@ -17,29 +17,50 @@ router chain "which app is this?", asks the scheduler "give me a worker for that
 app", and then reverse-proxies to a loopback TCP port that an R or Python
 process is listening on.
 
-## 1. Startup sequence (`lib/main.js`)
+## 1. Startup sequence (`lib/main.js` + `lib/server-init.js`)
 
-`main.js` is a top-to-bottom script with module-scope side effects, not a
-module you can `require()`. That is a deliberate-ish accident with real
-consequences (see Sharp Edges). In order:
+Startup is split in two. **`lib/main.js`** is the CLI: a top-to-bottom script
+with module-scope side effects (`optimist.argv`, `process.exit`, the pidfile,
+signal handlers), so it still isn't something you can `require()`.
+**`lib/server-init.js`** holds everything else, and *is* requirable —
+`createServer_p(configFilePath, options)` builds the object graph, reads the
+config, starts listening, and resolves to a handle. That extraction is what
+makes in-process integration testing possible; see `testingGuide.md`.
 
-1. **Version + CLI.** `SHINY_SERVER_VERSION` is set as a *global* from
-   `VERSION` or `package.json` (`lib/main.js:49-60`); `--version` exits here.
-   Arguments are read straight off `optimist.argv` at module scope, not passed
-   in.
-2. **Pidfile** (`lib/main.js:77-100`), via a POSIX record lock (`fcntl`) in
+In order:
+
+1. **Version + CLI** (`lib/main.js`). `--version` exits here. Arguments are read
+   straight off `optimist.argv` at module scope, not passed in.
+   `SHINY_SERVER_VERSION` is no longer set here: it lives in
+   **`lib/core/version.js`**, which publishes the global as a side effect of
+   being required. `server-init.js` requires it on every startup path, so the
+   global is populated whether or not the CLI ran. (It has to be a global
+   because `lib/worker/app-worker.ts:571` reads it that way when launching a
+   worker.)
+2. **Pidfile** (`lib/main.js`), via a POSIX record lock (`fcntl`) in
    `lib/core/fsutil.js:141-155`. Failure to lock exits 1.
-3. **Config path** resolution (`lib/main.js:102-107`), defaulting to
+3. **Config path** resolution (`lib/main.js`), defaulting to
    `/etc/shiny-server/shiny-server.conf`. Note the config is *not* read yet.
-4. **Object graph construction** (`lib/main.js:121-142`) — see below. All of
-   this happens before any config is parsed, which is why the graph is built
-   around mutable seams.
-5. **Express app + middleware stack** (`lib/main.js:158-200`).
-6. **`Server` facade + event wiring** (`lib/main.js:205-247`). No sockets are
-   bound yet; `Server` has no addresses.
-7. **`loadConfig_p()`** is invoked (`lib/main.js:283-289`). This is the first
-   point at which anything listens on a port. A failure here exits 1.
-8. **Signal handlers** (`lib/main.js:324-393`).
+4. **`createServer_p`** is called, and everything from here down happens inside
+   `lib/server-init.js`:
+5. **Object graph construction** — see below. All of this happens before any
+   config is parsed, which is why the graph is built around mutable seams.
+6. **Express app + middleware stack.**
+7. **`Server` facade + event wiring.** No sockets are bound yet; `Server` has no
+   addresses.
+8. **`loadConfig_p()`** is invoked. This is the first point at which anything
+   listens on a port. A failure here rejects, and `main.js` exits 1.
+9. **Signal handlers** (`lib/main.js`), which drive the handle's `reload_p()`
+   (SIGHUP), `dump()` (SIGUSR1), and `stopListening_p()` / `shutdownWorkers()`
+   (SIGINT/SIGTERM/SIGABRT).
+
+`createServer_p` does not resolve until every listener has emitted `'listening'`
+or `'error'` — `setAddresses()` itself returns as soon as `listen()` is called.
+Bind failures are *not* fatal and do not reject: they are logged and forwarded as
+`'error'` events exactly as before, and also reported on the handle as
+`bindErrors`. The handle's `addresses()` returns the bound `net.Server#address()`
+objects, which is the only way to discover the port when the config said
+`listen 0`.
 
 ### The object graph
 
@@ -53,7 +74,7 @@ metarouter = SquashRunAsRouter                        <- collapses runAs[] to on
                     └─ RestartRouter                  <- stamps settings.restart from restart.txt
                          └─ CompositeRouter
                               ├─ IndirectRouter  ──> ConfigRouter   (SWAPPED on reload)
-                              └─ ping()                             (lib/main.js:111-118)
+                              └─ ping()                             (lib/server-init.js)
 
 ShinyProxy(metarouter, schedulerRegistry)   -> app.use(shinyProxy.httpListener)
 sockjsServer = proxy_sockjs.createServer(metarouter, schedulerRegistry, ...)  (REBUILT on reload)
@@ -67,7 +88,7 @@ Two seams make reload possible without rebuilding the world:
 
 - **`IndirectRouter`** (`lib/router/router.js:65-80`) sits at the *bottom* of
   the chain holding a swappable inner router. On reload only the `ConfigRouter`
-  is replaced (`lib/main.js:251`); every decorator above it — and, crucially,
+  is replaced (`lib/server-init.js`); every decorator above it — and, crucially,
   `LocalConfigRouter`'s `AppConfig` cache — survives.
 - **`SchedulerRegistry.setTransport`** (`lib/scheduler/scheduler-registry.js:48-54`)
   and `transport.setSocketDir` are re-applied each reload, but the registry and
@@ -84,7 +105,7 @@ because its cache is keyed on an `AppSpec` whose settings already include the
 
 ### `loadConfig_p` — the reloadable half
 
-`lib/main.js:249-281`, wrapped in `qutil.serialized` (`lib/core/qutil.js:29-51`)
+`lib/server-init.js`, wrapped in `qutil.serialized` (`lib/core/qutil.js:29-51`)
 so overlapping SIGHUPs queue rather than interleave. It:
 
 - parses the config against `config/shiny-server-rules.config` and builds a new
@@ -93,20 +114,20 @@ so overlapping SIGHUPs queue rather than interleave. It:
 - installs it into `indirectRouter`, propagates `allow_app_override`;
 - calls `server.setAddresses(...)` — this is what actually binds ports;
 - builds a **brand-new SockJS server** and replaces the `sockjsHandler`
-  placeholder from `lib/main.js:153-156`;
+  placeholder from `lib/server-init.js`;
 - updates the closure variables `socketTimeout`, `useCompression`, and
   `requestLogger`, all of which are read *per connection / per request*, so the
   new values take effect immediately without touching the middleware stack.
 
 ## 2. The middleware stack
 
-Installed in this exact order (`lib/main.js:158-200`):
+Installed in this exact order (`lib/server-init.js`):
 
 | # | Middleware | Notes |
 |---|---|---|
 | 1 | `X-Powered-By: Shiny Server` | Express's own header is disabled at `:159` first. |
 | 2 | conditional `compression()` | Guarded by the mutable `useCompression` flag, so `http_allow_compression` is honored per-request after a reload. |
-| 3 | `client-sessions` | Random per-process secret (`lib/main.js:147-149`). |
+| 3 | `client-sessions` | Random per-process secret (`lib/server-init.js`). |
 | 4 | `sockjsHandler` | `if (!sockjsHandler(req,res)) next()`. |
 | 5 | `__assets__` filter | `connect_util.filterByRegex(/\b__assets__\/.+/, ...)`. |
 | 6 | `shinyProxy.httpListener` | Terminal — never calls `next()`. |
@@ -120,7 +141,7 @@ Why the order matters:
   an app's prefix and would otherwise be proxied straight into R. Both
   middlewares must therefore run before the proxy, and the assets regex is
   deliberately unanchored (`\b__assets__\/`) with everything up to and including
-  `__assets__/` stripped from `req.url` at `lib/main.js:189`.
+  `__assets__/` stripped from `req.url` at `lib/server-init.js`.
 - **`client-sessions` before SockJS.** The session cookie is established before
   SockJS transport requests are handled. (In practice nothing in `lib/` ever
   reads `req.session`; the middleware looks vestigial.)
@@ -134,7 +155,7 @@ Why the order matters:
 the URL doesn't match the prefix regex, and `true` after handling. The same
 function object is also used for upgrades — `Server.prototype.middleware` sets
 `handler.upgrade = handler` — which is why `sockjsHandler.upgrade(req, socket, head)`
-works in `lib/main.js:238`.
+works in `lib/server-init.js`.
 
 ## 3. Dispatch: plain HTTP request to an app
 
@@ -197,7 +218,7 @@ is what lets a single SockJS server serve every app prefix, and the optional
 `lib/proxy/robust-sockjs.js`.
 
 **WebSocket upgrades** bypass Express entirely — Express only handles
-`'request'`. `lib/main.js:231-240` handles `'upgrade'` on the `Server` facade,
+`'request'`. `lib/server-init.js` handles `'upgrade'` on the `Server` facade,
 manually running `clientSessionMiddleware` and then `sockjsHandler.upgrade`.
 
 Once SockJS produces a connection (`lib/proxy/sockjs.js:49-62`) it goes through
@@ -239,8 +260,8 @@ After routing (`lib/proxy/sockjs.js:100-251`):
 
 ## 5. Requests that never reach an app
 
-- **`/ping`** → `200 OK` (`lib/main.js:111-118`). It is joined *after*
-  `indirectRouter` in the composite (`lib/main.js:126`), so a config location
+- **`/ping`** → `200 OK` (`lib/server-init.js`). It is joined *after*
+  `indirectRouter` in the composite (`lib/server-init.js`), so a config location
   mapped to `/ping` wins over the health check.
 - **`*/__assets__/*`** → `shiny-server.css` from `assets/`,
   `shiny-server-client[.min].js` from `node_modules/shiny-server-client/dist/`,
@@ -265,11 +286,11 @@ After routing (`lib/proxy/sockjs.js:100-251`):
   cascading template lookup: `error-503-users.html` → `error-503.html` →
   `error.html`, checking the app/server `templateDir` before `templates/`.
   Results are memoized in a module-level cache that SIGHUP flushes
-  (`lib/main.js:326`).
+  (`lib/main.js`).
 
 ## 6. Reload, restart, and shutdown
 
-**SIGHUP** (`lib/main.js:324-328`) flushes the template cache and re-runs
+**SIGHUP** (`lib/main.js`) flushes the template cache and re-runs
 `loadConfig_p`.
 
 Rebuilt: `ConfigRouter` and all `ServerRouter`/location routers; the SockJS
@@ -282,8 +303,17 @@ running worker process**; the transport; the Express app and its middleware
 instances; the `client-sessions` secret; and any `http.Server` whose
 address/port is unchanged (`Server.setAddresses` diffs by
 `http://<host>:<port>` key and only opens/closes the delta,
-`lib/server/server.js:79-107`). Existing connections on a *removed* listener are
-not killed — `$close` only stops accepting.
+`lib/server/server.js`). Existing connections on a *removed* listener are
+not killed — `$close` only stops accepting. (`test/support/server.js` therefore
+destroys them by hand at teardown; production deliberately does not.)
+
+`$close` used to have a second, worse problem: `doClose` early-returned for a
+server that had not finished binding, while the caller dropped it from
+`$wildcards`/`$hosts` regardless — so a mid-bind listener was leaked, still
+holding its port with nobody left to close it. It now waits for the bind to
+settle (`'listening'` or `'error'`) before closing, and `$close`/`destroy()`
+return a promise that resolves once every listener has actually emitted
+`'close'`. `test/integration/harness.js` has the regression test.
 
 Two consequences worth internalizing:
 
@@ -302,7 +332,7 @@ Two consequences worth internalizing:
   the replacement server, so clients will be forced to reconnect. *Inferred from
   the code shape; not verified empirically.*
 
-**Shutdown.** `gracefulShutdown` (`lib/main.js:341-360`) sets
+**Shutdown.** `gracefulShutdown` (`lib/main.js`) sets
 `shutdown.shuttingDown = true` — read by `lib/proxy/sockjs.js:215,225` so that
 clients get "The server is restarting" and a `SHUTTING_DOWN` close code instead
 of "the application unexpectedly exited" — closes listeners, tells the registry
@@ -310,43 +340,46 @@ to shut down workers, then hard-exits after 500 ms. `lastDitchShutdown` runs on
 `'exit'` for the violent cases where timers will never fire. Exit codes follow
 the `128+signal` convention.
 
-**SIGUSR1** dumps the worker registry to the log (`lib/main.js:331-333`).
+**SIGUSR1** dumps the worker registry to the log (`lib/main.js`).
 
 ## 7. Sharp edges
 
-- **`server.on('request', app.handle)`** (`lib/main.js:221`) uses a *private*
-  Express API, and there is a **second** `'request'` listener for morgan at
-  `:244`. The access logger is therefore not middleware: it sees every request
+- **`server.on('request', app.handle)`** (`lib/server-init.js`) uses a *private*
+  Express API, and there is a **second** `'request'` listener for morgan after
+  it. `test/integration/access-log.js` pins the ordering consequence. The access logger is therefore not middleware: it sees every request
   unconditionally and is swapped atomically on reload via a closure variable.
 - **`lib/proxy/http.js:117` reads `req._parsedUrl`**, which only exists as a
   side effect of `parseurl` caching inside Express's router. Anything that
   bypasses `app.handle` will not have it.
-- **`lib/main.js:234` references an out-of-scope `res`** in the pre-config
-  `'upgrade'` guard — a `ReferenceError` if an upgrade arrives before the config
-  finishes loading.
+- **The pre-config `'upgrade'` guard references an out-of-scope `res`**
+  (`lib/server-init.js`, marked `KNOWN DEFECT` in place) — a `ReferenceError` if
+  an upgrade arrives before the config finishes loading. Characterized but
+  deliberately not fixed yet.
 - **`clientSessionMiddleware(request, null, cb)`** on the upgrade path
-  (`lib/main.js:237`) passes `null` for `res`. `client-sessions` dereferences
+  (`lib/server-init.js`, also marked `KNOWN DEFECT`) passes `null` for `res`. `client-sessions` dereferences
   `res.socket`, throws inside its `try`, and calls `next(err)` on `nextTick`.
   The callback ignores its argument, so upgrades still work — one tick later,
   with no `req.session` defined. Verified against
   `node_modules/client-sessions/lib/client-sessions.js:355-383,600-630`.
-- **`server.listening = true/false`** in `lib/server/server.js:174,178` is a
-  silent no-op: `net.Server.prototype.listening` is a getter with no setter, so
-  in sloppy mode the assignment is discarded and Node's own `!!this._handle`
-  value is what every read sees. Benign today (Node's value is more accurate),
-  but do not "fix" the reads assuming the writes work.
+- **`server.listening` is read-only.** `lib/server/server.js` used to assign
+  `server.listening = true/false`; that was a silent no-op, because
+  `net.Server.prototype.listening` is a getter with no setter, so in sloppy mode
+  the assignment is discarded. The assignments have been removed and a comment
+  put in their place. The *reads* were always correct — they see Node's own
+  `!!this._handle` — so do not "fix" them on the assumption that a flag is being
+  maintained.
 - **`Server`'s `newListener` trick** (`lib/server/server.js:55-73`) records
   every event name ever subscribed and retro-fits forwarding onto both existing
   and future `http.Server`s. It works in both orders, but it means listener
   registration order on the facade determines invocation order across *all*
   bound addresses.
 - **Socket timeout is a foot-gun.** The 45s default and the comment at
-  `lib/main.js:213-218` document that Node's `setTimeout` clock starts at the
+  `lib/server-init.js` document that Node's `setTimeout` clock starts at the
   last `write()` call, not at the last completed write, so active connections
   can still trip it. `sockjs_heartbeat_delay` must stay comfortably below it.
 - **`req.url` mutation.** The `__assets__` middleware rewrites `req.url` to a
   *leading-slash-less* path before handing it to `express.static`
-  (`lib/main.js:188-190`), and the proxy rewrites `req.url` again to strip the
+  (`lib/server-init.js`), and the proxy rewrites `req.url` again to strip the
   app prefix (`lib/proxy/http.js:129`). Anything downstream that wants the
   original must use `req.originalUrl`.
 - **No error-handling middleware, and `NODE_ENV` is never set**, so Express
@@ -359,6 +392,20 @@ the `128+signal` convention.
   *outside* the promise chain with a `try/catch`, because a synchronous
   `OutOfCapacityError` thrown inside the chain would escape as an unhandled
   exception rather than reaching `.fail()`.
-- **Dead imports** in `lib/main.js`: `UnixSocketTransport` (`:43`) and
-  `SimpleScheduler` (`:41`) are required but never used — the transport is
-  always TCP, and the scheduler is instantiated inside the registry.
+- **Ephemeral ports can be handed out twice, across address families.**
+  `TcpTransport.alloc_p` picks a worker port by binding `127.0.0.1:0`, reading
+  the port, and closing again. Anything that binds the wildcard `::` in that
+  window can be given the same port — and a later specific-address bind on
+  `127.0.0.1` then *succeeds*, shadowing the wildcard listener for loopback
+  traffic. Production rarely hits this (the listen port is configured, not
+  ephemeral), but it made the integration suite flaky until the harness pinned
+  its listener to `127.0.0.1`. See `testingGuide.md`.
+- **`qutil.serialized` hands a queued caller the *previous* call's outcome**,
+  because Q's `.fin()` settles with the original promise's value even when its
+  callback returns a promise. Harmless today — the only production user is
+  `loadConfig_p`, whose queued caller is the SIGHUP handler, which `.eat()`s the
+  result — but a live trap for the Q removal. Pinned in `test/qutil.js`.
+- **Dead imports have been removed** from what is now `lib/server-init.js`
+  (`UnixSocketTransport`, `SimpleScheduler`), along with `qutil.withTimeout_p`,
+  `qutil.fapply`, the unused `posix` require in `lib/router/router.js`, and the
+  never-called `isKeepalive`/`stripConnectionHeaders` in `lib/proxy/http.js`.

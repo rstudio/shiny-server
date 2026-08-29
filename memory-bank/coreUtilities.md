@@ -40,7 +40,8 @@ noise; use `.done()` when an error genuinely should crash.
 patch is installed as a *side effect of requiring qutil*. Several modules call
 `.eat()` without requiring qutil at all — `lib/proxy/http.js:192`,
 `lib/scheduler/scheduler.js` (102, 162, 225, 270), `lib/worker/app-worker.ts:553`.
-They work only because `lib/main.js:32` requires qutil early. Tests are made to
+They work only because `lib/server-init.js` requires qutil early, and
+`lib/main.js` requires `lib/server-init.js` before it calls `.eat()` itself. Tests are made to
 work the same way by `.mocharc.json`, which force-requires
 `./lib/core/log` and `./lib/core/qutil` before any test file. If you write a new
 entry point or a standalone script that uses `.eat()`, require qutil explicitly.
@@ -55,12 +56,13 @@ declaration merging so the `.ts` files can call them.
   the new call chains off `currentPromise.fin(...)` and re-enters `wrapped`;
   `currentPromise` is nulled in a `.fin` registered immediately after the call,
   so the ordering guarantee holds even for a burst of queued callers.
-  Sole consumer: `lib/main.js:249`, wrapping `loadConfig_p`. That is what makes
+  **But the value does not.** Q's `.fin()` settles with the *original* promise's
+  outcome even when its callback returns a promise, so a queued caller receives
+  the outcome of whatever ran ahead of it, not its own. Benign only because the
+  sole production caller discards the result. Pinned in `test/qutil.js`; see
+  `requestLifecycle.md` §7.
+  Sole consumer: `lib/server-init.js`, wrapping `loadConfig_p`. That is what makes
   a burst of `SIGHUP`s safe — config reloads never interleave.
-- **`withTimeout_p(timeoutMs, promise, label)`** (`qutil.js:59`) — rejects with
-  an `Error` whose `code` is `'ETIMEOUT'` if the timeout wins.
-  **No consumers anywhere in the repo — dead code.** (Also note it leaves the
-  `setTimeout` running even after the promise settles.)
 - **`forEachPromise_p(array, iterator, accept, defaultValue)`** (`qutil.js:91`) —
   sequential first-match search. Calls `iterator(el)` (promise-returning) one
   element at a time; the first result for which `accept(result)` is truthy wins;
@@ -69,12 +71,8 @@ declaration merging so the `.ts` files can call them.
   `lib/router/router.js:119` (`getFirstAppSpec_p` — walk routers until one
   claims the request) and `lib/router/directory-router.js:355` (walk candidate
   subpaths until one is a real app dir).
-- **`fapply(func, object, args)`** (`qutil.js:131`) — call a synchronous
-  function, wrapping return value or thrown exception in a promise.
-  **No consumers — dead code.** The header comment ("Why doesn't Q.apply work
-  this way??") is a fossil.
-- **`wrap(func)`** (`qutil.js:143`) — same idea as `fapply` but returns a
-  reusable promise-returning wrapper. Used to adapt a synchronous router to the
+- **`wrap(func)`** — calls a synchronous function and returns a promise of its
+  result, converting a throw into a rejection. Used to adapt a synchronous router to the
   promise-returning `getAppSpec_p` interface: `lib/router/router.js:320`
   (`RedirectRouter`).
 - **`map_p(collection, func_p)`** (`qutil.js:158`) — **sequential** map, not
@@ -169,7 +167,7 @@ Uses `graceful-fs` (retries on EMFILE) rather than `fs`, and pulls in the native
 - `createPidFile(path)` (`:142`) — synchronous; acquires a POSIX write record
   lock via the native addon and returns `false` if another process holds it.
   This, not the file's existence, is the single-instance check.
-  Consumer: `lib/main.js:85`.
+  Consumer: `lib/main.js`.
 
 **Traps.**
 1. `safeTail_p` calls `logger.error` (`:106`, `:117`) using the *global* `logger`
@@ -253,13 +251,16 @@ A one-line module (`:13`) exporting a single mutable boolean, `shuttingDown`.
 It exists purely as a shared mutable cell — requiring it from two modules gives
 them the same object.
 
-The protocol, all in `lib/main.js`:
+The protocol, driven from `lib/main.js` through the handle that
+`lib/server-init.js` returns:
 1. `SIGINT` / `SIGTERM` / `SIGABRT` / the synthetic `uncaughtException2` event
-   route to `gracefulShutdown()` (`main.js:341-360`): set
-   `shutdown.shuttingDown = true`, `server.destroy()`,
-   `schedulerRegistry.shutdown()` (which calls `shutdown()` on every scheduler),
-   then `process.exit(exitCode)` after a **500 ms** grace window so clients can
-   receive their close messages. Exit code is `128 + signo`.
+   route to `gracefulShutdown()`: set `shutdown.shuttingDown = true`, call the
+   handle's `stopListening_p()` (which is `Server#destroy()`) and
+   `shutdownWorkers()` (which calls `shutdown()` on every scheduler), then
+   `process.exit(exitCode)` after a **500 ms** grace window so clients can
+   receive their close messages. Exit code is `128 + signo`. The handle also
+   offers `shutdown_p()`, which does both and resolves once the listeners have
+   closed; that is what the test harness uses.
 2. `process.on('exit')` runs `lastDitchShutdown` (`main.js:362-374`) — same flag,
    same registry shutdown, but no timers (they won't fire during `exit`), so no
    client notification.
@@ -278,7 +279,7 @@ a leftover import.
 
 `filterByRegex(pathRegex, app)` (`:16`) returns Connect/Express middleware that
 delegates to `app` only when `url.parse(req.url).path` matches, and otherwise
-calls `next()`. Sole consumer: `lib/main.js:183`, gating the `__assets__/`
+calls `next()`. Sole consumer: `lib/server-init.js`, gating the `__assets__/`
 static-file handlers. Uses the legacy `url.parse` (deprecated but not removed);
 `lib/server/server.js:155` uses `new url.URL` — the codebase is inconsistent.
 
@@ -326,7 +327,7 @@ Exactly one event flows over it: **`vacantSched`**, carrying an `appSpec.getKey(
   - `lib/config/app-config.js:28` — evicts that app's cached
     `shiny-server-rules.config` overlay, so per-app config is re-read next time.
 
-The bus is constructed once in `lib/main.js:121` and passed into
+The bus is constructed once in `lib/server-init.js` and passed into
 `SchedulerRegistry` (`main.js:133`) and `LocalConfigRouter` → `AppConfig`.
 Tests construct their own (`test/scheduler.js`, `test/simple-scheduler.js`,
 `test/scheduler-registry.js`, `test/app-config.js`).
@@ -339,7 +340,7 @@ synchronously would break the eviction.
 ## `lib/globals.d.ts`
 
 Declares the two ambient globals the `.ts` files rely on:
-`SHINY_SERVER_VERSION` (a `var`, assigned in `lib/main.js:51/58`, read in
+`SHINY_SERVER_VERSION` (a `var`, assigned in `lib/core/version.js`, read in
 `lib/worker/app-worker.ts:571`) and `logger` (the log4js logger installed as a
 global by `lib/core/log.js:23`). It also declaration-merges `eat()` and `done()`
 onto Q's `Promise` class (see qutil above). `tsconfig.json` includes
@@ -347,12 +348,13 @@ onto Q's `Promise` class (see qutil above). `tsconfig.json` includes
 
 ## Summary: dead or vestigial
 
-- `qutil.withTimeout_p` — no consumers.
-- `qutil.fapply` — no consumers.
-- `paths.projectRoot` — exported, unused outside `paths.js`.
+- `qutil.withTimeout_p` and `qutil.fapply` — **removed**; they had no consumers.
+- `paths.projectRoot` — exported; used only by `paths.js` itself and the test
+  harness (`test/support/config.js`).
 - `SimpleEventBus` — a bare `EventEmitter` subclass with an empty prototype
   block; only meaningful as a named type for one event.
-- `lib/proxy/http.js:23` — requires `shutdown` but never reads it.
+- `lib/proxy/http.js` — requires `shutdown`, `AppSpec`, `Q`, `util` and `http`
+  but reads none of them.
 
 ## Cross-cutting traps
 

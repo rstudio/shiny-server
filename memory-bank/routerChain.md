@@ -49,7 +49,7 @@ including `host`. See `node_modules/sockjs/lib/transport.js:147-175`.
 
 ## Composition
 
-Built once at startup in `lib/main.js:124-141`:
+Built once at startup in `lib/server-init.js`:
 
 ```
 SquashRunAsRouter                       (lib/router/squash-run-as-router.js)
@@ -57,15 +57,15 @@ SquashRunAsRouter                       (lib/router/squash-run-as-router.js)
      └─ RestartRouter                   (lib/router/router.js:87)
          └─ CompositeRouter             (router.join)
              ├─ IndirectRouter ──▶ ConfigRouter   (swapped in on config (re)load)
-             └─ ping()                  (lib/main.js:111)
+             └─ ping()                  (lib/server-init.js)
 ```
 
-The result, `metarouter`, is handed to both `ShinyProxy` (`lib/main.js:138-141`)
-and the SockJS server (`lib/main.js:259`) — one router instance serves both
+The result, `metarouter`, is handed to both `ShinyProxy` (`lib/server-init.js`)
+and the SockJS server (`lib/server-init.js`) — one router instance serves both
 transports.
 
 `IndirectRouter` exists so config reload can hot-swap the `ConfigRouter`
-(`lib/main.js:252`) without rebuilding the wrapper stack or the proxy. It starts
+(`lib/server-init.js`) without rebuilding the wrapper stack or the proxy. It starts
 as a `NullRouter`.
 
 **Ordering constraints in this stack are load-bearing:**
@@ -101,7 +101,7 @@ at request time — `lib/router/config-router.js:42-101`), and builds a
 `ConfigRouter` also carries process-wide settings that main.js pulls off it after
 load (`socketDir`, `httpAllowCompression`, `httpKeepaliveTimeout`,
 `sockjsHeartbeatDelay`, `sockjsDisconnectDelay`, `accessLogSpec`,
-`allowAppOverride`) — see `lib/main.js:252-265`. It is a router *and* a config
+`allowAppOverride`) — see `lib/server-init.js`. It is a router *and* a config
 holder; that dual role is why reload has to touch several subsystems at once.
 
 ### Server selection is scored, not first-match
@@ -279,7 +279,7 @@ are logged and swallowed — a stat failure must not break the request.
 ### `LocalConfigRouter` (`lib/router/local-config-router.js`)
 
 Only active when `allow_app_override` is enabled (`$allowAppOverride`, set from
-config at `lib/main.js:253`). Reads `.shiny_app.conf` from the app dir
+config at `lib/server-init.js`). Reads `.shiny_app.conf` from the app dir
 (`lib/config/app-config.js:92`), parses it with `parseApplication(..., /* no defaults */)`,
 and merges. `addLocalConfig` (`lib/config/app-config.js:67`) whitelists the mergeable
 keys to `appDefaults`, `scheduler`, `frame_options` — a local config explicitly
@@ -356,7 +356,7 @@ filesystem probing in `DirectoryRouter.$findShinyDir_p` (one `readdir` per candi
 directory) is on the hot path. That's the reason `LocalConfigRouter` caches at all.
 
 **`req` mutation summary.** `ServerRouter` sets `req.templateDir`. `ShinyProxy`
-rewrites `req.url` (after routing). `lib/main.js:183-189` rewrites `req.url` for
+rewrites `req.url` (after routing). `lib/server-init.js` rewrites `req.url` for
 `__assets__` requests before the proxy ever sees them. Nothing else in the router
 layer mutates `req`.
 

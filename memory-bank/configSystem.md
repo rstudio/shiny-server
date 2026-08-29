@@ -231,7 +231,7 @@ independent filters make the overlay safe:
 
 The whole mechanism is gated on the top-level `allow_app_override` directive
 (default `true`), plumbed through `ConfigRouter.getAppOverride()` →
-`LocalConfigRouter.setAppOverride()` (`lib/main.js:253`).
+`LocalConfigRouter.setAppOverride()` (`lib/server-init.js`).
 
 Overlays are cached per `AppSpec.getKey()` and evicted on the `vacantSched` event
 (`lib/config/app-config.js:28`) — the cache must live *outside* the `RestartRouter`
@@ -285,8 +285,8 @@ Unexpected } character (did you leave a semicolon off the previous directive?) (
 `$validateAndTransformArgs` and are *not* wrapped by `throwForNode`, so they carry
 no position: `listen abc;` yields bare `"abc" is not a valid Integer value`.
 
-At startup, `lib/main.js:277` logs `Error loading config: <message>` and
-`process.exit(1)`. On `SIGHUP` reload (`lib/main.js:324`) a config error is
+At startup, `lib/server-init.js` logs `Error loading config: <message>` and
+`process.exit(1)`. On `SIGHUP` reload (`lib/main.js`) a config error is
 logged and **eaten** — the previously loaded router stays live, so a bad edit
 can't take down a running server.
 
@@ -353,4 +353,4 @@ can't take down a running server.
   `$USER` and `$ROOT`) into `/tmp/shiny-server-test/` and launches
   `bin/shiny-server` against it. Useful for exercising a real config without
   touching `/etc/shiny-server/shiny-server.conf` (the default path,
-  `lib/main.js:102`).
+  `lib/main.js`).

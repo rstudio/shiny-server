@@ -11,7 +11,7 @@ nothing to do with each other:
 1. **The server log** — log4js, written to the process's stdout
    (`lib/core/log.js`). Everything the Node process itself has to say.
 2. **The access log** — morgan, written to a file named by the `access_log`
-   config directive (`lib/main.js:291-321`).
+   config directive (`lib/server-init.js`).
 3. **Per-app worker logs** — one file per worker process, capturing the R/Python
    child's stderr. Covered in depth in `memory-bank/appWorkers.md`; only the
    parts that couple to this doc (naming, ownership, deletion, and being tailed
@@ -22,7 +22,7 @@ nothing to do with each other:
 ## The server log (log4js)
 
 `lib/core/log.js` is deliberately tiny and is required *first* in
-`lib/main.js:15`, before anything else, because it installs `global.logger` —
+`lib/main.js`, before anything else, because it installs `global.logger` —
 an implicit global that essentially every module in the codebase uses without
 importing it. `test/.mocharc.json` also requires it for the same reason.
 
@@ -42,7 +42,7 @@ importing it. `test/.mocharc.json` also requires it for the same reason.
   is the useful one for proxy/scheduler debugging — a great deal of the
   interesting narrative (`logger.trace`) is invisible at the default level.
 - **There is no runtime level change.** `SIGHUP` reloads the config and flushes
-  the template cache (`lib/main.js:324-328`) but does not touch the log level;
+  the template cache (`lib/main.js`) but does not touch the log level;
   no config directive sets it. Changing the level requires restarting the
   process with a different `SHINY_LOG_LEVEL`.
 - `lib/core/log.js:26-28` monkey-patches `setLevel` back onto the logger
@@ -51,24 +51,24 @@ importing it. `test/.mocharc.json` also requires it for the same reason.
   can be removed only after confirming no external/patch consumers.
 - **There is no `--log-dir` CLI flag.** The only flags `lib/main.js` reads via
   optimist are `--version`, `--pidfile`, `--memlog`, and a positional config
-  file path (`lib/main.js:68-107`).
+  file path (`lib/main.js`).
 
 ### Logging before the config is loaded
 
 Because log.js is required at module load, `logger` is usable immediately: the
 version banner, pidfile message, and config path are all logged before the
-config file is even read (`lib/main.js:74`, `:84`, `:107`). Config-parse
+config file is even read (`lib/main.js`, `:84`, `:107`). Config-parse
 failures are therefore reported on the server log with a distinct message for
-`ENOENT` (`lib/main.js:273-280`), and a startup failure exits with code 1
-(`lib/main.js:283-289`).
+`ENOENT` (`lib/server-init.js`), and a startup failure exits with code 1
+(`lib/server-init.js`).
 
 Two consequences of the "config loads asynchronously after the server is
 already listening" design:
 
 - `requestLogger` is `null` until `createLogger_p` resolves, so requests served
   during the startup window are silently absent from the access log
-  (`lib/main.js:243-247`, `:267-271`).
-- `lib/main.js:231-236` — the `upgrade` handler's pre-config branch references
+  (`lib/server-init.js`, `:267-271`).
+- `lib/server-init.js` — the `upgrade` handler's pre-config branch references
   an undefined `res` variable. A WebSocket upgrade arriving before the config
   parses will throw `ReferenceError` instead of logging cleanly. This is a
   latent bug, not intended behavior.
@@ -91,18 +91,18 @@ leave the server writing into a deleted inode forever.
 - Parsed into a plain `{path, format}` spec by `createAccessLogSpec`
   (`lib/router/config-router.js:249-256`), stored as
   `configRouter.accessLogSpec` (`lib/router/config-router.js:105`).
-- `createLogger_p` (`lib/main.js:291-321`) opens the path with `flags: 'a'` and
+- `createLogger_p` (`lib/server-init.js`) opens the path with `flags: 'a'` and
   wraps morgan around it. The legacy Connect format name `"default"` is
-  rewritten to morgan's `"combined"` (`lib/main.js:303-305`) — the schema's
+  rewritten to morgan's `"combined"` (`lib/server-init.js`) — the schema's
   default value is still the string `default`, so this translation is what keeps
   old config files working.
-- **Dead code**: `lib/main.js:314-320` is unreachable (it follows an
+- **Dead code**: `lib/server-init.js` is unreachable (it follows an
   unconditional `return`), a leftover from the pre-morgan implementation that
   used to `fs.open` with mode `0660`. The access log gets no explicit mode; it
   is created with the process umask.
 - **Wiring is deliberately outside Express.** morgan is attached as a *second*
-  `server.on('request', ...)` listener (`lib/main.js:244-247`), registered after
-  the Express handler (`lib/main.js:221`), and is invoked with a no-op `next`.
+  `server.on('request', ...)` listener (`lib/server-init.js`), registered after
+  the Express handler (`lib/server-init.js`), and is invoked with a no-op `next`.
   It is not middleware in the proxy chain. This matters because most Shiny
   traffic is proxied by `ShinyProxy` or hijacked by SockJS before Express
   middleware would finish; making morgan a listener guarantees it sees every
@@ -126,8 +126,11 @@ signalled by convention, not by class:
 
 - `err.code === 'ENOENT'` — treated as "app not found" → 404
   (`lib/proxy/http.js:212-213`).
-- `err.code === 'ETIMEOUT'` — produced by `qutil.withTimeout_p`
-  (`lib/core/qutil.js:53+`), used for app init timeouts.
+- `err.code === 'ETIMEOUT'` — was produced by `qutil.withTimeout_p`, which has
+  been removed. Nothing produces or checks it any more; an app that fails to
+  come up within `app_init_timeout` rejects from `connectEndpoint_p`
+  (`lib/scheduler/scheduler.js`) with the plain message "The application took
+  too long to respond." instead.
 - `err.consoleLogFile` — an ad-hoc property attached by worker-launch failures so
   the 500 page can tail the right log file (`lib/proxy/http.js:216`).
 
@@ -242,7 +245,7 @@ Other invariants worth knowing:
   (`lib/core/render.js:37`, `:82`). It is theoretically ambiguous
   (`"/a/b"+"c"` vs `"/a/"+"bc"`) and stringifies `undefined` for the no-custom-dir
   case. Harmless in practice, but don't rely on the key for anything.
-- The cache is flushed only on `SIGHUP` (`lib/main.js:326`) and in tests
+- The cache is flushed only on `SIGHUP` (`lib/main.js`) and in tests
   (`render.flushCache`, `lib/core/render.js:143-146`). Editing a custom template
   requires a `SIGHUP`.
 - `templateDir` reaches error paths two ways: attached to the request at the
@@ -330,10 +333,10 @@ depend on:
   `.fail(function(consoleLog) { return; })` at `lib/proxy/http.js:32-34` (and
   its twin at `lib/proxy/sockjs.js:200-202`) is therefore dead code, and
   misleadingly named — its parameter is an error, not a log.
-- **`uncaughtException` is re-thrown** after logging (`lib/main.js:387-392`), via
+- **`uncaughtException` is re-thrown** after logging (`lib/main.js`), via
   a synthetic `uncaughtException2` event used to run cleanup first. The process
   really does die.
-- **`clientError` is logged at DEBUG** (`lib/main.js:225-229`) because
+- **`clientError` is logged at DEBUG** (`lib/server-init.js`) because
   ECONNRESET/EPIPE are constant background noise; genuine client-side problems
   are invisible at the default INFO level.
 - **Unknown proxy events are logged as warnings** (`lib/proxy/http.js:240-248`)

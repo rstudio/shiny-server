@@ -15,13 +15,13 @@ hands the same address to both sides (the proxy and the R/Python process).
 
 There are exactly two objects.
 
-**`Transport`** is a long-lived singleton, created once in `lib/main.js:136` and
+**`Transport`** is a long-lived singleton, created once in `lib/server-init.js` and
 pushed down to every scheduler via `SchedulerRegistry.setTransport()`
-(`lib/main.js:255`, `lib/scheduler/scheduler-registry.js:48-53`). It has two
+(`lib/server-init.js`, `lib/scheduler/scheduler-registry.js:48-53`). It has two
 methods:
 
 - `setSocketDir(path)` — called on every config (re)load from
-  `lib/main.js:256`. TCP ignores it (`lib/transport/tcp.js:27-29`).
+  `lib/server-init.js`. TCP ignores it (`lib/transport/tcp.js:27-29`).
 - `alloc_p()` — returns a promise of a fresh `Endpoint`. Called once per worker
   launch at `lib/scheduler/scheduler.js:164`.
 
@@ -72,10 +72,11 @@ The secret is fresh per `Endpoint`, i.e. per worker process, not per server.
 
 ## TCP transport (the default, and the only one wired up)
 
-`lib/main.js:136` hardcodes `new TcpTransport()`. `UnixSocketTransport` is
-imported at `lib/main.js:43` but **never instantiated** — the Unix-socket
-implementation is live code that nothing currently selects. There is no config
-directive that switches transports.
+`lib/server-init.js` hardcodes `new TcpTransport()` (or whatever
+`createServer_p`'s `options.transport` supplies, which exists for tests).
+`UnixSocketTransport` is **never instantiated** — the Unix-socket implementation
+is live code that nothing currently selects, and the dead import of it has been
+removed. There is no config directive that switches transports.
 
 The history is worth knowing: commit `e9d1c7d` ("Go back to using TCP sockets
 for communication", Aug 2013) is what created this abstraction. Unix domain
@@ -153,7 +154,7 @@ Declared in `config/shiny-server-rules.config:16-22`. Root-level (`at $`),
 one `String path` param, and marked `undocumented` — consistent with the
 transport being unreachable. It is read into `ConfigRouter.socketDir`
 (`lib/router/config-router.js:106`) and passed to `transport.setSocketDir()` at
-`lib/main.js:256` on every config load; the TCP transport discards it. The
+`lib/server-init.js` on every config load; the TCP transport discards it. The
 directive's own `desc` says the directory should be root-owned with mode `0333`,
 which differs from the `0733` the code actually creates.
 

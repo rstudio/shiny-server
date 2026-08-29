@@ -14,7 +14,7 @@ Four files, all in `lib/scheduler/`:
 
 | File | Role |
 | --- | --- |
-| `scheduler-registry.js` | `AppSpec` key → `Scheduler` instance. One process-wide instance (`lib/main.js:133`). |
+| `scheduler-registry.js` | `AppSpec` key → `Scheduler` instance. One process-wide instance (`lib/server-init.js`). |
 | `scheduler.js` | Base class. Owns the worker table, the spawn/launch/connect/reap machinery. |
 | `simple-scheduler.js` | The only OSS subclass. Implements the *policy*: one worker per app, capacity check. |
 | `worker-entry.js` | Per-worker bookkeeping: the promise, the three connection counters, the idle timer. |
@@ -64,7 +64,7 @@ newline-joined concatenation of `appDir`, `runAs`, `prefix`, `logDir`, **and
   that file mutates the key, so the next request lands on a brand-new scheduler
   and a brand-new R process. That is the entire implementation of "touch
   restart.txt to restart an app."
-- `runAs` may be an array (see `SquashRunAsRouter` in `lib/main.js:130`); it is
+- `runAs` may be an array (see `SquashRunAsRouter` in `lib/server-init.js`); it is
   stringified into the key by ordinary coercion.
 - Keys are long strings containing serialized JSON. They are used as object keys
   in `map.create()` null-prototype objects (`lib/core/map.js`), which is why
@@ -87,7 +87,7 @@ newline-joined concatenation of `appDir`, `runAs`, `prefix`, `logDir`, **and
 
 `setTransport` (`lib/scheduler/scheduler-registry.js:48`) fans out to all
 existing schedulers *and* is re-called on every config load
-(`lib/main.js:255`). Schedulers created before a transport exists would have
+(`lib/server-init.js`). Schedulers created before a transport exists would have
 `this.$transport` undefined; `getWorker` guards with `if (this.$transport)`. In
 practice `loadConfig_p` runs before the server accepts connections.
 
@@ -347,12 +347,12 @@ user sees a session that dies immediately.
   `isFulfilled()`**. A worker still in its startup/connect phase is skipped and
   is orphaned when the server exits. Same blind spot in `dump()`, which prints
   `[unresolved promise]` (line 320).
-- `lib/main.js:355` calls `schedulerRegistry.shutdown()` on SIGINT/SIGTERM/
+- `lib/main.js` calls `schedulerRegistry.shutdown()` on SIGINT/SIGTERM/
   SIGABRT and waits 500 ms before `process.exit`.
-- `SIGUSR1` dumps the worker table to the log (`lib/main.js:331-333` →
+- `SIGUSR1` dumps the worker table to the log (`lib/main.js` →
   `Scheduler.dump`, `lib/scheduler/scheduler.js:312`). Useful for "which workers
   are alive and where are their logs" in production.
-- `SIGHUP` reloads config (`lib/main.js:324-329`). Note it does **not** touch the
+- `SIGHUP` reloads config (`lib/main.js`). Note it does **not** touch the
   registry: existing schedulers keep running; new settings produce new keys and
   therefore new schedulers on the next request.
 
