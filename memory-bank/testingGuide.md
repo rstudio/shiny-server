@@ -21,11 +21,20 @@ be named explicitly wherever tests are invoked:
 never loads it directly.
 
 There is no watch mode, no coverage tooling, and no linting step. Two CI systems run
-this: `.github/workflows/ci.yml` (Linux + macOS, plus a build-freshness check and the
-real-R tier) and Jenkins, which uses the vendored interpreter —
-`Jenkinsfile:108` runs `./bin/node ./node_modules/mocha/bin/mocha test test/integration`.
+this: `.github/workflows/ci.yml` (Linux + macOS, plus a build-freshness check) and
+Jenkins, which uses the vendored interpreter — `Jenkinsfile:108` runs
+`./bin/node ./node_modules/mocha/bin/mocha test test/integration`.
 **Keep that list of directories in sync with `package.json`'s `test` script**; a new
-test directory that isn't added in both places silently doesn't run.
+test directory that isn't added in both places silently doesn't run. (Note
+`Jenkinsfile.internal:138` still runs `mocha test` only, so the internal build skips
+the integration tier.)
+
+**The real-R tier runs on GitHub Actions only.** The Jenkins images deliberately do not
+install the `shiny` R package: Jenkins runs `mocha test test/integration`, never
+`npm run test:r`, so provisioning R packages there would build a toolchain nothing
+uses — and it broke the ubuntu-20.04 image, whose R falls back to compiling from
+source, where `shiny -> bslib -> sass -> fs` needs libuv. Jenkins is expected to be
+retired after the current round of refactors; don't add R provisioning back to it.
 
 `.mocharc.json` auto-requires three modules before any test file, and sets a timeout
 that a server boot can survive (mocha's 2s default cannot):
