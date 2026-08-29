@@ -1,3 +1,16 @@
+shiny-server 1.5.24
+--------------------------------------------------------------------------------
+
+* Added `:PROCESS_USER:` token for the `run_as` directive, which resolves to the
+  user running the shiny-server process. This enables running without root.
+
+* Added `Path` config type so that filesystem path directives (`site_dir`,
+  `app_dir`, `log_dir`, `bookmark_state_dir`, etc.) now resolve relative paths
+  to absolute at config parse time.
+
+* Added `npm run dev` for local development. Starts the server on port 3838 with
+  sample R and Python apps, no root required.
+
 shiny-server 1.5.23
 --------------------------------------------------------------------------------
 
