@@ -105,7 +105,10 @@ try {
                           }
                           stage('run tests') {
                               // Need npm install so npm modules required for testing are available
-                              sh './bin/node ./node_modules/mocha/bin/mocha test'
+                              // Note: mocha is not recursive, so each test
+                              // directory has to be named explicitly. Keep this
+                              // in sync with the "test" script in package.json.
+                              sh './bin/node ./node_modules/mocha/bin/mocha test test/integration'
                           }
                         }
                     }
