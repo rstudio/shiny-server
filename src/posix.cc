@@ -285,6 +285,17 @@ NAN_MODULE_INIT(Initialize) {
   Nan::Export(target, "getgrouplist", GetGroupList);
   Nan::Export(target, "getgrnam", GetGrNam);
   Nan::Export(target, "acquireRecordLock", AcquireRecordLock);
+
+  // acquireRecordLock passes lockType and whence straight through to
+  // struct flock, so the caller has to supply this platform's values -- and
+  // they differ: F_WRLCK is 1 on Linux but 3 on macOS/BSD, where 1 means
+  // F_RDLCK. JS used to hardcode the Linux numbers, which silently downgraded
+  // the pidfile's exclusive lock to a shared one on macOS. Export the real
+  // ones so there is nothing to get wrong.
+  Nan::Set(target, Nan::New("F_RDLCK").ToLocalChecked(), Nan::New(F_RDLCK));
+  Nan::Set(target, Nan::New("F_WRLCK").ToLocalChecked(), Nan::New(F_WRLCK));
+  Nan::Set(target, Nan::New("F_UNLCK").ToLocalChecked(), Nan::New(F_UNLCK));
+  Nan::Set(target, Nan::New("SEEK_SET").ToLocalChecked(), Nan::New(SEEK_SET));
 }
 DISABLE_WCAST_FUNCTION_TYPE
 NODE_MODULE(posix, Initialize)
