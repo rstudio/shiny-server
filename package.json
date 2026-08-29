@@ -31,7 +31,7 @@
     "log4js": "^6.9.1",
     "moment": "^2.29.1",
     "morgan": "^1.10.0",
-    "nan": "^2.18.0",
+    "nan": "^2.28.0",
     "optimist": "github:rstudio/node-optimist#dbbadda31e53b63225a57e172a528b1ddc52be52",
     "pause": "0.1.0",
     "q": "^1.5.1",
