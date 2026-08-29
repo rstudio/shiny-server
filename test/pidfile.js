@@ -119,17 +119,10 @@ describe('pidfile', function() {
       // Needs a genuinely separate process: POSIX record locks are per-process,
       // so a second acquire() in *this* process would happily succeed.
       //
-      // KNOWN DEFECT, platform-specific. lib/core/pidfile.js hardcodes
-      // F_WRLCK = 1, which is correct on Linux but is F_RDLCK on macOS/BSD
-      // (where F_WRLCK is 3). src/posix.cc passes l_type straight through, so
-      // on macOS this takes a *shared* lock and two instances can hold it at
-      // once -- the mutual exclusion this whole module exists for is absent.
-      // Shiny Server ships on Linux, so production is unaffected; skip here
-      // rather than assert broken behaviour.
-      if (process.platform !== 'linux') {
-        this.skip();
-      }
-
+      // This runs everywhere. It used to have to be skipped off Linux, because
+      // the F_WRLCK value was hardcoded to Linux's 1 -- which on macOS/BSD is
+      // F_RDLCK, a shared lock that two instances can hold at once. The
+      // constant now comes from the native addon.
       assert.strictEqual(pidfile.acquire(target).ok, true);
 
       var result = runInChild(
