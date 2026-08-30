@@ -63,7 +63,8 @@ lines into the spec output; `SHINY_LOG_LEVEL=OFF npm test` silences that noise.
 
 ## Current real state of `npm test`
 
-**310 passing, 0 failing, ~4s** on `master` (macOS, Node v24.20.0). `npm run test:r`
+**310 passing, 0 failing, ~4s** on `master` (macOS, Node v24.20.0); 315 on
+`replace-http-proxy-with-http-proxy-3`, which adds `test/python.js`. `npm run test:r`
 adds 8 more and takes about a second once R is warm.
 
 The macOS-only `test/app-worker.js` failure (the `/blah` mkdir case returns `EROFS`
@@ -240,6 +241,7 @@ message with a regex (`test/nested-locations.js:27-43`); the newer style uses
 | `lib/router/squash-run-as-router.js` | **Complete** (it's tiny). |
 | `lib/proxy/http.js` | **Moderate.** `test/proxy-http.js` pins `httpListener`'s dispatch contract against a doubled router/registry: the strict `appSpec === true` check, the 404/500/503 paths, and the acquire/release accounting. `test/integration/proxy.js` covers the same ground against a live server. `test/proxy-events.js` separately greps `node_modules/http-proxy` for `.emit(` calls and diffs them against `knownEvents` (`lib/proxy/http.js:61`) — a canary for upstream event churn, not a behavior test. |
 | `lib/config/lexer.js`, `parser.js`, `config.js`, `schema.js` | **Good.** `test/config-lexer.js` (33), `test/config-parser.js` (32, incl. `ConfigNode` inheritance and `search` ordering), `test/config-schema.js` (46, incl. the real `shiny-server-rules.config`). Ported and expanded from the `manual.test/` scripts. |
+| `lib/core/python.ts` | **Narrow.** `test/python.js`, 5 tests on `resolvePython_p` only: the venv-directory contract, the two rejection messages, and a bare name deferred to `PATH`. Nothing exercises the `shiny-python` launch path that consumes it. |
 | `lib/core/qutil.js` | **Good.** `test/qutil.js` — `forEachPromise_p`, `map_p` sequencing, `serialized`, `wrap`, `.eat()`. |
 | `lib/server-init.js`, the Express stack | **Moderate.** `test/integration/` — `__assets__` rewriting, static/`send` behavior, the proxy path, the access log, `X-Powered-By`. |
 | `lib/server/server.js` | **Narrow.** Exercised by every integration test's startup and teardown; the `$close` leak has a direct regression test in `test/integration/harness.js`. |
@@ -252,13 +254,25 @@ worth:
   highest-value gap.** The SockJS and WebSocket paths are the only major traffic route
   with no coverage at either tier. `test/support/fake-worker.js` already accepts an
   `onUpgrade` handler, so the harness is ready for it.
-- `lib/router/directory-router.js`, `local-config-router.js`, `user-dirs-router.js`, and
-  the combinators in `router.js` (`CompositeRouter`, `PrefixFilterRouter`, `RestartRouter`,
+- `lib/router/user-dirs-router.js` — **no coverage at either tier**, and unlike its
+  neighbours below it cannot get any from `test/integration/`: `createRouter_p` throws
+  `'shiny-server must be run as root to use the user_dirs directive'`
+  (`lib/router/config-router.js:99-102`) unless the process is root, and the integration
+  harness runs non-root. No fixture in `test/configs/` uses the directive; `user_dirs`
+  appears only in the shipped samples (`config/user-dirs.config`,
+  `config/multi-server.config`) and the schema. A unit test is nevertheless within reach
+  — `test/nested-locations.js:25` already does
+  `config_router.__set__("checkPermissions", function() {})` to bypass exactly that root
+  check, so a `user_dirs` fixture would load. Testing `getAppSpec_p` itself additionally
+  needs `build/Release/posix` (required directly, for `getpwnam`) rewired to a fake user,
+  the same pattern `test/app-worker.js` uses.
+- `lib/router/directory-router.js`, `local-config-router.js`, and the combinators in
+  `router.js` (`CompositeRouter`, `PrefixFilterRouter`, `RestartRouter`,
   `RedirectRouter`) — covered end-to-end by `test/integration/`, but not unit-tested;
   they are pure-ish functions that would be easy to test directly.
 - `lib/transport/tcp.js`, `unix-socket.js`; `lib/worker/app-worker-handle.js`, `run-as.js`.
 - `lib/main.js` (the CLI wrapper), `lib/core/permissions.js`, `fsutil.js`,
-  `connect-util.js`, `url-util.js`, `python.ts`, `shutdown.js`.
+  `connect-util.js`, `url-util.js`, `shutdown.js`.
 - `src/launcher.cc`, `src/posix.cc` — the native code is exercised only incidentally.
 
 ## Fixtures
