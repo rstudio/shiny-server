@@ -26,7 +26,7 @@
     "faye-websocket": "^0.11.4",
     "graceful-fs": "^4.2.11",
     "handlebars": "^4.7.9",
-    "http-proxy-3": "^1.23.3",
+    "http-proxy-3": "^2.0.1",
     "ip-address": "^10.7.0",
     "log4js": "^6.9.1",
     "mime-types": "^3.0.2",
@@ -36,7 +36,7 @@
     "optimist": "github:rstudio/node-optimist#dbbadda31e53b63225a57e172a528b1ddc52be52",
     "pause": "0.1.0",
     "q": "^1.5.1",
-    "qs": "^6.11.2",
+    "qs": "^6.16.0",
     "send": "^1.2.1",
     "shiny-server-client": "github:rstudio/shiny-server-client#v1.2.0",
     "sockjs": "^0.3.24",
@@ -47,11 +47,19 @@
   "overrides": {
     "sockjs": {
       "uuid": "^11.1.1"
-    }
+    },
+    "mocha": {
+      "diff": "^9.0.0",
+      "serialize-javascript": "^7.1.1"
+    },
+    "nodemon": {
+      "brace-expansion": "^5.0.9"
+    },
+    "picomatch": "^4.0.7"
   },
   "license": "AGPL-3.0",
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=22.0.0",
     "npm": ">=7.0.0"
   },
   "devDependencies": {
@@ -63,6 +71,6 @@
     "rewire": "^9.0.1",
     "should": "^13.2.3",
     "sinon": "^22.1.0",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   }
 }

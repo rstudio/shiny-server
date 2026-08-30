@@ -1,6 +1,6 @@
 ---
 title: Tech Context
-description: The developer-facing stack for Shiny Server — the runtime dependency set and why three of them are pinned GitHub forks (optimist, shiny-server-client, sockjs-client), the npm-shrinkwrap policy, the license-compliance workflow (tools/check-licenses.js, tools/preflight.sh, NOTICE.md), the partial TypeScript adoption and the "commit the compiled .js" rule, the Q promise library and the `_p` convention, Node version pinning via .nvmrc and the vendored ext/node (and why `nan` must move with it), the 2026 dependency sweep that took the stack to Node 24 / Express 5 / TypeScript 6 and what it deliberately left alone, upstream-tracking scripts, and the build/test/run commands (including what breaks on a macOS dev machine).
+description: The developer-facing stack for Shiny Server — the runtime dependency set and why three of them are pinned GitHub forks (optimist, shiny-server-client, sockjs-client), the npm-shrinkwrap policy, the license-compliance workflow (tools/check-licenses.js, tools/preflight.sh, NOTICE.md), the partial TypeScript adoption and the "commit the compiled .js" rule, the Q promise library and the `_p` convention, Node version pinning via .nvmrc and the vendored ext/node (and why `nan` must move with it), the 2026 dependency sweep that took the stack to Node 24 / Express 5 / TypeScript 6 and what it deliberately left alone, upstream-tracking scripts, the `overrides` that hold `npm audit` at zero and the two `npm outdated` rows that are permanent (q's `future`-tag false positive, @types/node held to the runtime major), and the build/test/run commands (including what breaks on a macOS dev machine).
 ---
 
 # Tech Context
@@ -55,8 +55,12 @@ Notes on the less obvious entries:
 - **`bash@0.0.1`** is a tiny shell-quoting helper. It has no license field in
   its `package.json`, which is why it is hardcoded in `KNOWN_LICENSES`
   (`tools/check-licenses.js:8`).
-- **`overrides`** — one entry, forcing `sockjs`'s transitive `uuid` to
-  `^11.1.1`. Read "The 2026 dependency sweep" below before touching it.
+- **`overrides`** — three entries, all clearing advisories in trees whose
+  parent is already at its latest release, so there is nothing to upgrade *to*:
+  `sockjs`'s transitive `uuid` → `^11.1.1`; `mocha`'s `diff` → `^9` and
+  `serialize-javascript` → `^7`; and a top-level `picomatch` → `^4`. Read "The
+  2026 dependency sweep" and "Keeping `npm audit` at zero" below before touching
+  them.
 
 ### The three GitHub-pinned forks
 
@@ -247,8 +251,9 @@ requires it.
   extracts it to `ext/node/` (gitignored). `bin/node` and `bin/npm` are two-line
   shims that exec out of `ext/node/`. The vendored Node is what ships in the
   package, which is why Shiny Server has no system Node prerequisite.
-- **`engines` in `package.json` says `node >=18.0.0`, `npm >=7.0.0`** — the
-  floor Express 5 imposes. It is a floor, not a target: `.nvmrc` is what
+- **`engines` in `package.json` says `node >=22.0.0`, `npm >=7.0.0`** — raised
+  from `>=18.0.0` (the Express 5 floor) when `http-proxy-3` went to 2.x, which
+  declares `node >=22`. It is a floor, not a target: `.nvmrc` is what
   actually runs and what ships.
 - Since 1.5.23 the project uses **official Node binaries** again. Between 1.5.21
   and 1.5.22 it built its own for glibc compatibility with RHEL/CentOS 7; that
@@ -382,8 +387,9 @@ On the security side the sweep took `npm audit` from 25 findings to 5. It moved
 compression — reachable here because `faye-websocket` and `sockjs` share the
 instance) and `flatted` 3.3.1 → 3.4.4. In both cases the parents already allowed
 the fixed version and only the shrinkwrap pin was stale, so `npm update <pkg>`
-was enough. The 5 remaining findings are all dev-only, in mocha's and nodemon's
-trees.
+was enough. The 5 findings it left behind were all dev-only, in mocha's and
+nodemon's trees; see "Keeping `npm audit` at zero" below for how those were
+cleared afterwards.
 
 - The `sockjs`/`uuid` override exists to clear an advisory that does not
   actually apply (sockjs calls only zero-argument `uuid.v4()`), taken as an
@@ -396,8 +402,8 @@ Deliberately **not** moved, so don't read their absence as an oversight:
 
 - **`q`** — 2.x was abandoned in 2015, and Q is being removed from this codebase
   separately.
-- **`typescript` 7** and **`http-proxy-3` 2** — both released while #596 was
-  open; each deserves its own change with the harness run against it.
+- **`typescript` 7** and **`http-proxy-3` 2** — were listed here while #596 was
+  open; both have since landed (see below).
 - **`@types/node`** — held at 24.x to match the runtime rather than following
   `latest` to 26, which would type against APIs Node 24 does not have.
 
@@ -406,3 +412,39 @@ There is also an in-progress plan at `plans/2026-08-28-Express-unit-tests.md`
 the Express 4 → 5 change can be verified rather than merely absorbed. It also
 sequences PR #597 (`:PROCESS_USER:` run_as token and a `Path` config type, which
 together allow non-root test configs) ahead of both.
+
+## Keeping `npm audit` at zero
+
+As of 2026-08-29 `npm audit` reports **0 vulnerabilities**, and holding that line
+required three `overrides` rather than upgrades. The pattern in every case: the
+*direct* dev dependency is already at its latest published release, and the
+advisory is in a transitive dep it pins below the fix. There is nothing to
+upgrade to, so the pin has to be overridden.
+
+| Override | Why |
+| --- | --- |
+| `mocha` → `diff` `^9`, `serialize-javascript` `^7` | mocha 11.8.0 (latest; 12 is still RC) pins `diff ^7` and `serialize-javascript ^6`. Both overrides are safe because mocha's API surface on them is tiny: `diff.createPatch` in `lib/reporters/base.js`, and `serializeJavascript(opts, {unsafe, ignoreFunction})` in `lib/nodejs/buffered-worker-pool.js` (parallel mode only, which this project does not use). Verified by forcing a string-mismatch assertion and checking the reporter still renders a diff. |
+| `picomatch` `^4` (top level) | nodemon 3.1.14 (latest) → chokidar 3 → `anymatch`/`readdirp`, which pin `picomatch ^2`; the last 2.x is the vulnerable one, so the only fix is a major bump. **This one must be top-level.** Scoping it under `nodemon` reaches readdirp's edge but not anymatch's, leaving 2.3.1 hoisted and the advisory open. Nothing else in the tree wants `picomatch`, so a global override is unambiguous. Verified end to end: chokidar still fires `add` events and honours `ignored`, and nodemon still restarts on a file change. |
+| `nodemon` → `brace-expansion` `^5.0.9` | nodemon's minimatch 10 floats to a vulnerable 5.0.x. Scoped deliberately: the tree also holds `brace-expansion` 1.1.18 (eslint, via rewire) and 2.1.4 (mocha), both *outside* the advisory range, and a global override would drag them across two majors for no reason. |
+
+`npm audit fix` is not useful here — for the mocha chain it proposes
+*downgrading* mocha to 11.3.0, which does not fix anything.
+
+### Two `npm outdated` rows are permanent
+
+`npm outdated` will never be empty, and neither row is actionable:
+
+- **`q` 1.5.1 → "2.0.3"** is a **false positive**. Check the dist-tags:
+  `latest` is 1.5.1 and `2.0.3` sits under a `future` tag. npm 11's `outdated`
+  reports the highest published semver, not the `latest` tag. q 2.0.3 was
+  published in **January 2015**, nearly three years *before* 1.5.1 (October
+  2017); it is an abandoned rewrite with different dependencies (`asap`,
+  `weak-map`, `pop-iterate`) and a different API. "Upgrading" would be a
+  functional downgrade. 1.5.1 is the current release. The real fix is removing Q
+  from the codebase, which is tracked separately.
+- **`@types/node` 24.x → 26.x** is deliberate; see the list above. It goes away
+  when `.nvmrc` moves to Node 26, not before.
+
+One deprecation warning also survives `npm ci` — `glob@10.5.0`, pulled by
+mocha 11.8.0. It is a deprecation notice, not an advisory, and glob 11 is not a
+drop-in for mocha's usage. Leave it.
