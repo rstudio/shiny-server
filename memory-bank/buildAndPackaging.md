@@ -1,6 +1,6 @@
 ---
 title: Build And Packaging
-description: How Shiny Server is compiled, vendored, and shipped — CMake/CPack orchestration, the vendored Node runtime (ext/node, install-node.sh, bin/node and bin/npm shims, .nvmrc), the vendored pandoc binaries, the C++ launcher and node-gyp posix module, .deb/.rpm construction with their postinst/posttrans/prerm scripts, the installed /opt/shiny-server layout, systemd/Upstart/SysV service registration, Jenkins CI, developer setup on Linux vs macOS, and the gotchas that break builds.
+description: How Shiny Server is compiled, vendored, and shipped — CMake/CPack orchestration, the vendored Node runtime (ext/node, install-node.sh, bin/node and bin/npm shims, .nvmrc), the vendored pandoc binaries, the C++ launcher (the only native source; the node-gyp posix module was removed), .deb/.rpm construction with their postinst/posttrans/prerm scripts, the installed /opt/shiny-server layout, systemd/Upstart/SysV service registration, Jenkins CI, developer setup on Linux vs macOS, and the gotchas that break builds.
 ---
 
 # Build And Packaging
@@ -55,12 +55,10 @@ engine**, plus a tiny C++ build.
   `CMAKE_RUNTIME_OUTPUT_DIRECTORY` points at `${CMAKE_CURRENT_SOURCE_DIR}/bin`
   (`CMakeLists.txt:5`). It is gitignored. `src/launcher.h` is generated from
   `src/launcher.h.in` and bakes in `${CMAKE_INSTALL_PREFIX}` — also gitignored.
-- **`posix.node`** (`binding.gyp`) — built by node-gyp as a side effect of
-  `npm install`, into `build/Release/posix.node`. Nine `lib/` modules require
-  it by that literal relative path (e.g. `lib/core/permissions.js:13`), so the
-  `build/` directory is shipped verbatim (`CMakeLists.txt:41`) even though it
-  is gitignored. This is the one place where a gitignored *build output*
-  directory is a required package payload.
+- **Nothing else.** The old node-gyp `posix.node` addon is gone, and with it
+  `binding.gyp`, the `nan` dependency, and the root `build/` directory as
+  package payload. `npm install` no longer needs a compiler, Python, or Node
+  headers.
 
 ### The launcher, and why it exists
 
@@ -112,12 +110,10 @@ the vendored node, bypassing the deleted symlink.
 
 **This is the contract for all project tooling.** `tools/preflight.sh:9` runs
 `bin/node tools/check-licenses.js`; CI runs mocha via `./bin/node`
-(`Jenkinsfile:108`). Using your own `node`/`npm` from `nvm` or Homebrew is
-what causes the classic failure mode: `posix.node` gets compiled against a
-different ABI than the runtime that will load it, and the server dies at
-startup with a NODE_MODULE_VERSION mismatch. `.nvmrc` exists mostly so
-`install-node.sh` has a single source of truth; a developer who `nvm use`s it
-gets an ABI-compatible local Node as a bonus, not as the supported path.
+(`Jenkinsfile:108`). `.nvmrc` exists mostly so `install-node.sh` has a single
+source of truth. (The historical reason for insisting on the vendored Node
+everywhere — keeping the `posix.node` addon ABI-compatible with the runtime —
+went away with the addon.)
 
 ## Vendored pandoc
 
@@ -160,13 +156,13 @@ Gotchas:
   `deploy-example` (`CMakeLists.txt:56-61`; `deploy-example` is generated from
   `bin/deploy-example.in` so the prefix can be substituted).
 - `ext/node/`, `ext/pandoc/` — the vendored runtimes.
-- `lib/`, `node_modules/`, `build/` — the server itself and its native module.
+- `lib/`, `node_modules/` — the server itself.
 - `config/` (init scripts + default configs), `samples/`, `R/`, `python/`,
   `templates/`, `assets/`, `scripts/`, `tools/`, and also `test/` and
   `manual.test/` — the install list at `CMakeLists.txt:38-52` is broad, and
   dev/test material genuinely ships in the product.
 - Top-level `VERSION`, `GIT_VERSION`, `NOTICE`, `COPYING`, `NEWS`,
-  `package.json`, `binding.gyp`, `config.html`, `README.md`
+  `package.json`, `config.html`, `README.md`
   (`CMakeLists.txt:68-77`).
 
 Outside the prefix, created by the postinst scripts: `/usr/bin/shiny-server`
@@ -323,9 +319,9 @@ From-scratch local build, Linux:
 `packaging/make-package.sh`, which does all of it.
 
 **macOS**: partially supported. `install-node.sh` handles `darwin`/`arm64`,
-`launcher.cc` has an `__APPLE__` branch, and the native `posix` module and the
-test suite build and run — this is what commit 3d31ccf ("Allow building on
-macOS") enabled, and NEWS 1.5.23 advertises. What does *not* work: pandoc
+`launcher.cc` has an `__APPLE__` branch, and the test suite builds and runs —
+this is what commit 3d31ccf ("Allow building on macOS") enabled, and NEWS
+1.5.23 advertises. What does *not* work: pandoc
 vendoring fetches Linux binaries, and `packaging/make-package.sh` cannot
 produce a package (no `dpkg`/`rpm`, and the generator autodetect at
 `packaging/make-package.sh:11-17` finds neither, so it exits with usage). macOS
@@ -351,16 +347,15 @@ is a *development* platform only; releases are Linux-only.
   build works; do delete it when a configure-time change (version, pandoc hash,
   install list) seems not to take effect — `CMakeCache.txt` will happily pin the
   old values.
-- **Two different `build/` directories.** Root `build/` is node-gyp output and
-  is *shipped*; `packaging/build/` is CMake output and is not. Both are
-  gitignored by the same rule.
+- **`build/` directories are never payload.** `packaging/build/` is CMake
+  output; a root `build/` is stale node-gyp output from before the addon was
+  removed. Neither is shipped. Both are gitignored by the same rule.
 - **Order dependency**: running `cpack` without having run `npm install` and
-  `install-node.sh` first produces a package that is missing `node_modules`,
-  `ext/node`, and `build/Release/posix.node`, and it will not error — CPack
-  installs whatever directories happen to exist.
-- **Mixing Node versions** between `npm install` (which builds `posix.node`)
-  and runtime is the most common self-inflicted breakage. Always go through
-  `bin/npm` / `bin/node`.
+  `install-node.sh` first produces a package that is missing `node_modules`
+  and `ext/node`, and it will not error — CPack installs whatever directories
+  happen to exist. `packaging/make-package.sh` also verifies the payload
+  contains no `binding.gyp`, `build/Release/posix.node`, or
+  `node_modules/nan`.
 - **Checked-in `tsc` output**: edit a `.ts` file, run `npm run build`, and
   commit *both*. CI enforces this.
 - The **install prefix is only half-parameterized** — the systemd unit hardcodes

@@ -16,7 +16,6 @@ const { Transport } = require("../lib/transport/tcp");
 const { Stream } = require("stream");
 const EventEmitter = require("events");
 const permissions = require("../lib/core/permissions");
-const posix = require("../build/Release/posix");
 
 if (!global["SHINY_SERVER_VERSION"]) {
   global["SHINY_SERVER_VERSION"] = "0.0.0.0";
@@ -266,7 +265,7 @@ async function createBaselineInput() {
   const pw = {
     uid: process.getuid(),
     gid: process.getgid(),
-    home: posix.getpwuid(process.getuid()).home,
+    home: os.userInfo().homedir,
   };
 
   const endpoint = await new Transport().alloc_p();
@@ -328,7 +327,7 @@ function expectedSpawnRParams(appSpec, pw) {
         cwd: appSpec.appDir,
         stdio: ["pipe", "pipe", "pipe"],
         env: map.compact({
-          HOME: posix.getpwuid(process.getuid()).home,
+          HOME: os.userInfo().homedir,
           LANG: process.env["LANG"],
           PATH: process.env["PATH"],
         }),

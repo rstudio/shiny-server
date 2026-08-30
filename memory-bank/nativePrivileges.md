@@ -1,82 +1,101 @@
 ---
 title: Native Components And The Privilege Model
-description: What the two C++ pieces of shiny-server actually do — the `posix` node-gyp addon (src/posix.cc: getpwnam/getpwuid/getgrouplist/getgrnam/acquireRecordLock, all read-only) and the `shiny-server` launcher binary (src/launcher.cc: a non-setuid exec trampoline built by CMake, NOT a privilege helper, despite CLAUDE.md) — plus the real privilege model: server stays root, workers drop to `run_as` by shelling out to `su`, supplementary groups, root-vs-non-root config validation, macOS/dev vs Linux, and the node-gyp-vs-CMake build split. Read before touching user switching, `run_as`, log-file ownership, `members_of`, the pidfile lock, or anything under src/.
+description: What remains of shiny-server's native code — the `shiny-server` launcher binary (src/launcher.cc: a non-setuid exec trampoline built by CMake, NOT a privilege helper) — plus what replaced the deleted `posix` node-gyp addon: command-backed account lookups (lib/core/user-db.js: getent/id/dscacheutil, NSS/Directory Service aware) and BSD descriptor locking for the pidfile via a short-lived flock/lockf helper (lib/core/pidfile.js). Also the real privilege model: server stays root, workers drop to `run_as` by shelling out to `su`, supplementary groups, root-vs-non-root config validation, macOS/dev vs Linux. Read before touching user switching, `run_as`, log-file ownership, `members_of`, the pidfile lock, or anything under src/.
 ---
 
 # Native Components And The Privilege Model
 
-Shiny Server has exactly two pieces of C++:
+Shiny Server has exactly one piece of C++ left:
 
-1. **`posix`** — a Node addon (`src/posix.cc`, built by `binding.gyp`) that
-   exposes a handful of POSIX identity calls Node doesn't provide.
-2. **`shiny-server`** — a standalone native executable (`src/launcher.cc`, built
-   by CMake) that is the entry point installed on `PATH`.
+- **`shiny-server`** — a standalone native executable (`src/launcher.cc`, built
+  by CMake) that is the entry point installed on `PATH`.
 
-Neither is setuid, and **neither performs any privilege transition.** All the
-actual privilege work happens in JavaScript and in `su`.
+It is not setuid and **performs no privilege transition.** All the actual
+privilege work happens in JavaScript and in `su`.
 
-> ## Correcting the record
->
-> The project's `CLAUDE.md:62` says of `src/`: *"C++ launcher (`launcher.cc`)
-> and POSIX bindings (`posix.cc`) compiled via node-gyp. Provides user/group
-> switching and Unix permissions management."* **Two of those three claims are
-> wrong**, and they are a persistent source of confusion:
->
-> - `src/launcher.cc` never calls `setuid`, `setgid`, `initgroups`, or `su`. It
->   is a ~128-line front-end shim that locates the install base directory and
->   `execv`s into the bundled Node. It is not setuid, and nothing in
->   `packaging/` sets a setuid bit on it.
-> - `src/posix.cc` is **read-only and informational**: passwd/group *lookups*
->   plus one `fcntl` record lock. It changes no identity and manages no
->   permissions.
-> - Real `run_as` user switching is done by shelling out to `su` from
->   `lib/worker/app-worker.ts` (`wrapWithUserSwitch`, line 654). The only native
->   involvement is `posix.getpwnam` to resolve the username.
-> - `lib/worker/run-as.js` *does* contain `setuid`/`setgid`/`initgroups`, but it
->   is **dead code** — nothing in `lib/`, `test/`, `tools/`, `scripts/`, or
->   `src/` requires it. Do not read it as the live mechanism.
-> - Only `posix.cc` is compiled by node-gyp. `launcher.cc` is built by **CMake**
->   (`src/CMakeLists.txt`); node-gyp never sees it (`binding.gyp:1-10` lists
->   `src/posix.cc` as its sole source). See "Build wiring" below.
+The second native artifact — the `posix` node-gyp addon (`src/posix.cc`,
+`binding.gyp`, the `nan` dependency) — **was removed**. Its two jobs are now
+done without native code:
 
-## The `posix` addon — what Node can't do
+1. **User/group/membership lookups** → `lib/core/user-db.js`, which shells out
+   to platform account commands (see below).
+2. **The `--pidfile` lock** → `lib/core/pidfile.js`, which has a short-lived
+   `flock`/`lockf` helper take a BSD descriptor lock on an already-open fd.
+
+## Account lookups — `lib/core/user-db.js`
 
 Node's built-ins cover *changing* identity (`process.setuid`, `setgid`,
-`initgroups`) but not *querying* the user/group databases, and not POSIX record
-locks. `src/posix.cc:282-288` exports five functions:
+`initgroups`) but not *querying* the user/group databases. Instead of a native
+addon, `user-db.js` runs the host's own account utilities, so lookups stay
+aware of NSS (Linux) and Directory Service (macOS) — LDAP/SSSD/centrally
+managed accounts resolve exactly as local ones do. Parsing `/etc/passwd` or
+`/etc/group` directly is deliberately **not** a fallback; it would bypass that
+directory.
 
-| Export | Backed by | Used for |
+Public surface:
+
+| Function | Backed by (Linux / macOS) | Used for |
 |---|---|---|
-| `getpwnam(name)` | `getpwnam_r` (`src/posix.cc:57`) | resolve `run_as` user → uid/gid/home/shell (`lib/scheduler/scheduler.js:171`, `lib/router/user-dirs-router.js:66`) |
-| `getpwuid(uid)` | `getpwuid_r` (`src/posix.cc:98`) | name of the current process user (`lib/core/permissions.js:30`) |
-| `getgrouplist(name)` | `getgrouplist` (`src/posix.cc:141`) | **supplementary groups** of a user, for `members_of` access control (`lib/router/user-dirs-router.js:72`) |
-| `getgrnam(name)` | `getgrnam` (`src/posix.cc:209`) | group name → gid when parsing `members_of` (`lib/router/config-router.js:441`) |
-| `acquireRecordLock(fd, type, whence, start, len)` | `fcntl(F_SETLK)` (`src/posix.cc:247`) | non-blocking exclusive lock on the pidfile (`lib/core/fsutil.js:144`) |
+| `getCurrentUser()` | `os.userInfo()` | name of the current process user (`lib/core/permissions.js`) |
+| `lookupUser_p(name)` | `getent -- passwd` / `id -P --` | resolve `run_as` user → `{name, uid, gid, home}` (`lib/scheduler/scheduler.js`, `lib/router/user-dirs-router.js`, `lib/worker/app-worker.ts`) |
+| `lookupGroup(name)` (sync) | `getent -- group` / `dscacheutil -q group -a name` | group name → gid when parsing `members_of` (`lib/router/config-router.js`) |
+| `getGroupIds_p(name)` | `id -G --` (both) | **supplementary groups** of a user, for `members_of` access control (`lib/router/user-dirs-router.js`) |
 
-Notes and portability details worth knowing:
+Contract details worth knowing:
 
-- All lookups return `null` (not an error) when the entry simply doesn't exist —
-  the code distinguishes "not found" from "error" by checking `errno == 0`
-  (`src/posix.cc:75-84`). Callers rely on this: `lib/worker/app-worker.ts:124`
-  rejects with "User X does not exist" on a `null` pw.
-- `getgrouplist`'s result type differs by platform: `gid_t` on Linux, `int` on
-  BSD/macOS, and on BSD a non-zero return is an error while on Linux it isn't
-  (`src/posix.cc:158-193`). It retries up to 3 times, growing the buffer from an
-  initial 64 groups (`src/posix.cc:176-203`).
-- `acquireRecordLock` returns `false` (rather than throwing) for
-  `EACCES`/`EAGAIN` — i.e. "someone else holds it"
-  (`src/posix.cc:268-275`). `createPidFile` (`lib/core/fsutil.js:141-155`) turns
-  that into the "Is another instance of shiny-server running?" error at
-  `lib/main.js`. A record lock (not a lockfile) is used so the lock dies
-  with the process, even on SIGKILL.
-- The addon is loaded by **absolute relative path** — `require('../../build/Release/posix')`
-  in `lib/core/permissions.js:13`, `lib/core/fsutil.js:16`,
-  `lib/scheduler/scheduler.js:29`, `lib/worker/app-worker.ts:32`,
-  `lib/router/router.js:22`, `lib/router/user-dirs-router.js:16`,
-  `lib/router/config-router.js:26`, `lib/worker/run-as.js:22`. There is no
-  `bindings`-style resolution and no Debug fallback, so `build/Release/posix.node`
-  must exist or the server won't boot. This is why `build/` is one of the
-  directories installed into the package (`CMakeLists.txt:40`).
+- A clean "not found" maps to `null` (getent status 2, `id` status 1, empty
+  `dscacheutil` output). Callers rely on this: `launchWorker_p`
+  (`lib/worker/app-worker.ts`) rejects with "User X does not exist" on a null
+  pw, and `user-dirs-router` treats null as fall-through (404, not 403).
+  Command launch failures, unexpected exit statuses, and malformed successful
+  output **throw/reject** — they are operational errors, not "not found".
+- Commands are resolved from fixed system locations (`/usr/bin`, `/bin` on
+  Linux; `/usr/bin` on macOS), never from the ambient `PATH`, and are invoked
+  with argument arrays under `LC_ALL=C` — a username from a `user_dirs` URL
+  travels as exactly one argv element and can never become an option or shell
+  fragment.
+- A lookup of the current effective username is fast-pathed through
+  `os.userInfo()` and runs no external command; the normal non-root dev/test
+  path therefore never spawns anything.
+- `user_dirs` does these lookups on the request path, so positive results are
+  cached for 5s and negative ones for 1s (bounded, oldest-evicted, concurrent
+  lookups coalesced). The positive TTL bounds the access-control revocation
+  delay, comparable to what NSS/Directory Service cache anyway.
+- `lookupGroup` is synchronous because config construction is synchronous; it
+  runs only for configured `members_of` groups at startup/reload.
+
+## The pidfile lock — `lib/core/pidfile.js`
+
+The lock behind `--pidfile` is a **BSD `flock(2)`-style descriptor lock**, not
+a lockfile and not the old `fcntl(F_SETLK)` record lock:
+
+1. Node opens the pidfile read/write without truncating it.
+2. Node passes that descriptor as fd 3 to a short-lived helper:
+   `/usr/bin/flock -n -E 75 3` on Linux (`/bin/flock` fallback),
+   `/usr/bin/lockf -s -t 0 3` on macOS.
+3. The helper takes an exclusive, nonblocking lock on fd 3 and exits. Because
+   fd 3 shares Node's open file description, **the lock survives the helper's
+   exit** — no helper process stays alive.
+4. Node keeps its descriptor open until `release()` or process exit; the
+   kernel drops the lock when the last descriptor closes, even on SIGKILL.
+
+Contention is exit status 75 (EX_TEMPFAIL) on both platforms, and 75 is the
+*only* status translated into the "Is another instance of Shiny Server
+running?" result; anything else (missing helper, signal, timeout, unexpected
+status) is a distinct startup error. Do not run the server under a `flock`
+wrapper instead — that would change `$MAINPID`, signal behavior, and the PID
+written to the file.
+
+`release()` requires a prior successful `acquire()` by the module (an
+absolute-path → `{fd, dev, ino}` ownership map): it unlinks only while still
+holding the lock, only if the pathname still identifies the held inode and the
+descriptor still contains this process's PID. A replaced pathname is left
+alone.
+
+One transition caveat: BSD `flock` and the old `fcntl` record lock are
+separate lock domains on Linux. Package upgrades stop the old service before
+starting the new one, so the supported path never overlaps them — but manually
+running an old and a new server against the same pidfile is unsupported.
 
 ## The `launcher` binary — a path-discovery trampoline, not a setuid helper
 
@@ -123,15 +142,13 @@ is gitignored (`.gitignore:9`), as is the built `bin/shiny-server`
 ## The privilege model
 
 **The server process stays root for its entire life.** There is no
-`process.setuid` anywhere in `lib/main.js` or the request path. The only
-`setuid`/`setgid`/`initgroups` calls anywhere in the tree are in the dead
-`lib/worker/run-as.js:29-31` (see below). Root is retained because the server
-must:
+`process.setuid` anywhere in `lib/main.js` or the request path. Root is
+retained because the server must:
 
 - bind privileged ports (`listen 80`),
-- `getpwnam` arbitrary users and read their home dirs (`user_dirs`, `user_apps`),
+- resolve arbitrary users and read their home dirs (`user_dirs`, `user_apps`),
 - create and `chown` per-app log files and bookmark-state dirs to the app user
-  (`lib/worker/app-worker.ts:193-250`, `:256-305`),
+  (`lib/worker/app-worker.ts`),
 - and, crucially, `su` to *any* `run_as` user.
 
 **Workers drop privileges via `su`, not via `setuid` in Node, and not via any
@@ -143,80 +160,73 @@ initialization, and supplementary groups for free rather than reimplementing
 them.
 
 The construction of that command lives in `wrapWithUserSwitch`
-(`lib/worker/app-worker.ts:654-682`) and is documented in detail in
+(`lib/worker/app-worker.ts`) and is documented in detail in
 `memory-bank/appWorkers.md`. Two facts matter for the privilege story:
 
-- Every path and argument is passed through `bash.escape()`
-  (`app-worker.ts:662-664`) before landing inside `su ... -c "<string>"`. That
-  is the injection boundary; do not add an unescaped interpolation there.
-- The child is spawned `detached: true` (`lib/worker/app-worker.ts:391-397`) so
-  signals reach the whole process group — `su` forks the real worker, and
-  killing only `su` would orphan the app.
+- Every path and argument is passed through `bash.escape()` before landing
+  inside `su ... -c "<string>"`. That is the injection boundary; do not add an
+  unescaped interpolation there.
+- The child is spawned `detached: true` so signals reach the whole process
+  group — `su` forks the real worker, and killing only `su` would orphan the
+  app.
 
 ### Security invariants
 
-- **`lib/worker/app-worker.ts:334-335`: never launch a worker as root.** If the
-  server is superuser and `switchUser` is false (meaning `appSpec.runAs` equals
-  the current user, i.e. root), it throws "Aborting attempt to launch worker
-  process as root". `switchUser` is computed at `app-worker.ts:325-326` as
-  `runAs !== null && processUser !== runAs`.
+- **Never launch a worker as root.** If the server is superuser and
+  `switchUser` is false (meaning `appSpec.runAs` equals the current user, i.e.
+  root), `createAppWorker` throws "Aborting attempt to launch worker process
+  as root". `switchUser` is computed as `runAs !== null && processUser !==
+  runAs`.
 - **`appSpec.runAs` must be a plain string by launch time.** `run_as` in config
   can hold a *list* (including the `:HOME_USER:` keyword); `SquashRunAsRouter`
   (`lib/router/squash-run-as-router.js`, wired at `lib/main.js`) collapses it,
-  and `app-worker.ts:328-332` asserts the collapse happened. A non-string here
-  would reach the `su` command line.
-- **`permissions.canRunAs(user)`** (`lib/core/permissions.js:37-39`) is the
-  single definition of "may I become this user": true iff we are root, or the
-  user *is* us. Config validation uses it (`lib/router/config-router.js:44-48`).
-- **Worker addresses/secrets never appear in argv.** The whole `ShinyInput` blob
-  goes over stdin specifically so `ps` can't leak it
-  (`lib/worker/app-worker.ts:317-319`). See `memory-bank/transportLayer.md`.
-- **Stdin, not env, for secrets** — but note `lib/worker/run-as.js:44-47` (dead
-  code) does pass `SHINY_PORT` via environment.
+  and `app-worker.ts` asserts the collapse happened. A non-string here would
+  reach the `su` command line.
+- **`permissions.canRunAs(user)`** (`lib/core/permissions.js`) is the single
+  definition of "may I become this user": true iff we are root, or the user
+  *is* us. Config validation uses it (`lib/router/config-router.js`).
+- **Worker addresses/secrets never appear in argv.** The whole `ShinyInput`
+  blob goes over stdin specifically so `ps` can't leak it. See
+  `memory-bank/transportLayer.md`.
 
 ### Supplementary groups
 
-Two distinct uses, both via the `posix` addon:
+Two distinct uses:
 
-- **Access control (`members_of`).** `lib/router/config-router.js:436-451`
-  resolves each configured group name to a gid with `posix.getgrnam` at config
-  parse time (failing fast on unknown groups). At request time,
-  `lib/router/user-dirs-router.js:71-74` calls `posix.getgrouplist(username)` and
-  intersects with those gids; an empty intersection means the request resolves to
-  no app (a 404), not a 403.
+- **Access control (`members_of`).** `lib/router/config-router.js` resolves
+  each configured group name to a gid with `userDb.lookupGroup` at config parse
+  time (failing fast on unknown groups). At request time,
+  `lib/router/user-dirs-router.js` awaits `userDb.getGroupIds_p(username)` and
+  intersects with those gids; an empty intersection means the request resolves
+  to no app (a 404), not a 403.
 - **Worker identity.** Supplementary groups for the worker process itself are
-  established by `su`, not by Node — that is one of the main reasons `su` is used
-  (`lib/worker/app-worker.ts:314-316`).
+  established by `su`, not by Node — that is one of the main reasons `su` is
+  used (`lib/worker/app-worker.ts`).
 
 ### Root vs. non-root startup
 
-`checkPermissions()` (`lib/router/config-router.js:42-100`), called from
-`createRouter_p` at `config-router.js:37`, validates the config against the
-current identity *before* the router is built:
+`checkPermissions()` (`lib/router/config-router.js`), called from
+`createRouter_p`, validates the config against the current identity *before*
+the router is built:
 
 - **As root:** if the config uses exactly one `run_as` user, no `user_apps`/
   `user_dirs`, and no port under 1024, it logs "Running as root unnecessarily is
-  a security risk!" (`config-router.js:67-71`) and otherwise proceeds.
+  a security risk!" and otherwise proceeds.
 - **As non-root:** it throws a config-node-attributed error for any `run_as` the
-  process can't satisfy (`config-router.js:78-85`), for `user_apps`
-  (`:87-90`), for `user_dirs` (`:91-94`), and for `listen` ports below 1024
-  (`:96-100`). Errors go through `throwForNode` so the message points at the
-  offending config line.
+  process can't satisfy, for `user_apps`, for `user_dirs`, and for `listen`
+  ports below 1024. Errors go through `throwForNode` so the message points at
+  the offending config line.
 
 This means a non-root dev instance works fine as long as `run_as` names the
 developer's own account and the port is ≥1024 — the standard
 `npm start -- --config ...` workflow.
 
-### `lib/worker/run-as.js` is dead code
+### `lib/worker/run-as.js` is gone
 
-Nothing references it (grep for `run-as` finds only `squash-run-as-router.js`).
-It's a leftover alternative to `su`: drop privileges in-process with
-`posix.getpwnam` + `setgid`/`initgroups`/`setuid`
-(`lib/worker/run-as.js:27-31`), then `spawn` the real command with a hand-built
-env. It also only forwards four `SHINY_*` env vars
-(`run-as.js:44-47`), which predates the stdin-based `ShinyInput` protocol. Treat
-it as historical; don't wire it back up without revisiting the escaping and env
-story.
+The old in-process alternative to `su` (`getpwnam` + `setgid`/`initgroups`/
+`setuid`, forwarding four `SHINY_*` env vars) was dead code — nothing required
+it — and was deleted along with the addon. Don't resurrect it without
+revisiting the escaping and env story; `su` is the live mechanism.
 
 ## macOS / dev vs. production Linux
 
@@ -225,10 +235,11 @@ deploy on:
 
 - `src/launcher.cc` compiles on Linux and macOS only
   (`src/launcher.cc:74`, `:114`, `:121-123`).
-- `src/posix.cc:158-162` and `:188-193` branch on `__linux__` for `getgrouplist`
-  types and error conventions.
-- `wrapWithUserSwitch` (`lib/worker/app-worker.ts:667-673`) uses a different
-  `su` invocation on non-Linux because macOS `su` lacks `-s`.
+- `lib/core/user-db.js` and `lib/core/pidfile.js` have Linux and macOS command
+  tables only; any other platform gets a clear "unsupported platform" error
+  when an account lookup or pidfile lock is requested.
+- `wrapWithUserSwitch` (`lib/worker/app-worker.ts`) uses a different `su`
+  invocation on non-Linux because macOS `su` lacks `-s`.
 - Defaults such as `/var/shiny-server/sockets`, `/srv/shiny-server`, and
   `/var/log/shiny-server` (`config/default.config`) don't exist on a Mac; dev
   usually runs non-root with a custom config.
@@ -238,34 +249,31 @@ deploy on:
   `/usr/bin/shiny-server` to the launcher (`postinst.in:6`) and chown
   `/var/log/shiny-server` to `shiny` (`postinst.in:41`).
 - Running non-root on a dev box means `permissions.isSuperuser()` is false, so
-  workers are spawned **without** `su` at all (`app-worker.ts:325-326`,
-  `:373-375`) — the user-switching path is effectively untested locally. Keep
-  that in mind when changing it.
+  workers are spawned **without** `su` at all — the user-switching path is
+  effectively untested locally. Keep that in mind when changing it.
 
-## Build wiring — two build systems, two artifacts
-
-**node-gyp / `binding.gyp` → `build/Release/posix.node`.** `binding.gyp` is
-minimal (`binding.gyp:1-10`): one target `posix`, one source `src/posix.cc`, and
-an include dir resolved by shelling out to `node -e "require('nan')"`. NAN is a
-regular npm dependency (`nan` in `package.json`), so the addon is rebuilt
-automatically by `npm install`. `binding.gyp` itself is installed into the
-package (`CMakeLists.txt:68`) so the addon can be rebuilt in place.
+## Build wiring — one build system, one artifact
 
 **CMake → `bin/shiny-server` (the launcher).** `src/CMakeLists.txt` is two
 lines: `configure_file` for `launcher.h.in` → `src/launcher.h`, then
 `add_executable(shiny-server launcher.cc)`. The top-level
 `CMakeLists.txt:5` sets `CMAKE_RUNTIME_OUTPUT_DIRECTORY` to `<source>/bin`, so
 the binary lands *in the source tree* at `bin/shiny-server` (gitignored) rather
-than in a build dir. `CMakeLists.txt:57-61` then installs `bin/node`, `bin/npm`,
+than in a build dir. `CMakeLists.txt` then installs `bin/node`, `bin/npm`,
 `bin/shiny-server`, and the generated `bin/deploy-example` into
 `<prefix>/shiny-server/bin`.
 
-**What CMake does not build:** the JS/TS. `CMakeLists.txt:38-52` installs
-`lib`, `node_modules`, `build`, `R`, `python`, `ext`, etc. wholesale with
-`USE_SOURCE_PERMISSIONS` — meaning `npm install` (which runs node-gyp and
-produces `build/Release/posix.node`) and `npm run build` (tsc) must have been run
-*before* CMake's install step. `external/pandoc` is a separate subproject
-(`CMakeLists.txt:36`) and Node itself is downloaded by
+There is no longer any node-gyp involvement anywhere: no `binding.gyp`, no
+`nan` dependency, no `build/Release/posix.node`, and the root `build/`
+directory is no longer package content. `npm install` needs no compiler,
+Python, or Node headers, and a checkout is no longer coupled to the Node major
+that last ran it.
+
+**What CMake does not build:** the JS/TS. `CMakeLists.txt` installs `lib`,
+`node_modules`, `R`, `python`, `ext`, etc. wholesale with
+`USE_SOURCE_PERMISSIONS` — meaning `npm install` and `npm run build` (tsc)
+must have been run *before* CMake's install step. `external/pandoc` is a
+separate subproject and Node itself is downloaded by
 `external/node/install-node.sh` into `ext/node`.
 
 Layout of a finished install (`--prefix /opt` → `/opt/shiny-server/`):
@@ -274,8 +282,7 @@ Layout of a finished install (`--prefix /opt` → `/opt/shiny-server/`):
 /opt/shiny-server/bin/shiny-server        <- native launcher (src/launcher.cc)
 /opt/shiny-server/ext/node/bin/shiny-server <- copy of node (install-node.sh:61)
 /opt/shiny-server/lib/main.js             <- JS entry point
-/opt/shiny-server/build/Release/posix.node<- node-gyp addon
 ```
 
 The launcher's `dirname(dirname(argv0))` walk (`src/launcher.cc:125`) is exactly
-what ties the first line to the other three.
+what ties the first line to the other two.
