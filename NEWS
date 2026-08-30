@@ -1,6 +1,23 @@
 shiny-server 1.5.24
 --------------------------------------------------------------------------------
 
+* Upgraded the bundled Node.js from v20.17.0 to v24.20.0.
+
+* Replaced the unmaintained `http-proxy` dependency with `http-proxy-3`, a
+  maintained fork.
+
+* Upgraded Express from 4 to 5, and `send` from 0.19 to 1.2. Static files with
+  a `.R` extension are now served as `text/R; charset=utf-8` rather than
+  `text/R; charset=UTF-8`; charset names are case-insensitive, so this should
+  be invisible to clients.
+
+* Upgraded TypeScript from 5 to 6, and set an explicit `target` of ES2022 in
+  tsconfig.json.
+
+* Upgraded the remaining npm dependencies, including ip-address 9 -> 10. This
+  clears every known runtime advisory, among them a critical one in
+  websocket-driver; the five that remain are all in development-only tooling.
+
 * Added `:PROCESS_USER:` token for the `run_as` directive, which resolves to the
   user running the shiny-server process. This enables running without root.
 
@@ -9,7 +26,11 @@ shiny-server 1.5.24
   to absolute at config parse time.
 
 * Added `npm run dev` for local development. Starts the server on port 3838 with
-  sample R and Python apps, no root required.
+  sample R and Python apps, no root required. The Python sample needs a one-time
+  `uv sync --project dev/apps/py-hello` first.
+
+* A `python` setting that points at a path which doesn't exist now reports that,
+  instead of surfacing a bare `ENOENT ... stat` error.
 
 shiny-server 1.5.23
 --------------------------------------------------------------------------------

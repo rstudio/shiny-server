@@ -21,42 +21,56 @@
   "dependencies": {
     "bash": "0.0.1",
     "client-sessions": "^0.8.0",
-    "compression": "^1.7.4",
-    "express": "^4.21.0",
+    "compression": "^1.8.1",
+    "express": "^5.2.1",
     "faye-websocket": "^0.11.4",
     "graceful-fs": "^4.2.11",
-    "handlebars": "^4.7.8",
-    "http-proxy": "^1.18.1",
-    "ip-address": "^9.0.5",
+    "handlebars": "^4.7.9",
+    "http-proxy-3": "^2.0.1",
+    "ip-address": "^10.7.0",
     "log4js": "^6.9.1",
+    "mime-types": "^3.0.2",
     "moment": "^2.29.1",
-    "morgan": "^1.10.0",
-    "nan": "^2.18.0",
+    "morgan": "^1.12.0",
+    "nan": "^2.28.0",
     "optimist": "github:rstudio/node-optimist#dbbadda31e53b63225a57e172a528b1ddc52be52",
     "pause": "0.1.0",
     "q": "^1.5.1",
-    "qs": "^6.11.2",
-    "send": "^0.19.0",
+    "qs": "^6.16.0",
+    "send": "^1.2.1",
     "shiny-server-client": "github:rstudio/shiny-server-client#v1.2.0",
     "sockjs": "^0.3.24",
     "sockjs-client": "github:jcheng5/sockjs-client#v1.5.2.2-jcheng5",
     "split": "^1.0.1",
-    "underscore": "^1.13.7"
+    "underscore": "^1.13.8"
+  },
+  "overrides": {
+    "sockjs": {
+      "uuid": "^11.1.1"
+    },
+    "mocha": {
+      "diff": "^9.0.0",
+      "serialize-javascript": "^7.1.1"
+    },
+    "nodemon": {
+      "brace-expansion": "^5.0.9"
+    },
+    "picomatch": "^4.0.7"
   },
   "license": "AGPL-3.0",
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=22.0.0",
     "npm": ">=7.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.7.3",
+    "@types/node": "^24.13.3",
     "@types/q": "^1.5.8",
     "@types/split": "^1.0.5",
-    "mocha": "^10.7.3",
+    "mocha": "^11.8.0",
     "nodemon": "^3.1.14",
-    "rewire": "^7.0.0",
+    "rewire": "^9.0.1",
     "should": "^13.2.3",
-    "sinon": "^18.0.1",
-    "typescript": "^5.6.2"
+    "sinon": "^22.1.0",
+    "typescript": "^7.0.2"
   }
 }

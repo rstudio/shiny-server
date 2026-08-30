@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    // Pinned rather than left to the compiler default, which moved from ES5 to
+    // a modern target in TypeScript 6 and silently rewrote the committed .js
+    // output. ES2022 is fully supported by every Node in `engines.node`.
+    "target": "es2022",
     "strict": true,
     "noImplicitAny": true,
     "noImplicitOverride": true,

@@ -12,7 +12,7 @@
  */
 const assert = require("assert");
 const http = require("http");
-const httpProxy = require("http-proxy");
+const httpProxy = require("http-proxy-3");
 
 describe("http-proxy", () => {  
   it("doesn't use keepalive on proxied requests", done => {

@@ -64,7 +64,22 @@ tools/preflight.sh
 npm start -- --config config/default.config
 ```
 
-> **Node ABI gotcha.** `build/Release/posix.node` is a native addon compiled against the Node version in `.nvmrc` (currently v20.17.0). If your ambient `node` is a different major version, *everything* fails immediately with `ERR_DLOPEN_FAILED` / `NODE_MODULE_VERSION` mismatch — including `npm test`. Either `nvm use`, or prefix with the vendored runtime: `PATH="$PWD/ext/node/bin:$PATH" npm test`.
+**Run a local dev server (no root required):**
+```bash
+npm run dev          # nodemon against dev/shiny-server.conf, port 3838
+```
+
+> **First run: provision the Python sample app.** `dev/apps/py-hello` is a `uv`
+> project, and `dev/.gitignore` ignores `**/.venv/`, so a fresh clone has no
+> virtualenv and `/py-hello/` returns a 500. Nothing creates it for you:
+>
+> ```bash
+> uv sync --project dev/apps/py-hello
+> ```
+>
+> `/r-hello/` is unaffected — it needs only R and the `shiny` package.
+
+> **Node ABI gotcha.** `build/Release/posix.node` is a native addon compiled against the Node version in `.nvmrc` (currently v24.20.0). If your ambient `node` is a different major version, *everything* fails immediately with `ERR_DLOPEN_FAILED` / `NODE_MODULE_VERSION` mismatch — including `npm test`. Either `nvm use`, or prefix with the vendored runtime: `PATH="$PWD/ext/node/bin:$PATH" npm test`.
 
 ## Architecture
 
