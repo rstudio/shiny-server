@@ -13,7 +13,25 @@ interface PythonEnv {
 
 export async function resolvePython_p(pythonPath: string, baseDir?: string): Promise<PythonEnv> {
   if (path.isAbsolute(pythonPath)) {
-    let stat = await fs_promises.stat(pythonPath);
+    let stat: fs.Stats;
+    try {
+      stat = await fs_promises.stat(pythonPath);
+    } catch (err) {
+      // Without this, a missing path escapes as a bare
+      // "ENOENT: no such file or directory, stat '...'", which doesn't say what
+      // the path was supposed to be. Every other failure mode below explains
+      // itself; this one should too.
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new Error(
+          `The python path '${pythonPath}' does not exist. It must be a Python ` +
+            `executable, or a virtual environment directory that has already ` +
+            `been created (this setting does not create one).`
+        );
+      }
+      throw new Error(
+        `Can't read the python path '${pythonPath}': ${(err as Error).message}`
+      );
+    }
     if (stat.isDirectory()) {
       // virtualenv/venv support. Assume that the directory is a virtual
       // environment directory. Add its bin directory to the path, clear

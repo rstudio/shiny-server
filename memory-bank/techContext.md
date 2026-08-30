@@ -1,6 +1,6 @@
 ---
 title: Tech Context
-description: The developer-facing stack for Shiny Server — the runtime dependency set and why three of them are pinned GitHub forks (optimist, shiny-server-client, sockjs-client), the npm-shrinkwrap policy, the license-compliance workflow (tools/check-licenses.js, tools/preflight.sh, NOTICE.md), the partial TypeScript adoption and the "commit the compiled .js" rule, the Q promise library and the `_p` convention, Node version pinning via .nvmrc and the vendored ext/node (and why `nan` must move with it), the 2026 dependency sweep that took the stack to Node 24 / Express 5 / TypeScript 6 and what it deliberately left alone, upstream-tracking scripts, the `overrides` that hold `npm audit` at zero and the two `npm outdated` rows that are permanent (q's `future`-tag false positive, @types/node held to the runtime major), and the build/test/run commands (including what breaks on a macOS dev machine).
+description: The developer-facing stack for Shiny Server — the runtime dependency set and why three of them are pinned GitHub forks (optimist, shiny-server-client, sockjs-client), the npm-shrinkwrap policy, the license-compliance workflow (tools/check-licenses.js, tools/preflight.sh, NOTICE.md), the partial TypeScript adoption and the "commit the compiled .js" rule, the Q promise library and the `_p` convention, Node version pinning via .nvmrc and the vendored ext/node (and why `nan` must move with it), the 2026 dependency sweep that took the stack to Node 24 / Express 5 / TypeScript 6 and what it deliberately left alone, upstream-tracking scripts, the `overrides` that hold `npm audit` at zero and the two `npm outdated` rows that are permanent (q's `future`-tag false positive, @types/node held to the runtime major), and the build/test/run commands (including `npm run dev` and the one-time `uv sync` its Python sample app needs, and what breaks on a macOS dev machine).
 ---
 
 # Tech Context
@@ -291,10 +291,24 @@ npm run build                                # tsc; REQUIRED after any .ts edit
 npm test                                     # mocha test/  (~200ms; see testingGuide.md)
 npx mocha test/scheduler.js                  # single file
 tools/preflight.sh                           # licenses + upstream; before release
+npm run dev                                  # local dev server, port 3838, no root
 tools/test-config.sh testapps                # run the server against a test config
 node tools/makedocs.js                       # regenerate config.html from the schema
 ```
 
+- **`npm run dev`** runs nodemon against `dev/shiny-server.conf`, which uses
+  `run_as :PROCESS_USER:` so no root is needed, and serves `dev/apps/`
+  (`r-hello`, `py-hello`) on port 3838. **`py-hello` needs a one-time
+  `uv sync --project dev/apps/py-hello`.** It is a `uv` project
+  (`pyproject.toml` + `uv.lock` + `.python-version`), the config points at it
+  with `python .venv/;`, and `dev/.gitignore` ignores `**/.venv/` — correctly,
+  since a venv is a platform-specific build artifact. But nothing creates it, so
+  on a fresh clone `/py-hello/` 500s. This is deliberately *not* automated: a
+  `predev` hook was considered and rejected, as was teaching the server to
+  detect a `uv` project and launch via `uv run`. `uv run` silently creates and
+  populates the venv when it is missing, which would move dependency resolution
+  — network access and arbitrary package execution as the `run_as` user — into
+  the request path of a running server. Provisioning stays the operator's job.
 - **`tools/test-config.sh`** is the local-run path. It templates
   `test/configs/$NAME.config.in` (substituting `$USER` and `$ROOT`) into
   `/tmp/shiny-server-test/` and launches `bin/shiny-server` against it. Default

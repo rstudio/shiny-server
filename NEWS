@@ -26,7 +26,11 @@ shiny-server 1.5.24
   to absolute at config parse time.
 
 * Added `npm run dev` for local development. Starts the server on port 3838 with
-  sample R and Python apps, no root required.
+  sample R and Python apps, no root required. The Python sample needs a one-time
+  `uv sync --project dev/apps/py-hello` first.
+
+* A `python` setting that points at a path which doesn't exist now reports that,
+  instead of surfacing a bare `ENOENT ... stat` error.
 
 shiny-server 1.5.23
 --------------------------------------------------------------------------------
