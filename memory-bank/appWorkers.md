@@ -25,9 +25,9 @@ matters:
   An endpoint carries the port/socket path *and* a per-worker random 16-byte
   shared secret (`lib/transport/shared.js:22`).
 - The scheduler computes the log file path
-  (`Scheduler.getLogFilePath`, `lib/scheduler/scheduler.js:281`), does
-  `posix.getpwnam(appSpec.runAs)`, and hands the passwd struct in. AppWorker
-  never looks up the user itself.
+  (`Scheduler.getLogFilePath`, `lib/scheduler/scheduler.js:281`), awaits
+  `userDb.lookupUser_p(appSpec.runAs)`, and hands the user record in. AppWorker
+  never looks up the `run_as` user itself.
 - AppWorker returns a promise for an `AppWorker` object as soon as the process
   has been *spawned*. It makes no claim that the app is up. Readiness is
   determined entirely by the scheduler polling `endpoint.connect_p()` with
@@ -154,14 +154,13 @@ controls or documents.
 `src/launcher.cc` is the `shiny-server` front-end binary: it locates its own
 install directory via `/proc/self/exe` (Linux) or `_NSGetExecutablePath` (macOS)
 and `execv`s `ext/node/bin/shiny-server lib/main.js` (`src/launcher.cc:38-66`).
-It has no setuid logic. The only native module used here is `posix`
-(`binding.gyp` builds only `src/posix.cc`), and only for `getpwnam`/`getpwuid`.
+It has no setuid logic. No native module is involved in worker launching at
+all: user records come from `lib/core/user-db.js` (command-backed lookups).
 
-**`lib/worker/run-as.js` is dead code.** It's a standalone script that drops
-privileges via `setgid`/`initgroups`/`setuid` and re-spawns, using the old
-`SHINY_PORT`/`SHINY_APP` env-var protocol that was replaced by JSON-on-stdin. A
-grep across `lib/`, `src/`, `scripts/`, `tools/`, and `test/` finds no reference
-to it. Don't take it as documentation of current behavior.
+**`lib/worker/run-as.js` is gone.** It was a standalone script that dropped
+privileges via `setgid`/`initgroups`/`setuid` and re-spawned, using the old
+`SHINY_PORT`/`SHINY_APP` env-var protocol that was replaced by JSON-on-stdin.
+It had no references and was deleted with the `posix` addon.
 
 ## The stdin payload and the stdout handshake
 
@@ -356,7 +355,7 @@ Typing escape hatches to be aware of:
 
 - Untyped neighbors are pulled in with `var x = require(...)` rather than
   `import`, which yields `any` and skips module resolution entirely: `path`,
-  `bash`, `map`, `paths`, `permissions`, `posix`
+  `bash`, `map`, `paths`, `permissions`, `userDb`
   (`lib/worker/app-worker.ts:25-32`). A side effect: `logDir` in `createLogFile`
   is `any` (it comes from the untyped `path.dirname`), which is the only reason
   `logDir = null` on the error path type-checks (`:210`, `:213`).

@@ -1,6 +1,18 @@
 shiny-server 1.5.24
 --------------------------------------------------------------------------------
 
+* Removed the `posix` native Node addon (and with it the node-gyp build and
+  the `nan` dependency). User, group, and group-membership lookups are now
+  performed with platform account utilities, which remain aware of
+  NSS/Directory Service (LDAP, SSSD, etc.), and the `--pidfile` lock is now a
+  BSD descriptor lock acquired by a short-lived helper process. New runtime
+  expectations: on Linux, `getent`, `id`, and `flock` must be available in
+  `/usr/bin` or `/bin`; on macOS, `id`, `dscacheutil`, and `lockf` in
+  `/usr/bin`. Note that the new pidfile lock is a different lock domain than
+  before: manually running an old and a new server against the same pidfile at
+  the same time is unsupported (package upgrades, which stop the old service
+  first, are unaffected).
+
 * Upgraded the bundled Node.js from v20.17.0 to v24.20.0.
 
 * Replaced the unmaintained `http-proxy` dependency with `http-proxy-3`, a

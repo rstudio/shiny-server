@@ -22,7 +22,7 @@ The `memory-bank/` directory contains architectural documentation, with YAML fro
 - `schedulerSystem.md` — Worker pooling, `WorkerEntry` reference counting, idle reaping, capacity limits.
 - `appWorkers.md` — How an R/Python app process is actually launched, the stdin handshake, per-worker logging, teardown.
 - `transportLayer.md` — TCP vs. Unix socket endpoints, the per-worker shared secret.
-- `nativePrivileges.md` — The `posix` addon, the launcher binary, and the root/`run_as` privilege model.
+- `nativePrivileges.md` — The launcher binary, command-backed account lookups, the pidfile lock, and the root/`run_as` privilege model.
 - `coreUtilities.md` — The `lib/core/` helper inventory and the Q promise idioms.
 - `loggingAndErrors.md` — The three log streams, error-to-HTTP-response path, `sanitize_errors`, template cascade.
 - `testingGuide.md` — Test runner setup, Rewire/Sinon patterns, the honest coverage map, traps.
@@ -79,8 +79,6 @@ npm run dev          # nodemon against dev/shiny-server.conf, port 3838
 >
 > `/r-hello/` is unaffected — it needs only R and the `shiny` package.
 
-> **Node ABI gotcha.** `build/Release/posix.node` is a native addon compiled against the Node version in `.nvmrc` (currently v24.20.0). If your ambient `node` is a different major version, *everything* fails immediately with `ERR_DLOPEN_FAILED` / `NODE_MODULE_VERSION` mismatch — including `npm test`. Either `nvm use`, or prefix with the vendored runtime: `PATH="$PWD/ext/node/bin:$PATH" npm test`.
-
 ## Architecture
 
 ### Request Flow
@@ -102,7 +100,7 @@ npm run dev          # nodemon against dev/shiny-server.conf, port 3838
 
 6. **Workers (`lib/worker/`)** — `AppWorker` (TypeScript) launches Shiny app processes as the configured `run_as` user by shelling out to `su`, and captures stderr to log files. Supports R Shiny, Python Shiny (`shiny-python` mode), and R Markdown (`rmd` mode).
 
-7. **Native code (`src/`)** — Two separate artifacts with two separate build systems. `posix.cc` is the only node-gyp target (`binding.gyp`); it exports `getpwnam`, `getpwuid`, `getgrnam`, `getgrouplist`, and `acquireRecordLock` — identity *lookups* and a pidfile lock, not privilege switching. `launcher.cc` is built by CMake (`src/CMakeLists.txt`) into the standalone `shiny-server` binary, a path-discovery trampoline that `execv`s the bundled Node; it is not setuid and does no user switching.
+7. **Native code (`src/`)** — `launcher.cc` is the project's only C++ source. It is built by CMake (`src/CMakeLists.txt`) into the standalone `shiny-server` binary, a path-discovery trampoline that `execv`s the bundled Node; it is not setuid and does no user switching. Account lookups are command-backed (`lib/core/user-db.js`: `getent`/`id` on Linux, `id`/`dscacheutil` on macOS, so NSS/Directory Service accounts resolve), and the `--pidfile` lock is a BSD descriptor lock taken by a short-lived `flock`/`lockf` helper (`lib/core/pidfile.js`).
 
 ### Key Data Types
 

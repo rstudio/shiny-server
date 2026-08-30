@@ -29,7 +29,7 @@ import split = require("split");
 var map = require("../core/map");
 var paths = require("../core/paths");
 var permissions = require("../core/permissions");
-var posix = require("../../build/Release/posix");
+var userDb = require("../core/user-db");
 import { Endpoint } from "../transport/tcp";
 import { AppSpec } from "./app-spec";
 import * as python from "../core/python";
@@ -109,7 +109,7 @@ async function exists(path: string): Promise<boolean> {
  *
  * @param {AppSpec} appSpec - Contains the basic details about the app to
  *   launch
- * @param pw - the user info, a result of `posix.getpwnam()`
+ * @param pw - the user info, a result of `userDb.lookupUser_p()`
  * @param {Endpoint} endpoint - The endpoint that the Shiny app should
  *   listen on.
  * @param {String} logFilePath - The file path to write stderr to.
@@ -278,7 +278,8 @@ async function createBookmarkStateDirectory(
       logger.info(`created ${label}bookmark state directory: ${dir}`);
 
       if (typeof username === "string") {
-        var pw = posix.getpwnam(username);
+        var pw = await userDb.lookupUser_p(username);
+        if (!pw) throw new Error("User " + username + " does not exist");
         await fs_promises.chown(dir, pw.uid, pw.gid);
       }
     } catch (ex) {

@@ -26,7 +26,8 @@
 // connectEndpoint_p really connects before the proxy really proxies. The only
 // thing that does not happen is `su`-ing to another user and exec'ing R, which
 // is also why the config under test must `run_as` the current user --
-// Scheduler calls posix.getpwnam(appSpec.runAs) regardless of this stub.
+// Scheduler resolves appSpec.runAs through lib/core/user-db regardless of
+// this stub.
 
 var http = require('http');
 var Q = require('q');

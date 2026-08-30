@@ -135,6 +135,6 @@ Practical consequences for anyone working in here:
   have none and are only exercised by hand. `testingGuide.md` has the honest
   map.
 - **The build is heavier than the code.** CMake, a vendored Node runtime, a
-  vendored pandoc, node-gyp native modules, and deb/rpm packaging surround an
+  vendored pandoc, and deb/rpm packaging surround an
   ~8k-line `lib/` tree. Most "it doesn't work" problems on a dev machine are
   build/environment problems, not code problems.

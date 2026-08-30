@@ -36,8 +36,7 @@ add_subdirectory(src)
 add_subdirectory(external/pandoc)
 
 install(DIRECTORY assets
-                  samples                  
-                  build
+                  samples
                   config
                   ext
                   lib
@@ -65,8 +64,7 @@ execute_process(COMMAND cat
                 INPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/NOTICE.md
                 OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/NOTICE)
 
-install(FILES binding.gyp
-              config.html
+install(FILES config.html
               COPYING
               NEWS
               package.json

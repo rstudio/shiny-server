@@ -169,8 +169,8 @@ The ordering here is the subtle part:
    `acquireWorker` and waits on the same promise instead of spawning a duplicate.
 3. `$transport.alloc_p()` picks a TCP port or Unix socket
    (`lib/transport/tcp.js:41`, `lib/transport/unix-socket.js:51`).
-4. `posix.getpwnam(appSpec.runAs)` resolves the target user; `launchWorker_p`
-   forks the process (`lib/worker/app-worker.ts`).
+4. `userDb.lookupUser_p(appSpec.runAs)` resolves the target user;
+   `launchWorker_p` forks the process (`lib/worker/app-worker.ts`).
 5. **Readiness is not "the process started" — it's "the port answers."**
    `connectEndpoint_p` (lines 56-109, called at 252) polls the endpoint on a
    fixed retry ladder `[50, 50, 100, 100, 100, 100, 100, 200, 200, 300, 300,
@@ -379,9 +379,7 @@ configurable?`).
 
 ## Testing notes
 
-- `test/scheduler.js` requires the compiled native module (`build/Release/posix`,
-  pulled in at `lib/scheduler/scheduler.js:29`), so it cannot run without
-  `node-gyp` output present. It `rewire`s `app_worker` — which is why
+- `test/scheduler.js` `rewire`s `app_worker` — which is why
   `scheduler.js:28` declares it with `let` rather than `const`, with a comment
   saying exactly that. Don't "modernize" that line.
 - `test/scheduler.js` uses `sinon.useFakeTimers({toNotFake: ['nextTick',

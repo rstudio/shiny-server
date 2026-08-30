@@ -250,8 +250,8 @@ config-level path is `/users` or similar; the `~user` form is produced by whatev
 URL scheme the admin configures, not by this router — it simply treats the first
 segment after the prefix as a username.
 
-It resolves the user with `posix.getpwnam` (falsy → `null`, i.e. fall through, not
-403), optionally gates on `members_of` group membership via `posix.getgrouplist`,
+It resolves the user with `userDb.lookupUser_p` (null → fall through, not
+403), optionally gates on `members_of` group membership via `userDb.getGroupIds_p`,
 then constructs a **fresh `DirectoryRouter` per request** rooted at
 `~user/ShinyApps` with `~user/ShinyApps/log` as the log dir and a hardcoded
 blacklist `/^(\/)?log(\/)?/` so the log directory is never served

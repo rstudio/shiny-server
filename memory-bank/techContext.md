@@ -1,6 +1,6 @@
 ---
 title: Tech Context
-description: The developer-facing stack for Shiny Server — the runtime dependency set and why three of them are pinned GitHub forks (optimist, shiny-server-client, sockjs-client), the npm-shrinkwrap policy, the license-compliance workflow (tools/check-licenses.js, tools/preflight.sh, NOTICE.md), the partial TypeScript adoption and the "commit the compiled .js" rule, the Q promise library and the `_p` convention, Node version pinning via .nvmrc and the vendored ext/node (and why `nan` must move with it), the 2026 dependency sweep that took the stack to Node 24 / Express 5 / TypeScript 6 and what it deliberately left alone, upstream-tracking scripts, the `overrides` that hold `npm audit` at zero and the two `npm outdated` rows that are permanent (q's `future`-tag false positive, @types/node held to the runtime major), and the build/test/run commands (including `npm run dev` and the one-time `uv sync` its Python sample app needs, and what breaks on a macOS dev machine).
+description: The developer-facing stack for Shiny Server — the runtime dependency set and why three of them are pinned GitHub forks (optimist, shiny-server-client, sockjs-client), the npm-shrinkwrap policy, the license-compliance workflow (tools/check-licenses.js, tools/preflight.sh, NOTICE.md), the partial TypeScript adoption and the "commit the compiled .js" rule, the Q promise library and the `_p` convention, Node version pinning via .nvmrc and the vendored ext/node, the 2026 dependency sweep that took the stack to Node 24 / Express 5 / TypeScript 6 and what it deliberately left alone, upstream-tracking scripts, the `overrides` that hold `npm audit` at zero and the two `npm outdated` rows that are permanent (q's `future`-tag false positive, @types/node held to the runtime major), and the build/test/run commands (including `npm run dev` and the one-time `uv sync` its Python sample app needs, and what breaks on a macOS dev machine).
 ---
 
 # Tech Context
@@ -13,11 +13,13 @@ developer's edge of that boundary.
 
 - **Node.js**, CommonJS throughout. No bundler, no transpile step for the `.js`
   files — they are the source.
-- **A small C++ addon** (`src/posix.cc`, built by node-gyp per `binding.gyp`)
-  exposed as `build/Release/posix`. Nine `lib/` modules require it directly
-  (`lib/core/fsutil.js:16`, `lib/router/router.js:22`, `lib/worker/run-as.js:22`,
-  and others). This is load-bearing for *everything* — you cannot even load the
-  test suite without a matching-ABI `posix.node`.
+- **No native addon.** The old `posix` node-gyp addon is gone (along with
+  `binding.gyp` and `nan`). Account lookups are command-backed
+  (`lib/core/user-db.js`: `getent`/`id`/`dscacheutil`) and the pidfile lock is
+  a BSD descriptor lock taken by a short-lived `flock`/`lockf` helper
+  (`lib/core/pidfile.js`). The only remaining C++ is `src/launcher.cc`, built
+  by CMake — so `npm install` needs no compiler and checkouts are no longer
+  coupled to a Node ABI.
 - **Python and R** are not dependencies of the server; they are what the
   workers run. `tools/memlog-view.R` is a small ggplot/Shiny scratch app for
   eyeballing the memory log — a developer utility, not shipped functionality.
@@ -36,7 +38,6 @@ From `package.json` `dependencies`:
 | Promises | `q` |
 | Logging | `log4js`, `split` |
 | Utility | `underscore`, `moment`, `graceful-fs`, `bash` |
-| Native build | `nan` |
 
 Dev: `mocha`, `should`, `sinon`, `rewire`, `typescript`, and `@types/*`.
 
@@ -259,11 +260,8 @@ requires it.
   and 1.5.22 it built its own for glibc compatibility with RHEL/CentOS 7; that
   requirement went away when CentOS 7 was dropped.
 - Recent history: 18.20.4 → 20.17.0 (1.5.23) → 24.20.0.
-  Bumping Node = edit `.nvmrc`, update `NEWS`, re-run `install-node.sh`, and
-  rebuild the native addon. **Check `nan` at the same time**: 2.20 does not
-  compile against Node 24's V8 headers, and a `nan` too old for the Node in
-  `.nvmrc` breaks `npm ci` in node-gyp — which then breaks everything that
-  loads `build/Release/posix.node`, i.e. essentially everything.
+  Bumping Node = edit `.nvmrc`, update `NEWS`, and re-run `install-node.sh`.
+  There is no native addon to rebuild.
 - There is no `.npmrc`. It used to contain only `scripts-prepend-node-path=true`,
   which npm 9 removed (the behavior is now unconditional); the file was deleted
   as inert.
@@ -286,7 +284,7 @@ that passes trivially — that's expected, not a bug.
 ## Day-to-day commands
 
 ```bash
-npm install                                  # deps + node-gyp build of posix.node
+npm install                                  # deps
 npm run build                                # tsc; REQUIRED after any .ts edit
 npm test                                     # mocha test/  (~200ms; see testingGuide.md)
 npx mocha test/scheduler.js                  # single file
@@ -330,21 +328,6 @@ node tools/makedocs.js                       # regenerate config.html from the s
 Since 1.5.23 the project builds on macOS (commit `3d31ccf`). You can install
 deps, compile TypeScript, and run the full test suite locally.
 
-**The gotcha:** the native `posix.node` addon is ABI-locked to the Node major it
-was compiled against. If your shell's `node` differs from `.nvmrc`, *every* test
-fails at load time with:
-
-```
-The module '.../build/Release/posix.node' was compiled against a different
-Node.js version using NODE_MODULE_VERSION 137. This version of Node.js
-requires NODE_MODULE_VERSION 127.
-```
-
-This is a version mismatch, not a broken checkout. Fix it by using the pinned
-Node — `nvm use`, or prepend the vendored one:
-`PATH="$PWD/ext/node/bin:$PATH" npm test`. (`npm run build` is unaffected; only
-things that load `lib/` care.)
-
 What you still cannot do on macOS: exercise the multi-user story. Running apps
 as another Unix user requires root and `setuid`/`setgid`; the deb/rpm packaging
 and systemd/init integration are Linux-only. A `Dockerfile` (untracked, Ubuntu
@@ -360,9 +343,10 @@ harness that was built specifically so the Express 4 → 5 move could be
 It is **five commits, each verified against a passing suite** rather than one
 bundle, so a regression bisects to a specific upgrade:
 
-1. Node 20.17.0 → 24.20.0, plus the `nan` ^2.18 → ^2.28 bump it requires and
-   deletion of the inert `.npmrc`. First on purpose: it holds Node constant for
-   every later comparison instead of confounding runtime with dependencies.
+1. Node 20.17.0 → 24.20.0, plus deletion of the inert `.npmrc`. First on
+   purpose: it holds Node constant for every later comparison instead of
+   confounding runtime with dependencies. (The `nan` bump it required at the
+   time is moot now — the addon it built has since been removed.)
 2. `http-proxy` → `http-proxy-3`.
 3. `express` 4 → 5 **and** `send` 0.19 → 1.2 — inseparable, since Express 5
    depends on serve-static 2 / send 1.

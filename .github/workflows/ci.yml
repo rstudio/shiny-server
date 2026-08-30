@@ -18,15 +18,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # .nvmrc is the version the native addon (build/Release/posix.node) is
-      # expected to compile against; using anything else here tends to fail in
-      # node-gyp rather than anywhere informative.
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: npm
 
-      # Also rebuilds src/posix.cc via node-gyp.
+      # Account lookups and pidfile locking shell out to platform utilities;
+      # fail here, informatively, if the image lacks them.
+      - name: Check required platform utilities
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            command -v getent id flock
+          else
+            command -v id dscacheutil lockf
+          fi
+
       - name: Install dependencies
         run: npm ci
 

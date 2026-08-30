@@ -70,15 +70,6 @@ adds 8 more and takes about a second once R is warm.
 The macOS-only `test/app-worker.js` failure (the `/blah` mkdir case returns `EROFS`
 rather than `EACCES` on darwin) is fixed — the assertion now accepts either errno.
 
-- **Node ABI trap (the first thing that bites).** `test/app-worker.js:19` requires
-  `../build/Release/posix.node` directly, and `lib/core/fsutil.js` requires it
-  transitively. If your shell's `node` is not ABI-compatible with whatever built
-  `build/Release/`, mocha dies before running a single test with
-  `ERR_DLOPEN_FAILED ... NODE_MODULE_VERSION`. Run tests with a Node matching
-  `.nvmrc` (currently v24.20.0), or `npm rebuild` against the Node you're using.
-  `nan` and `.nvmrc` move together for this reason: `nan` 2.20 does not compile
-  against Node 24's V8 headers, so bumping one without the other fails in
-  node-gyp before a single test runs.
 - The `app-worker` block prints four log4js lines mid-spec about bookmark state
   directories under `$TMPDIR/app-worker-test-bookmarks`. Expected, not a failure.
 
@@ -112,9 +103,10 @@ still be using the first. What makes the plain assignment work is that
 `scheduler.js:176` resolves `app_worker.launchWorker_p` as a property *at call time*.
 
 Note also that `Scheduler.setTransport()` alone is not a sufficient seam:
-`scheduler.js:171` calls `posix.getpwnam(appSpec.runAs)` and `:175` calls
+`spawnWorker` resolves `appSpec.runAs` through `lib/core/user-db.js` and calls
 `launchWorker_p` regardless of transport. That is why test configs must
-`run_as $USER` — so the real `getpwnam` succeeds.
+`run_as $USER` — so the real account lookup succeeds (for the current user it
+is fast-pathed through `os.userInfo()`, no external command).
 
 ### Two traps that produced days of "impossible" flakiness
 
@@ -264,8 +256,7 @@ worth:
   — `test/nested-locations.js:25` already does
   `config_router.__set__("checkPermissions", function() {})` to bypass exactly that root
   check, so a `user_dirs` fixture would load. Testing `getAppSpec_p` itself additionally
-  needs `build/Release/posix` (required directly, for `getpwnam`) rewired to a fake user,
-  the same pattern `test/app-worker.js` uses.
+  needs `lib/core/user-db.js` rewired to resolve a fake user.
 - `lib/router/directory-router.js`, `local-config-router.js`, and the combinators in
   `router.js` (`CompositeRouter`, `PrefixFilterRouter`, `RestartRouter`,
   `RedirectRouter`) — covered end-to-end by `test/integration/`, but not unit-tested;
@@ -273,7 +264,7 @@ worth:
 - `lib/transport/tcp.js`, `unix-socket.js`; `lib/worker/app-worker-handle.js`, `run-as.js`.
 - `lib/main.js` (the CLI wrapper), `lib/core/permissions.js`, `fsutil.js`,
   `connect-util.js`, `url-util.js`, `shutdown.js`.
-- `src/launcher.cc`, `src/posix.cc` — the native code is exercised only incidentally.
+- `src/launcher.cc` — the native code is exercised only incidentally.
 
 ## Fixtures
 
