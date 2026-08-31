@@ -15,10 +15,11 @@
 # Do NOT "set -e"
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
+# Include the directory where shiny-server resides into the PATH and DAEMON. The default is /usr/local/bin/
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
 DESC="shiny server"
 NAME=shiny-server
-DAEMON=shiny-server
+DAEMON=/usr/local/bin/shiny-server
 SCRIPTNAME=/etc/init.d/shiny-server
 
 # Exit if the package is not installed
