@@ -81,7 +81,7 @@ sockjsServer = proxy_sockjs.createServer(metarouter, schedulerRegistry, ...)  (R
 
 Server (facade)  ──> N x http.Server, one per unique listen address
    'request'  -> app.handle (express)   AND   -> requestLogger (morgan)
-   'upgrade'  -> clientSessionMiddleware -> sockjsHandler.upgrade
+   'upgrade'  -> sockjsHandler.upgrade
 ```
 
 Two seams make reload possible without rebuilding the world:
@@ -127,10 +127,14 @@ Installed in this exact order (`lib/server-init.js`):
 |---|---|---|
 | 1 | `X-Powered-By: Shiny Server` | Express's own header is disabled at `:159` first. |
 | 2 | conditional `compression()` | Guarded by the mutable `useCompression` flag, so `http_allow_compression` is honored per-request after a reload. |
-| 3 | `client-sessions` | Random per-process secret (`lib/server-init.js`). |
-| 4 | `sockjsHandler` | `if (!sockjsHandler(req,res)) next()`. |
-| 5 | `__assets__` filter | `connect_util.filterByRegex(/\b__assets__\/.+/, ...)`. |
-| 6 | `shinyProxy.httpListener` | Terminal — never calls `next()`. |
+| 3 | `sockjsHandler` | `if (!sockjsHandler(req,res)) next()`. |
+| 4 | `__assets__` filter | `connect_util.filterByRegex(/\b__assets__\/.+/, ...)`. |
+| 5 | `shinyProxy.httpListener` | Terminal — never calls `next()`. |
+
+There is **no session middleware**. A `client-sessions` entry sat at position 3 until
+2026-09; it was entirely vestigial and was removed. See
+`memory-bank/proxyLayer.md` for the full autopsy — in particular, it never emitted a
+cookie, so don't go looking for one.
 
 Why the order matters:
 
@@ -142,9 +146,6 @@ Why the order matters:
   middlewares must therefore run before the proxy, and the assets regex is
   deliberately unanchored (`\b__assets__\/`) with everything up to and including
   `__assets__/` stripped from `req.url` at `lib/server-init.js`.
-- **`client-sessions` before SockJS.** The session cookie is established before
-  SockJS transport requests are handled. (In practice nothing in `lib/` ever
-  reads `req.session`; the middleware looks vestigial.)
 - **The proxy is terminal.** `httpListener(req, res)` takes no `next`. Every
   path through it either responds (404/500/503) or hands off to `http-proxy`.
   There is no error-handling middleware anywhere in the app, so Express's
@@ -211,15 +212,15 @@ Shiny Server ⇄ worker (a plain WebSocket via `faye-websocket`).
 
 **HTTP-based SockJS transports** (xhr-polling, xhr-streaming, jsonp, eventsource,
 htmlfile, plus `/info` and the iframe/welcome pages) arrive as ordinary requests
-and are claimed by middleware #4. The SockJS prefix is
+and are claimed by middleware #3. The SockJS prefix is
 `'.*/__sockjs__(/[no]=\\w+)?'` (`lib/proxy/sockjs.js:42`) — the leading `.*`
 is what lets a single SockJS server serve every app prefix, and the optional
 `/n=` / `/o=` path param is the robust-reconnect session id consumed by
 `lib/proxy/robust-sockjs.js`.
 
 **WebSocket upgrades** bypass Express entirely — Express only handles
-`'request'`. `lib/server-init.js` handles `'upgrade'` on the `Server` facade,
-manually running `clientSessionMiddleware` and then `sockjsHandler.upgrade`.
+`'request'`. `lib/server-init.js` handles `'upgrade'` on the `Server` facade by
+calling `sockjsHandler.upgrade` directly.
 
 Once SockJS produces a connection (`lib/proxy/sockjs.js:49-62`) it goes through
 two wrappers before routing:
@@ -300,7 +301,7 @@ logger; `socketTimeout`; `useCompression`; the set of bound listeners.
 Preserved: the event bus; the entire router decorator chain and
 `LocalConfigRouter`'s `AppConfig` cache; the `SchedulerRegistry` **and every
 running worker process**; the transport; the Express app and its middleware
-instances; the `client-sessions` secret; and any `http.Server` whose
+instances; and any `http.Server` whose
 address/port is unchanged (`Server.setAddresses` diffs by
 `http://<host>:<port>` key and only opens/closes the delta,
 `lib/server/server.js`). Existing connections on a *removed* listener are
@@ -355,12 +356,11 @@ the `128+signal` convention.
   (`lib/server-init.js`, marked `KNOWN DEFECT` in place) — a `ReferenceError` if
   an upgrade arrives before the config finishes loading. Characterized but
   deliberately not fixed yet.
-- **`clientSessionMiddleware(request, null, cb)`** on the upgrade path
-  (`lib/server-init.js`, also marked `KNOWN DEFECT`) passes `null` for `res`. `client-sessions` dereferences
-  `res.socket`, throws inside its `try`, and calls `next(err)` on `nextTick`.
-  The callback ignores its argument, so upgrades still work — one tick later,
-  with no `req.session` defined. Verified against
-  `node_modules/client-sessions/lib/client-sessions.js:355-383,600-630`.
+- **FIXED (2026-09): the `client-sessions`-on-upgrade swallow.** The middleware
+  was removed outright rather than repaired, because it was vestigial; the
+  upgrade handler now calls `sockjsHandler.upgrade()` directly and synchronously.
+  See `memory-bank/proxyLayer.md`. The pre-config `res` defect above is
+  unrelated and still open.
 - **`server.listening` is read-only.** `lib/server/server.js` used to assign
   `server.listening = true/false`; that was a silent no-op, because
   `net.Server.prototype.listening` is a getter with no setter, so in sloppy mode
