@@ -28,7 +28,7 @@ From `package.json` `dependencies`:
 
 | Role | Packages |
 | --- | --- |
-| HTTP framework / middleware | `express` (v5), `compression`, `morgan`, `client-sessions`, `send`, `mime-types`, `qs`, `pause` |
+| HTTP framework / middleware | `express` (v5), `compression`, `morgan`, `send`, `mime-types`, `qs`, `pause` |
 | Proxying | `http-proxy-3` |
 | WebSocket / SockJS | `faye-websocket`, `sockjs` (server), `sockjs-client` (served to browsers), `shiny-server-client` |
 | CLI / config | `optimist` (argv parsing), `ip-address` (config validation) |
