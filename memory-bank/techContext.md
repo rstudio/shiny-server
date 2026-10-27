@@ -439,10 +439,32 @@ upgrade to, so the pin has to be overridden.
 | --- | --- |
 | `mocha` → `diff` `^9`, `serialize-javascript` `^7` | mocha 11.8.0 (latest; 12 is still RC) pins `diff ^7` and `serialize-javascript ^6`. Both overrides are safe because mocha's API surface on them is tiny: `diff.createPatch` in `lib/reporters/base.js`, and `serializeJavascript(opts, {unsafe, ignoreFunction})` in `lib/nodejs/buffered-worker-pool.js` (parallel mode only, which this project does not use). Verified by forcing a string-mismatch assertion and checking the reporter still renders a diff. |
 | `picomatch` `^4` (top level) | nodemon 3.1.14 (latest) → chokidar 3 → `anymatch`/`readdirp`, which pin `picomatch ^2`; the last 2.x is the vulnerable one, so the only fix is a major bump. **This one must be top-level.** Scoping it under `nodemon` reaches readdirp's edge but not anymatch's, leaving 2.3.1 hoisted and the advisory open. Nothing else in the tree wants `picomatch`, so a global override is unambiguous. Verified end to end: chokidar still fires `add` events and honours `ignored`, and nodemon still restarts on a file change. |
-| `nodemon` → `brace-expansion` `^5.0.9` | nodemon's minimatch 10 floats to a vulnerable 5.0.x. Scoped deliberately: the tree also holds `brace-expansion` 1.1.18 (eslint, via rewire) and 2.1.4 (mocha), both *outside* the advisory range, and a global override would drag them across two majors for no reason. |
+| `nodemon` → `brace-expansion` `^5.0.9` | nodemon's minimatch 10 floats to a vulnerable 5.0.x. Scoped deliberately: the tree also holds `brace-expansion` 1.x (eslint, via rewire) and 2.x (mocha), and a global override would drag them across two majors for no reason. Those two copies are kept patched within their own majors instead (see the 2026-10-27 refresh below). |
 
 `npm audit fix` is not useful here — for the mocha chain it proposes
 *downgrading* mocha to 11.3.0, which does not fix anything.
+
+### The 2026-10-27 refresh
+
+Two months after the sweep, `npm audit` had drifted to 11 findings, 8 of them
+in runtime deps (critical: `handlebars`, `proxy-addr`; high: `body-parser`,
+`compression`, `follow-redirects`). Every one had an in-range fix, and plain
+`npm audit fix` cleared all but one. The direct deps' floors in `package.json`
+were then raised to the patched versions so a fresh resolve can't pick a
+vulnerable one. Expect this drift: re-run `npm audit` right before tagging a
+release, not just after a sweep.
+
+The holdout was mocha's `brace-expansion` 2.1.4, and it is worth knowing why:
+
+- mocha's minimatch 9 is **hoisted** to `node_modules/minimatch`, so its
+  `brace-expansion` lives at the top level too. A `mocha` → `brace-expansion`
+  override does not reach it, the same scoping trap as `picomatch` above.
+- No override is needed anyway, since the fix (2.1.7) is inside minimatch's
+  `^2.0.2` range, yet neither `npm audit fix` nor `npm update brace-expansion`
+  would move the locked 2.1.4.
+- What worked: delete the `node_modules/brace-expansion` entry from
+  `npm-shrinkwrap.json` and run `npm install`, which re-resolves just that
+  node to the newest in-range version.
 
 ### Two `npm outdated` rows are permanent
 

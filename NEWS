@@ -15,8 +15,8 @@ shiny-server 1.5.24
   tsconfig.json.
 
 * Upgraded the remaining npm dependencies, including ip-address 9 -> 10. This
-  clears every known runtime advisory, among them a critical one in
-  websocket-driver; the five that remain are all in development-only tooling.
+  clears every known advisory, runtime and development alike, among them
+  critical ones in websocket-driver, handlebars, and proxy-addr.
 
 * Added `:PROCESS_USER:` token for the `run_as` directive, which resolves to the
   user running the shiny-server process. This enables running without root.
