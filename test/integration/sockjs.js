@@ -31,7 +31,8 @@ var errorcode = require('../../lib/proxy/errorcode');
 
 var APP_FILES = {
   'site/myapp/server.R': '# not actually run\n',
-  'site/myapp/ui.R': '# not actually run\n'
+  'site/myapp/ui.R': '# not actually run\n',
+  'site/static/hello.html': '<h1>not an app</h1>'
 };
 
 /**
@@ -66,6 +67,10 @@ function waitFor_p(predicate, description, timeoutMs) {
       setTimeout(poll, 10);
     })();
   });
+}
+
+function delay_p(ms) {
+  return new Promise(function(resolve) { setTimeout(resolve, ms); });
 }
 
 /** The WebSocket upgrades the stand-in workers received. */
@@ -303,6 +308,43 @@ describe('sockjs', function() {
         assert.ok(close, 'expected a channel close, got: ' + msg);
         assert.strictEqual(close.code, errorcode.ACCESS_DENIED);
         assert.strictEqual(upgrades(server).length, 0);
+      });
+    });
+  });
+
+  describe('on URLs that are not a servable app', function() {
+    // A SockJS connection reaches the routers with no `res`: sockjs.js calls
+    // getAppSpec_p(conn) with just the connection. A router branch that writes
+    // a response anyway throws, the exception is uncaught, and lib/main.js
+    // shuts the whole server down -- every user's session with it. Each URL
+    // here is one channel-open away from a branch that writes to `res`.
+
+    beforeEach(function() {
+      return start_p();
+    });
+
+    [
+      ['a hidden path element', '/myapp/.hidden/'],
+      ['a ".." segment', '/elsewhere/../myapp/'],
+      ['an encoded ".." segment', '/elsewhere/%2e%2e/myapp/'],
+      ['a static directory', '/static/'],
+      ['a path that does not exist', '/nope/']
+    ].forEach(function(testCase) {
+      it('leave the server running for ' + testCase[0] + ' (' + testCase[1] + ')', function() {
+        return sockjsClient.connect_p(server.port, testCase[1]).then(function(conn) {
+          track(conn);
+          // Opening a channel is what consults the routers. Nothing comes
+          // back for a URL that isn't an app, so give the routers a moment.
+          conn.send('0|o|');
+          return delay_p(250);
+        })
+        .then(function() {
+          return server.get_p('/ping');
+        })
+        .then(function(r) {
+          assert.strictEqual(r.status, 200);
+          assert.strictEqual(upgrades(server).length, 0);
+        });
       });
     });
   });
