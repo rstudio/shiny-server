@@ -9,6 +9,9 @@ RUN dnf -y install dnf-plugins-core
 RUN dnf config-manager --set-enabled powertools
 
 RUN dnf -y groupinstall "Development tools"
+# Node 24's headers need C++20 (-std=gnu++20), which the stock gcc 8 lacks.
+# make-package-jenkins.sh enables this toolset when it is present.
+RUN dnf -y install gcc-toolset-13-gcc gcc-toolset-13-gcc-c++
 RUN dnf -y install rsyslog
 RUN dnf -y install screen
 RUN dnf -y install passwd

@@ -13,7 +13,9 @@ RUN apt-get update && apt-get install -y \
   ca-certificates \
   curl \
   g++ \
+  g++-10 \
   gcc \
+  gcc-10 \
   git \
   gpg \
   libpam0g-dev \

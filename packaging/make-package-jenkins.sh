@@ -3,12 +3,16 @@
 set -e
 set -x
 
-# This is needed for CentOS5/6 Jenkins workers to bootstrap a newer gcc toolchain.
 cd "$(dirname $0)"
 
-if (which scl && scl -l | grep -q devtoolset-11);
-then
-	scl enable devtoolset-11 ./make-package.sh
+# Node 24's headers compile addons with -std=gnu++20, which needs gcc 10+.
+# The build images' stock compilers are older (gcc 9 on Ubuntu 20.04, gcc 8
+# on Rocky 8), so prefer the newer one each image installs alongside it.
+if [ -f /opt/rh/gcc-toolset-13/enable ]; then
+	source /opt/rh/gcc-toolset-13/enable
+	CC=gcc CXX=g++ ./make-package.sh "$@"
+elif which g++-10; then
+	CC=gcc-10 CXX=g++-10 ./make-package.sh "$@"
 else
 	CC=gcc CXX=g++ ./make-package.sh "$@"
 fi
