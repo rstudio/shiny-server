@@ -99,6 +99,17 @@ for each test, in about 15ms. Three modules make that possible:
   `http.Server` on the endpoint's port. Everything else stays live: the real
   `TcpTransport`, the real endpoint and shared secret, the real
   `connectEndpoint_p` handshake, the real proxy. Only `su` and R are skipped.
+  An `onUpgrade` option handles the worker side of WebSockets; upgrades are
+  recorded in `requests` like any other request, and `kill()` destroys the
+  upgraded sockets too, because `closeAllConnections()` does not reach them.
+- **`test/support/sockjs-client.js`** — a browser-side SockJS client over the
+  native WebSocket transport. `connect_p(port, '/myapp/')` gives a plain session;
+  `RobustSession` adds the `n=`/`o=` ids, `<hex>#` tagging and CONTINUE handshake
+  of shiny-server-client's reconnect support, and records the CONTINUEs it
+  receives. Multiplex framing (`0|o|`, `0|m|...`) is left to the test on purpose,
+  since that protocol is what the tests check. **Close every client before
+  `stop_p()`**: `$destroyConnections` cannot see upgraded sockets either, so an
+  open client stalls shutdown until mocha times out.
 
 Pass `worker: false` to `start_p` to keep the real launcher and spawn actual R — that
 is what `test/integration-r/` does.
@@ -234,7 +245,8 @@ message with a regex (`test/nested-locations.js:27-43`); the newer style uses
 | `lib/core/iputil.js` | **Good.** `test/iputil.js`, 7 tests, thorough edge cases (zones, v4-mapped v6, wildcards). |
 | `lib/core/render.js` | **Good.** `test/render.js`, template-resolution fallback order and caching. |
 | `lib/scheduler/*` | **Moderate.** `test/scheduler.js` (spawn bookkeeping, acquire/release, idle-kill timer), `test/simple-scheduler.js` (maxRequests semantics), `test/scheduler-registry.js` (per-appSpec scheduler lifecycle). All against mocked workers. |
-| `lib/proxy/robust-sockjs.js` | **Moderate.** Reconnect/collision/disconnect-buffering. |
+| `lib/proxy/robust-sockjs.js` | **Moderate.** Reconnect/collision/disconnect-buffering in `test/robust-sockjs.js`; end to end, `test/integration/sockjs.js` resumes a session on a new transport and checks the CONTINUE id, the replay of a message the worker sent while the browser was away, and that the worker-side WebSocket survives. |
+| `lib/proxy/sockjs.js`, `multiplex.js`, `errorcode.js` | **Moderate.** `test/integration/sockjs.js` (7 tests) covers both entry points: the native WebSocket via the `upgrade` handler, and the XHR fallback via the Express middleware. It checks two-way relay including messages queued before the worker socket opens, the `/websocket/` URL rewrite and shared secret, `sockConn` accounting, the app-exit alert and `APP_EXIT` close, and `ACCESS_DENIED` for a robust session on a `reconnect false` app. Each was checked by mutating the code it covers. Not covered: `OUT_OF_CAPACITY`, subapp channels (a non-empty `o` URL), `SHUTTING_DOWN`, and the `xhr_streaming`/polling transports. |
 | `lib/config/app-config.js` | **Narrow.** Only `addLocalConfig` merge semantics. |
 | `lib/router/config-router-util.js` | **Narrow.** Only `parseApplication`. |
 | `lib/router/config-router.js` | **Narrow.** Only `createRouter_p` against 3 fixtures, with permission checks rewired out. |
@@ -250,10 +262,6 @@ message with a regex (`test/nested-locations.js:27-43`); the newer style uses
 **Zero automated coverage**, roughly in descending order of how much a test would be
 worth:
 
-- `lib/proxy/sockjs.js`, `lib/proxy/multiplex.js`, `lib/proxy/errorcode.js` — **now the
-  highest-value gap.** The SockJS and WebSocket paths are the only major traffic route
-  with no coverage at either tier. `test/support/fake-worker.js` already accepts an
-  `onUpgrade` handler, so the harness is ready for it.
 - `lib/router/user-dirs-router.js` — **no coverage at either tier**, and unlike its
   neighbours below it cannot get any from `test/integration/`: `createRouter_p` throws
   `'shiny-server must be run as root to use the user_dirs directive'`

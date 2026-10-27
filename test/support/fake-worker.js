@@ -99,6 +99,9 @@ function FakeAppWorker(appSpec, endpoint, logFilePath, workerId, handler, onUpgr
   /** Requests this stand-in app received, as {method, url, headers}. */
   this.requests = [];
 
+  /** Sockets handed to onUpgrade, so that kill() can hang them up. */
+  this.upgradedSockets = [];
+
   this.$exit = Q.defer();
   this.$running = true;
 
@@ -113,6 +116,12 @@ function FakeAppWorker(appSpec, endpoint, logFilePath, workerId, handler, onUpgr
 
   if (onUpgrade) {
     this.server.on('upgrade', function(req, socket, head) {
+      self.requests.push({
+        method: req.method,
+        url: req.url,
+        headers: req.headers
+      });
+      self.upgradedSockets.push(socket);
       onUpgrade(req, socket, head, self);
     });
   }
@@ -150,6 +159,10 @@ function FakeAppWorker(appSpec, endpoint, logFilePath, workerId, handler, onUpgr
       self.$exit.resolve(0);
     });
     this.server.closeAllConnections();
+    // closeAllConnections() only knows about sockets still speaking HTTP. An
+    // upgraded socket has been handed off, but server.close() still waits for
+    // it, so without this a live websocket would keep the worker from exiting.
+    this.upgradedSockets.forEach(function(socket) { socket.destroy(); });
   };
 
   this.destroy_p = function() {
