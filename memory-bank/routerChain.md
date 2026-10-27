@@ -334,7 +334,23 @@ asserts `req.url.indexOf(appSpec.prefix) === 0` (logging "Bad router returned
 invalid prefix" and 404ing otherwise), then rewrites `req.url` to the remainder.
 So a router's `prefix` must be a literal, byte-exact prefix of the *unmodified*
 `req.url` — this is why `DirectoryRouter` builds the prefix from `rawPath` (escaped)
-rather than the decoded path. SockJS does the same slice at `lib/proxy/sockjs.js:159`.
+rather than the decoded path. SockJS does the same slice at `lib/proxy/sockjs.js:159`,
+but **without** the check, so a SockJS prefix that isn't a real prefix of `conn.url`
+silently produces a garbled worker path instead of a 404.
+
+**Routers must parse URLs literally; never with `new URL()`.** Every router (and
+`/ping`, and the `__assets__` filter) parses with `url_util.parseRequestUrl`
+(`lib/core/url-util.js`), which is Node's legacy `Url.prototype.parse`. That is the
+parser `url.parse()` uses, minus the wrapper that emits the DEP0169 warning. The
+legacy parser keeps the path as sent. The WHATWG parser resolves `.`/`..` segments
+(including `%2e%2e`) and reads a leading `//x` as a host. Routing on the normalized
+path while `ShinyProxy`, SockJS and static serving use the raw one is a path
+confusion. Verified in October 2026 with two `site_dir` locations: under `new URL()`,
+`/public/../private/secret.html` and `//x/private/secret.html` both served the
+`/private` file (today: 403 and 404), and a SockJS session opened under `/public/..`
+connected to the `/private` app's worker. That defeats access control a non-normalizing
+upstream proxy applies by path prefix. A real WHATWG migration would have to
+normalize once, up front, and route and forward that same normalized path.
 
 **Shallow clone in `SingleAppRouter` aliases nested settings.**
 `lib/router/router.js:239` does `_.clone(self.$settings)`, so `settings.appDefaults`
