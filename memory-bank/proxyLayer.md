@@ -132,7 +132,6 @@ What actually crosses the proxy boundary, verified rather than assumed:
 | `connection: close` | to worker | forced by http-proxy (agent=false) |
 | `x-frame-options` | to browser | `lib/proxy/http.js:257`, from `appDefaults.frameOptions` |
 | `X-Powered-By: <serverName>` | to browser | `lib/server-init.js` (express's own is disabled) |
-| `session_state` cookie | to browser | `client-sessions` middleware, `lib/server-init.js,170` |
 
 **There are no `X-Forwarded-*` headers.** `http-proxy` only adds them when
 `options.xfwd` is set (`passes/web-incoming.js:72`), and Shiny Server never sets it.
@@ -146,14 +145,24 @@ spawned it. There is no `Shiny-Server-*` header — the equivalent information
 to the worker once at spawn time as JSON on stdin (`lib/worker/app-worker.ts:560-592`),
 and the R side injects it into the page for `shiny-server-client` to read.
 
-**Surprise:** the `client-sessions` middleware is applied to upgrade requests as
-`clientSessionMiddleware(request, null, cb)` (`lib/server-init.js`). With `res === null`
-the `Session` constructor throws on `res.socket`
-(`node_modules/client-sessions/lib/client-sessions.js:378`), the library catches it and
-calls `next(err)` on `process.nextTick`, and `lib/main.js` ignores the error argument.
-Verified empirically. So WebSocket upgrades work, but only by accident, and one tick
-later than they look. Also, nothing in `lib/` ever *reads* `req.session_state`; the
-middleware appears vestigial.
+**Sets no cookies at all.** Shiny Server's own middleware stack never calls
+`res.setHeader('set-cookie', ...)`, and there is no session middleware left (see
+below). Client cookies are forwarded to the worker verbatim, but nothing is minted
+here. Verified against a live `/r-hello/` response.
+
+**Removed: `client-sessions`.** Until 2026-09 a `client-sessions` middleware sat in
+the stack and was also applied to upgrade requests as
+`clientSessionMiddleware(request, null, cb)`. It was fully vestigial and has been
+deleted: nothing in `lib/`, `test/`, `R/`, or `assets/` ever read `req.session_state`,
+and because the lazy `Session.content` getter was never touched the session stayed
+`loaded === false` / `dirty === false`, so `updateCookie()` was a no-op and *no
+`session_state` cookie was ever emitted* (verified empirically). On the upgrade path
+`res === null` made the `Session` constructor throw on `res.socket`; the library caught
+it and called `next(err)` on `process.nextTick`, and the callback ignored the argument
+— so upgrades worked, one tick late, with no session. It was added in `280b075`
+(Apr 2013) as infrastructure for Shiny Server Pro's auth layer, which never shipped in
+open source. The upgrade handler now calls `sockjsHandler.upgrade()` directly. Do not
+reintroduce it looking for a session cookie that never existed.
 
 ## Connection accounting (get this right)
 
