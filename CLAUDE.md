@@ -79,7 +79,7 @@ npm run dev          # nodemon against dev/shiny-server.conf, port 3838
 >
 > `/r-hello/` is unaffected — it needs only R and the `shiny` package.
 
-> **Node ABI gotcha.** `build/Release/posix.node` is a native addon compiled against the Node version in `.nvmrc` (currently v24.20.0). If your ambient `node` is a different major version, *everything* fails immediately with `ERR_DLOPEN_FAILED` / `NODE_MODULE_VERSION` mismatch — including `npm test`. Either `nvm use`, or prefix with the vendored runtime: `PATH="$PWD/ext/node/bin:$PATH" npm test`.
+> **Node ABI gotcha.** `build/Release/posix.node` is a native addon compiled against the Node version in `.nvmrc` (currently v24.22.1). If your ambient `node` is a different major version, *everything* fails immediately with `ERR_DLOPEN_FAILED` / `NODE_MODULE_VERSION` mismatch — including `npm test`. Either `nvm use`, or prefix with the vendored runtime: `PATH="$PWD/ext/node/bin:$PATH" npm test`.
 
 ## Architecture
 

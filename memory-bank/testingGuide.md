@@ -63,9 +63,8 @@ lines into the spec output; `SHINY_LOG_LEVEL=OFF npm test` silences that noise.
 
 ## Current real state of `npm test`
 
-**310 passing, 0 failing, ~4s** on `master` (macOS, Node v24.20.0); 315 on
-`replace-http-proxy-with-http-proxy-3`, which adds `test/python.js`. `npm run test:r`
-adds 8 more and takes about a second once R is warm.
+**329 passing, 0 failing, ~5s** on `master` as of 2026-10-27 (macOS, Node v24.22.1).
+`npm run test:r` adds 8 more and takes about a second once R is warm.
 
 The macOS-only `test/app-worker.js` failure (the `/blah` mkdir case returns `EROFS`
 rather than `EACCES` on darwin) is fixed — the assertion now accepts either errno.
@@ -75,7 +74,7 @@ rather than `EACCES` on darwin) is fixed — the assertion now accepts either er
   transitively. If your shell's `node` is not ABI-compatible with whatever built
   `build/Release/`, mocha dies before running a single test with
   `ERR_DLOPEN_FAILED ... NODE_MODULE_VERSION`. Run tests with a Node matching
-  `.nvmrc` (currently v24.20.0), or `npm rebuild` against the Node you're using.
+  `.nvmrc` (currently v24.22.1), or `npm rebuild` against the Node you're using.
   `nan` and `.nvmrc` move together for this reason: `nan` 2.20 does not compile
   against Node 24's V8 headers, so bumping one without the other fails in
   node-gyp before a single test runs.

@@ -245,7 +245,7 @@ requires it.
 
 ## Node version policy
 
-- **`.nvmrc` is the single source of truth** — currently `v24.20.0`.
+- **`.nvmrc` is the single source of truth** — currently `v24.22.1`.
   `external/node/install-node.sh:8` reads it (`NODE_VERSION=$(cat .nvmrc)`),
   downloads the matching official Node tarball for the host OS/arch, and
   extracts it to `ext/node/` (gitignored). `bin/node` and `bin/npm` are two-line
@@ -258,7 +258,7 @@ requires it.
 - Since 1.5.23 the project uses **official Node binaries** again. Between 1.5.21
   and 1.5.22 it built its own for glibc compatibility with RHEL/CentOS 7; that
   requirement went away when CentOS 7 was dropped.
-- Recent history: 18.20.4 → 20.17.0 (1.5.23) → 24.20.0.
+- Recent history: 18.20.4 → 20.17.0 (1.5.23) → 24.20.0 → 24.22.1 (1.5.24).
   Bumping Node = edit `.nvmrc`, update `NEWS`, re-run `install-node.sh`, and
   rebuild the native addon. **Check `nan` at the same time**: 2.20 does not
   compile against Node 24's V8 headers, and a `nan` too old for the Node in
