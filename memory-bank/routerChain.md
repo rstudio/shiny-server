@@ -37,10 +37,18 @@ there is no `res` at all (`lib/proxy/sockjs.js:76` calls `getAppSpec_p(conn)` wi
 arg). Any router that wants to write a response must tolerate this.
 `SingleAppRouter` handles it explicitly (`lib/router/router.js:230-233`, returns
 `null` instead of redirecting); `RedirectRouter` bails at `lib/router/router.js:321`.
-`DirectoryRouter` does **not** guard — its redirect/static paths would throw on an
-undefined `res`. In practice SockJS URLs always contain `/__sockjs__/...` after the
-app directory, so those branches aren't reached, but that is an invariant, not a
-check.
+`DirectoryRouter` guards every branch that writes a response: with no `res` it
+returns `null`, so `sockjs.js` treats the URL as unroutable. Until 2026-10 it did
+not, and the 403 branch for hidden/`.`/`..` path elements was reachable: open a
+SockJS session at e.g. `/app/.x/__sockjs__/...`, open channel 0, and
+`render.sendPage(undefined, 403, ...)` threw. The throw was uncaught, so
+`lib/main.js` shut the server down, taking every session with it, from two
+unauthenticated requests. (The redirect, index.html and static branches looked
+unreachable, because a SockJS URL always has `/__sockjs__/...` after the app
+directory, but they are guarded too rather than relying on that.)
+`test/integration/sockjs.js` ("on URLs that are not a servable app") is the
+regression test. **Any new router branch that writes to `res` must check it
+first.**
 
 The SockJS connection is duck-typed to satisfy the routers: sockjs-node's
 `decorateConnection` sets `.url`, `.address` (the *local* socket address, which is
@@ -326,7 +334,23 @@ asserts `req.url.indexOf(appSpec.prefix) === 0` (logging "Bad router returned
 invalid prefix" and 404ing otherwise), then rewrites `req.url` to the remainder.
 So a router's `prefix` must be a literal, byte-exact prefix of the *unmodified*
 `req.url` — this is why `DirectoryRouter` builds the prefix from `rawPath` (escaped)
-rather than the decoded path. SockJS does the same slice at `lib/proxy/sockjs.js:159`.
+rather than the decoded path. SockJS does the same slice at `lib/proxy/sockjs.js:159`,
+but **without** the check, so a SockJS prefix that isn't a real prefix of `conn.url`
+silently produces a garbled worker path instead of a 404.
+
+**Routers must parse URLs literally; never with `new URL()`.** Every router (and
+`/ping`, and the `__assets__` filter) parses with `url_util.parseRequestUrl`
+(`lib/core/url-util.js`), which is Node's legacy `Url.prototype.parse`. That is the
+parser `url.parse()` uses, minus the wrapper that emits the DEP0169 warning. The
+legacy parser keeps the path as sent. The WHATWG parser resolves `.`/`..` segments
+(including `%2e%2e`) and reads a leading `//x` as a host. Routing on the normalized
+path while `ShinyProxy`, SockJS and static serving use the raw one is a path
+confusion. Verified in October 2026 with two `site_dir` locations: under `new URL()`,
+`/public/../private/secret.html` and `//x/private/secret.html` both served the
+`/private` file (today: 403 and 404), and a SockJS session opened under `/public/..`
+connected to the `/private` app's worker. That defeats access control a non-normalizing
+upstream proxy applies by path prefix. A real WHATWG migration would have to
+normalize once, up front, and route and forward that same normalized path.
 
 **Shallow clone in `SingleAppRouter` aliases nested settings.**
 `lib/router/router.js:239` does `_.clone(self.$settings)`, so `settings.appDefaults`
