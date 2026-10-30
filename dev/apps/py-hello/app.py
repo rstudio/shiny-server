@@ -23,7 +23,7 @@ app_ui = ui.page_sidebar(
     ),
     ui.card(
         ui.card_header("Summary Statistics"),
-        ui.output_text_verbatim("summary"),
+        ui.output_code("summary"),
     ),
     title="Shiny Server Dev Mode (Python)",
 )
@@ -64,7 +64,7 @@ def server(input, output, session):
         ax.set_xlabel("Value")
         return fig
 
-    @render.text
+    @render.code
     def summary():
         d = data()
         return (
