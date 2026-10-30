@@ -147,8 +147,7 @@ paths from `process.cwd()`.
 
 ## `lib/core/fsutil.js` (+ `fsutil.d.ts`)
 
-Uses `graceful-fs` (retries on EMFILE) rather than `fs`, and pulls in the native
-`build/Release/posix` addon for record locking.
+Uses `graceful-fs` (retries on EMFILE) rather than `fs`.
 
 - `directoryExistsSync(path)` (`:22`) — true/false; rethrows non-`ENOENT`.
   Consumer: `lib/transport/unix-socket.js:39`.
@@ -164,10 +163,8 @@ Uses `graceful-fs` (retries on EMFILE) rather than `fs`, and pulls in the native
 - `safeStat_p(path)` (`:127`) — resolves `null` instead of rejecting.
   Consumers: `lib/config/app-config.js:94`, `lib/router/router.js:97`
   (the `restart.txt` check).
-- `createPidFile(path)` (`:142`) — synchronous; acquires a POSIX write record
-  lock via the native addon and returns `false` if another process holds it.
-  This, not the file's existence, is the single-instance check.
-  Consumer: `lib/main.js`.
+- The pidfile single-instance check used to live here as `createPidFile`; it
+  is now `lib/core/pidfile.js` (see below).
 
 **Traps.**
 1. `safeTail_p` calls `logger.error` (`:106`, `:117`) using the *global* `logger`
@@ -177,9 +174,33 @@ Uses `graceful-fs` (retries on EMFILE) rather than `fs`, and pulls in the native
    (Verified: renaming `exists_p` in `python.ts` produces a TS2339 on
    `typeof import(".../fsutil")`.)
 
+## `lib/core/pidfile.js`
+
+Acquires and releases the `--pidfile`. The lock is a BSD `flock(2)`-style
+descriptor lock taken by a short-lived external helper (`flock` on Linux,
+`lockf` on macOS) that locks a descriptor Node passes it as fd 3 and
+immediately exits — Node's own descriptor keeps the lock held, and no helper
+process survives. Contention is helper exit status 75, the only status
+translated to the "another instance" result. `release()` requires a prior
+`acquire()` by the module (an absolute-path → `{fd, dev, ino}` ownership map)
+and unlinks only while holding the lock. Consumer: `lib/main.js`. See
+`nativePrivileges.md` for the full story.
+
+## `lib/core/user-db.js`
+
+Command-backed user/group database: `getCurrentUser()` (`os.userInfo()`),
+`lookupUser_p(name)`, `lookupGroup(name)` (sync, for config construction), and
+`getGroupIds_p(name)`. Uses `getent`/`id` on Linux and `id`/`dscacheutil` on
+macOS, resolved from fixed system paths with argument arrays — NSS/Directory
+Service aware, never shell-interpolated, never `/etc/passwd` parsing. "Not
+found" is `null`; operational failures throw. Request-path lookups are cached
+(5s positive / 1s negative TTL, bounded, concurrent lookups coalesced), and
+the current effective user is fast-pathed through `os.userInfo()`. See
+`nativePrivileges.md`.
+
 ## `lib/core/permissions.js`
 
-Thin wrapper over `process.getuid()` and the native `posix.getpwuid`.
+Thin wrapper over `process.getuid()` and `userDb.getCurrentUser()`.
 
 - `isSuperuser()` (`:19`), `getProcessUser()` (`:25`, memoized by uid),
   `canRunAs(user)` (`:37` — root, or the requested user is us).
@@ -371,4 +392,4 @@ onto Q's `Promise` class (see qutil above). `tsconfig.json` includes
    run one at a time by design (ordering matters for router precedence and for
    not fd-storming a directory). Don't "optimize" them into `Q.all`.
 5. **Sync-in-name functions really are sync.** `directoryExistsSync` and
-   `createPidFile` block the event loop; both are startup-only.
+   `pidfile.acquire`/`release` block the event loop; all are startup-only.

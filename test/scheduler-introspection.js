@@ -49,6 +49,15 @@ describe('Scheduler introspection', function() {
         return launchDeferred.promise;
       }
     });
+    // The real lookup shells out to `id`/`getent`, which can take longer than
+    // the fixed delays below, leaving a launch that should have completed
+    // still pending.
+    Scheduler.__set__('userDb', {
+      lookupUser_p: function() {
+        return Promise.resolve({name: 'jeff', uid: 1000, gid: 1000,
+          home: '/home/jeff'});
+      }
+    });
 
     scheduler = new Scheduler(new SimpleEventBus(), appSpec);
     scheduler.setTransport({

@@ -15,9 +15,9 @@
 //
 // Config text is written with $-placeholders rather than as static fixture
 // files, because two of the values can only be known at run time: the user the
-// test process happens to be running as (run_as must name a user that
-// posix.getpwnam can resolve and that the process is allowed to become), and
-// the absolute path of the checkout.
+// test process happens to be running as (run_as must name a user that the
+// account database can resolve and that the process is allowed to become),
+// and the absolute path of the checkout.
 
 var fs = require('fs');
 var os = require('os');

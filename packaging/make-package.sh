@@ -67,5 +67,19 @@ popd
 
 "$CPACK" -G "$GENERATOR"
 
+# Verify the payload does not carry the removed node-gyp addon artifacts.
+PACKAGE_FILE=`ls shiny-server*.deb shiny-server*.rpm 2>/dev/null | head -1`
+if [ "$GENERATOR" == "DEB" ]
+then
+	PAYLOAD=`dpkg-deb -c "$PACKAGE_FILE"`
+else
+	PAYLOAD=`rpm -qlp "$PACKAGE_FILE"`
+fi
+if echo "$PAYLOAD" | grep -E "binding\.gyp|build/Release/posix\.node|node_modules/nan/"
+then
+	echo "ERROR: package contains removed node-gyp/posix addon artifacts" >&2
+	exit 1
+fi
+
 # Now that installer is built, install the devDependencies as well
 (cd ../.. && ./bin/npm install)

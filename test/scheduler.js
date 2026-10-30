@@ -27,13 +27,19 @@ var Scheduler = rewire('../lib/scheduler/scheduler.js');
 var exitPromise = Q.defer();
 
 var killSpy = sinon.spy();
-Scheduler.__set__("app_worker", {launchWorker_p: function() {
+var launchWorkerSpy = sinon.spy(function() {
   return Q({
     kill: killSpy,
     getExit_p: function(){ return exitPromise.promise; },
     isRunning: function(){ return true }
   });
-}});
+});
+Scheduler.__set__("app_worker", {launchWorker_p: launchWorkerSpy});
+
+// Stub the account lookup so these tests don't shell out to `id`/`getent`.
+var jeffPw = {name: "jeff", uid: 1000, gid: 1000, home: "/home/jeff"};
+var lookupUserStub = sinon.stub();
+Scheduler.__set__("userDb", {lookupUser_p: lookupUserStub});
 
 var appSpec = new AppSpec("/var/shiny-www/01_hello/", "jeff", "", "/tmp", {})
 var scheduler;
@@ -65,6 +71,9 @@ describe('Scheduler', function(){
     }});
 
     killSpy.resetHistory();
+    launchWorkerSpy.resetHistory();
+    lookupUserStub.reset();
+    lookupUserStub.resolves(jeffPw);
     exitPromise = Q.defer();
   });
 
@@ -87,6 +96,26 @@ describe('Scheduler', function(){
         worker.data.should.have.keys('a', 'b', 'sockConn', 'httpConn');
       })      
       .then(done, done).done();
+    }),
+    it('launches the worker as the looked-up run_as user.', function() {
+      return scheduler.spawnWorker(appSpec, {}).getAppWorkerHandle_p()
+      .then(function() {
+        lookupUserStub.calledOnceWithExactly("jeff").should.be.true();
+        launchWorkerSpy.calledOnce.should.be.true();
+        launchWorkerSpy.firstCall.args[0].should.equal(appSpec);
+        launchWorkerSpy.firstCall.args[1].should.equal(jeffPw);
+      });
+    }),
+    it('fails the launch when the user lookup fails.', function() {
+      lookupUserStub.rejects(new Error("getent failed"));
+      return scheduler.spawnWorker(appSpec, {}).getAppWorkerHandle_p()
+      .then(function() {
+        throw new Error("expected the launch to fail");
+      }, function(err) {
+        err.message.should.equal("getent failed");
+        launchWorkerSpy.called.should.be.false();
+        Object.keys(scheduler.$workers).should.be.empty;
+      });
     }),
     it('properly handles acquire and release.', function() {
       //request a worker
