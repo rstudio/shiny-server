@@ -1,3 +1,13 @@
+shiny-server 1.5.25
+--------------------------------------------------------------------------------
+
+* Fixed a long-standing bug where an occasional client was dropped immediately
+  after connecting (SockJS close code 2010, "Another connection still open").
+  This only affected clients on HTTP fallback transports (e.g., xhr-polling)
+  rather than WebSocket, and required a chance collision between two
+  concurrent connections, so it presented as a rare, flaky connect that a
+  retry usually resolved. (#609)
+
 shiny-server 1.5.24
 --------------------------------------------------------------------------------
 

@@ -234,11 +234,21 @@ heartbeat/disconnect delays are config-driven. Two entry points into the same se
 the express middleware (`lib/server-init.js`, returns truthy if it handled the
 request) and the `upgrade` handler (`lib/server-init.js`).
 
-The SockJS `prefix` is the regex `.*/__sockjs__(/[no]=\w+)?`
+The SockJS `prefix` is the regex `.*/__sockjs__(?:/[no]=\w+)?`
 (`lib/proxy/sockjs.js:42`) — deliberately greedy, so *any* URL containing
 `/__sockjs__` anywhere is captured regardless of which app prefix or path params
 precede it. Defaults: heartbeat 25s, disconnect delay 5s
 (`lib/proxy/sockjs.js:26-33`, matching `lib/router/config-router.js:121-129`).
+
+The optional robust-session group in that prefix must stay **non-capturing**.
+SockJS appends its own numbered capture groups (server number, then session id)
+to the prefix when it builds its route regexes and reads the matches back
+positionally, so a capturing group here shifts every later group by one and the
+server-number segment gets parsed as the session id. Because sockjs-client draws
+that server number at random per connection, the practical symptom was that
+concurrent HTTP-fallback sessions whose numbers collided were folded into one
+SockJS session (fixed in 2026; regression test:
+`test/integration/sockjs-session-collision.js`).
 
 The connection pipeline is three layers deep, outermost first:
 
