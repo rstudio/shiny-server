@@ -248,14 +248,12 @@ null), reuses `schema.ConfigSchemaParam` to decode param arity, and renders
 `desc` strings support a mini-markdown: `` `name` `` auto-links to another
 directive's anchor, and `[text](url)` becomes a link (`tools/makedocs.js:33`).
 
-Two caveats:
-
-- **`tools/makedocs.js` does not currently run.** It does
-  `require('connect/lib/utils')` at `tools/makedocs.js:26`, and `connect` is not
-  in `package.json` and not installed. It is also not wired into any npm script.
-- **`config.html` is stale** relative to the schema. E.g. the `log_dir` description
-  in the schema mentions `SHINY_LOG_STDERR` (v1.5.13+); the checked-in
-  `config.html` does not.
+Freshness of the generated file is enforced: CI runs `node tools/makedocs.js`
+and fails if the committed `config.html` differs from the output (the "Check
+the generated config reference is current" step in `.github/workflows/ci.yml`,
+modeled on the adjacent compiled-output check). The tool is not wired into an
+npm script — invoke it directly. Any edit to `config/shiny-server-rules.config`
+must be followed by running it and committing the regenerated `config.html`.
 
 ## 7. Error reporting
 

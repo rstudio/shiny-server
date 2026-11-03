@@ -40,6 +40,16 @@ jobs:
           git diff --exit-code -- lib/ \
             || (echo "::error::Compiled output in lib/ is stale. Run 'npm run build' and commit the result." && exit 1)
 
+      # config.html is generated from config/shiny-server-rules.config by
+      # tools/makedocs.js and committed, so editing the rules config without
+      # regenerating would silently leave the docs stale. This makes that a
+      # failure.
+      - name: Check the generated config reference is current
+        run: |
+          node tools/makedocs.js
+          git diff --exit-code -- config.html \
+            || (echo "::error::config.html is stale. Run 'node tools/makedocs.js' and commit the result." && exit 1)
+
       # Unit tests plus the fast integration tier (test/integration), which
       # boots a real server on an ephemeral port against a stand-in worker.
       # mocha is not recursive, so both directories are named in the "test"

@@ -44,6 +44,11 @@ npm install
 npm run build        # compiles lib/**/*.ts via tsc
 ```
 
+**Regenerate the config reference (required after editing `config/shiny-server-rules.config`):**
+```bash
+node tools/makedocs.js   # regenerates config.html; commit the result (CI enforces freshness)
+```
+
 **Run all tests:**
 ```bash
 npm test             # mocha test/
