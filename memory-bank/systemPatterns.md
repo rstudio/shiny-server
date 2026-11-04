@@ -189,7 +189,7 @@ Inside a `.ts` file you'll see `import` and `require` mixed on purpose
 (`lib/worker/app-worker.ts:23-35`): ES-style `import` for modules with real
 types (`child_process`, `fs/promises`, `./app-spec`, `../transport/tcp`), and
 `var x = require(...)` for the untyped legacy JS modules (`bash`, `paths`,
-`permissions`, `map`, the native `posix` addon). This is not sloppiness — it is
+`permissions`, `map`, `user-db`). This is not sloppiness — it is
 how the strict compiler is kept happy without writing declarations for every
 legacy module.
 
@@ -198,19 +198,6 @@ Likewise, promises are mixed by design: **native `async`/`await` inside**, but
 `lib/worker/app-worker.ts:123` returns `Q.Promise<AppWorker>` while its body is
 `await`-based. Keep that boundary — JS callers expect to call `.fin()` and
 `.eat()` on what they get back.
-
-## Native addon require path
-
-The `posix` native module is required by its build path, not by package name:
-
-```js
-var posix = require('../../build/Release/posix');
-```
-
-That path (`lib/router/router.js:22`, `lib/worker/app-worker.ts:32`, and
-elsewhere) means **`node-gyp` must have run before anything works**, and it
-means `build/` is a required runtime directory, not just a build artifact. See
-`nativePrivileges.md`.
 
 ## Things that are *not* conventions here
 
